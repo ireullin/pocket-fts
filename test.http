@@ -1,0 +1,78 @@
+# For use with VS Code REST Client extension
+
+@host = http://localhost:5122
+
+###
+# @name createCollection
+# Create a new collection named 'articles'
+POST {{host}}/collections/create
+Content-Type: application/json
+
+{
+  "name": "articles2",
+  "primary_key": "id",
+  "fts": {"stemming": true},
+  "fields": [
+    {"name": "id", "type": "text", "weight": 2},
+    {"name": "title", "type": "text"},
+    {"name": "body", "type": "text", "weight": 0.5}
+  ]
+}
+
+###
+# @name upsertDocument
+# Add a document to the 'articles' collection
+POST {{host}}/documents/upsert
+Content-Type: application/json
+
+{
+    "collection": "articles",
+    "document": {
+        "id": "doc-001",
+        "title": "Go FTS",
+        "body": "This is a test document about Full-Text Search in Go."
+    }
+}
+
+###
+# @name searchForDoc
+# Search for the document we just added
+POST {{host}}/search
+Content-Type: application/json
+
+{
+    "collection": "articles",
+    "query": "search"
+}
+
+###
+# @name deleteDocument
+# Delete the document with id 'doc-001'
+POST {{host}}/documents/delete
+Content-Type: application/json
+
+{
+    "collection": "articles",
+    "id": "doc-001"
+}
+
+###
+# @name searchForDeletedDoc
+# Search for the document again to confirm it's gone (should return empty Hits)
+POST {{host}}/search
+Content-Type: application/json
+
+{
+    "collection": "articles",
+    "query": "search"
+}
+
+###
+# @name deleteCollection
+# Delete the entire 'articles' collection
+POST {{host}}/collections/delete
+Content-Type: application/json
+
+{
+    "name": "articles"
+}

@@ -1,0 +1,7 @@
+{"time":"2025-09-30T18:05:01.400114924+08:00","level":"INFO","msg":"Database initialized successfully."}
+{"time":"2025-09-30T18:05:01.417804324+08:00","level":"INFO","msg":"FTS engine initialized successfully."}
+{"time":"2025-09-30T18:05:01.419131824+08:00","level":"INFO","msg":"Server listening","address":"http://localhost:5122"}
+{"time":"2025-09-30T18:05:01.419299824+08:00","level":"INFO","msg":"Database file","path":"db.sqlite"}
+{"time":"2025-09-30T18:05:22.117623908+08:00","level":"ERROR","msg":"Failed to upsert document","collection":"articles","error":"collection not found"}
+{"time":"2025-09-30T18:05:48.714952237+08:00","level":"INFO","msg":"Successfully created collection","collection":"articles"}
+{"time":"2025-09-30T18:06:23.621644308+08:00","level":"INFO","msg":"Successfully created collection","collection":"articles2"}

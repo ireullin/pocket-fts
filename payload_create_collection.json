@@ -1,0 +1,10 @@
+{
+  "name": "articles",
+  "primary_key": "id",
+  "fts": {"stemming": true},
+  "fields": [
+    {"name": "id", "type": "text", "weight": 2},
+    {"name": "title", "type": "text"},
+    {"name": "body", "type": "text", "weight": 0.5}
+  ]
+}

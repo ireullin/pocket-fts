@@ -1,0 +1,28 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+pocket_fts
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# SQLite database files
+*.sqlite
+*.sqlite3
+db.sqlite
+
+# Environment files
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db

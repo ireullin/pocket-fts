@@ -1,0 +1,8 @@
+{
+    "collection": "articles",
+    "document": {
+        "id": "doc-001",
+        "title": "Go FTS",
+        "body": "This is a test document about Full-Text Search in Go."
+    }
+}
