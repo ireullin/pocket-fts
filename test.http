@@ -26,7 +26,7 @@ POST {{host}}/documents/upsert
 Content-Type: application/json
 
 {
-    "collection": "articles",
+    "collection": "articles2",
     "document": {
         "id": "doc-001",
         "title": "Go FTS",

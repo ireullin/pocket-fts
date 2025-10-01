@@ -103,6 +103,7 @@ extern int FtsDeleteCollection(long long unsigned int handle, char* collectionNa
 extern int FtsSearch(long long unsigned int handle, char* collectionName, char* requestJSON, char** resultOut, char** errOut);
 extern void FtsFree(void* ptr);
 extern void FtsSetLogCallback(fts_log_cb_t cb, void* user);
+extern char* FtsVersion(void);
 
 #ifdef __cplusplus
 }

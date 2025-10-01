@@ -19,7 +19,7 @@ vendor/
 *.sqlite
 *.sqlite3
 db.sqlite
-
+.db
 # Environment files
 .env
 

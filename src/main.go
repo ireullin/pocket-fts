@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"log/slog"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 var db *sql.DB
 var logger *slog.Logger
 var fts *FTS
+var queryExecutor *QueryExecutor
 
 func main() {
 	logFile, err := os.OpenFile("pocket_fts.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
@@ -20,7 +22,10 @@ func main() {
 		log.Fatalf("failed to open log file: %v", err)
 	}
 	defer logFile.Close()
-	logger = slog.New(slog.NewJSONHandler(logFile, nil))
+	
+	// 使用 MultiWriter 同時寫到檔案和 console
+	multiWriter := io.MultiWriter(os.Stdout, logFile)
+	logger = slog.New(slog.NewJSONHandler(multiWriter, nil))
 
 	port := flag.Int("p", 5122, "Port to listen on")
 	dbFile := flag.String("f", "db.sqlite", "Database file path")
@@ -42,6 +47,18 @@ func main() {
 	}
 	defer fts.Close()
 	logger.Info("FTS engine initialized successfully.")
+	
+	// 設定 FTS C library 的 log callback
+	SetupFTSLogging()
+	logger.Info("FTS logging setup completed.")
+	
+	// 記錄 FTS 版本
+	ftsVersion := GetFTSVersion()
+	logger.Info("FTS core version", "version", ftsVersion)
+	
+	// 初始化查詢執行器
+	queryExecutor = NewQueryExecutor(db, fts)
+	logger.Info("Query executor initialized successfully.")
 
 	// Register API handlers
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +69,7 @@ func main() {
 	http.HandleFunc("/documents/upsert", handleDocumentUpsert)
 	http.HandleFunc("/documents/delete", handleDocumentDelete)
 	http.HandleFunc("/search", handleSearch)
+	http.HandleFunc("/query", handleQuery)
 
 	addr := fmt.Sprintf(":%d", *port)
 	logger.Info("Server listening", "address", fmt.Sprintf("http://localhost%s", addr))

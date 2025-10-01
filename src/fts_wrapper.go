@@ -5,9 +5,8 @@ package main
 #include <stdlib.h>
 #include "../lib/libftscore.h"
 
-// Forward declarations for functions from the .md file that might be missing in the .h file
-int FtsDeleteDocument(unsigned long long handle, char* collection_name, char* primary_key_json, char** err);
-int FtsDeleteCollection(unsigned long long handle, char* collection_name, char** err);
+// C callback function that will forward to Go
+extern void logCallback(int level, char* message, void* user_data);
 */
 import "C"
 import (
@@ -147,4 +146,42 @@ func (f *FTS) DeleteDocument(collectionName, primaryKeyJSON string) error {
 		return cToGoError(errOut)
 	}
 	return nil
+}
+
+// GetVersion returns the FTS core version string
+func GetFTSVersion() string {
+	versionCStr := C.FtsVersion()
+	if versionCStr == nil {
+		return "unknown"
+	}
+	version := C.GoString(versionCStr)
+	C.FtsFree(unsafe.Pointer(versionCStr))
+	return version
+}
+
+// SetupFTSLogging sets up the FTS C library to forward its logs to the Go logger
+func SetupFTSLogging() {
+	C.FtsSetLogCallback((C.fts_log_cb_t)(unsafe.Pointer(C.logCallback)), nil)
+}
+
+//export logCallback
+func logCallback(level C.int, message *C.char, userData unsafe.Pointer) {
+	if logger == nil {
+		return
+	}
+	
+	msg := C.GoString(message)
+	
+	switch int(level) {
+	case 0: // Debug
+		logger.Debug("FTS: " + msg)
+	case 1: // Info
+		logger.Info("FTS: " + msg)
+	case 2: // Warn
+		logger.Warn("FTS: " + msg)
+	case 3: // Error
+		logger.Error("FTS: " + msg)
+	default:
+		logger.Info("FTS: " + msg)
+	}
 }

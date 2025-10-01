@@ -1,0 +1,991 @@
+{"time":"2025-10-01T18:25:48.297080972+08:00","level":"INFO","msg":"Database initialized successfully."}
+{"time":"2025-10-01T18:25:48.323460772+08:00","level":"INFO","msg":"FTS engine initialized successfully."}
+{"time":"2025-10-01T18:25:48.323681672+08:00","level":"INFO","msg":"FTS logging setup completed."}
+{"time":"2025-10-01T18:25:48.323887772+08:00","level":"INFO","msg":"FTS core version","version":"v0.8"}
+{"time":"2025-10-01T18:25:48.324079172+08:00","level":"INFO","msg":"Query executor initialized successfully."}
+{"time":"2025-10-01T18:25:48.324381772+08:00","level":"INFO","msg":"Server listening","address":"http://localhost:5122"}
+{"time":"2025-10-01T18:25:48.324580172+08:00","level":"INFO","msg":"Database file","path":"db.sqlite"}
+{"time":"2025-10-01T18:25:53.260630654+08:00","level":"INFO","msg":"Collection delete request received","method":"POST","remote_addr":"127.0.0.1:46886"}
+{"time":"2025-10-01T18:25:53.263477354+08:00","level":"ERROR","msg":"Failed to delete collection schema from DB","collection":"products","error":"collection 'products' not found, nothing deleted"}
+{"time":"2025-10-01T18:25:53.265229754+08:00","level":"INFO","msg":"Collection create request received","method":"POST","remote_addr":"127.0.0.1:46902"}
+{"time":"2025-10-01T18:25:53.308926054+08:00","level":"INFO","msg":"Successfully created collection, FTS index, and SQL table","collection":"products"}
+{"time":"2025-10-01T18:25:53.311594254+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46916"}
+{"time":"2025-10-01T18:25:53.329679354+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46916"}
+{"time":"2025-10-01T18:25:53.330857254+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46926"}
+{"time":"2025-10-01T18:25:53.347210254+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46926"}
+{"time":"2025-10-01T18:25:53.348917354+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46928"}
+{"time":"2025-10-01T18:25:53.363675453+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46928"}
+{"time":"2025-10-01T18:25:53.364988953+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46930"}
+{"time":"2025-10-01T18:25:53.380138453+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46930"}
+{"time":"2025-10-01T18:25:53.381364653+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46944"}
+{"time":"2025-10-01T18:25:53.396147753+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46944"}
+{"time":"2025-10-01T18:25:53.397373453+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46958"}
+{"time":"2025-10-01T18:25:53.412221853+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46958"}
+{"time":"2025-10-01T18:25:53.413411753+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46968"}
+{"time":"2025-10-01T18:25:53.428707153+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46968"}
+{"time":"2025-10-01T18:25:53.430073753+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46978"}
+{"time":"2025-10-01T18:25:53.445938453+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46978"}
+{"time":"2025-10-01T18:25:53.447304353+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46986"}
+{"time":"2025-10-01T18:25:53.461241852+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46986"}
+{"time":"2025-10-01T18:25:53.462398452+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:46992"}
+{"time":"2025-10-01T18:25:53.475997452+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:46992"}
+{"time":"2025-10-01T18:25:53.477278652+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47006"}
+{"time":"2025-10-01T18:25:53.490899452+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47006"}
+{"time":"2025-10-01T18:25:53.492226952+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47016"}
+{"time":"2025-10-01T18:25:53.506875752+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47016"}
+{"time":"2025-10-01T18:25:53.508236252+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47022"}
+{"time":"2025-10-01T18:25:53.525183352+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47022"}
+{"time":"2025-10-01T18:25:53.526490452+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47032"}
+{"time":"2025-10-01T18:25:53.540067452+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47032"}
+{"time":"2025-10-01T18:25:53.541330752+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47046"}
+{"time":"2025-10-01T18:25:53.555212452+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47046"}
+{"time":"2025-10-01T18:25:53.556484352+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47050"}
+{"time":"2025-10-01T18:25:53.572043851+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47050"}
+{"time":"2025-10-01T18:25:53.573280351+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47060"}
+{"time":"2025-10-01T18:25:53.588071351+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47060"}
+{"time":"2025-10-01T18:25:53.589352251+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47076"}
+{"time":"2025-10-01T18:25:53.604674251+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47076"}
+{"time":"2025-10-01T18:25:53.606264651+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47088"}
+{"time":"2025-10-01T18:25:53.622634751+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47088"}
+{"time":"2025-10-01T18:25:53.624039951+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47098"}
+{"time":"2025-10-01T18:25:53.638765351+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47098"}
+{"time":"2025-10-01T18:25:53.640128551+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47114"}
+{"time":"2025-10-01T18:25:53.655789751+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47114"}
+{"time":"2025-10-01T18:25:53.657004751+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47116"}
+{"time":"2025-10-01T18:25:53.67263345+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47116"}
+{"time":"2025-10-01T18:25:53.67395155+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47118"}
+{"time":"2025-10-01T18:25:53.68881865+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47118"}
+{"time":"2025-10-01T18:25:53.69004365+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47130"}
+{"time":"2025-10-01T18:25:53.70618155+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47130"}
+{"time":"2025-10-01T18:25:53.70744905+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47144"}
+{"time":"2025-10-01T18:25:53.72379935+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47144"}
+{"time":"2025-10-01T18:25:53.72509235+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47160"}
+{"time":"2025-10-01T18:25:53.73999985+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47160"}
+{"time":"2025-10-01T18:25:53.74145105+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47174"}
+{"time":"2025-10-01T18:25:53.75765275+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47174"}
+{"time":"2025-10-01T18:25:53.75893495+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47188"}
+{"time":"2025-10-01T18:25:53.773959949+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47188"}
+{"time":"2025-10-01T18:25:53.775259749+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47204"}
+{"time":"2025-10-01T18:25:53.790573649+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47204"}
+{"time":"2025-10-01T18:25:53.791749749+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47212"}
+{"time":"2025-10-01T18:25:53.805738249+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47212"}
+{"time":"2025-10-01T18:25:53.806925649+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47216"}
+{"time":"2025-10-01T18:25:53.822752849+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47216"}
+{"time":"2025-10-01T18:25:53.824092349+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47232"}
+{"time":"2025-10-01T18:25:53.839523249+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47232"}
+{"time":"2025-10-01T18:25:53.840762649+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47238"}
+{"time":"2025-10-01T18:25:53.856012749+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47238"}
+{"time":"2025-10-01T18:25:53.857209149+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47240"}
+{"time":"2025-10-01T18:25:53.872221948+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47240"}
+{"time":"2025-10-01T18:25:53.873580548+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47252"}
+{"time":"2025-10-01T18:25:53.889525848+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47252"}
+{"time":"2025-10-01T18:25:53.890737948+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47260"}
+{"time":"2025-10-01T18:25:53.905405648+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47260"}
+{"time":"2025-10-01T18:25:53.906434248+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47266"}
+{"time":"2025-10-01T18:25:53.921047148+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47266"}
+{"time":"2025-10-01T18:25:53.922462348+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47278"}
+{"time":"2025-10-01T18:25:53.938966348+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47278"}
+{"time":"2025-10-01T18:25:53.940495748+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47280"}
+{"time":"2025-10-01T18:25:53.958011248+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47280"}
+{"time":"2025-10-01T18:25:53.959572448+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47288"}
+{"time":"2025-10-01T18:25:53.976928147+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47288"}
+{"time":"2025-10-01T18:25:53.978576847+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47294"}
+{"time":"2025-10-01T18:25:53.998639847+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47294"}
+{"time":"2025-10-01T18:25:54.000162847+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47300"}
+{"time":"2025-10-01T18:25:54.017531547+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47300"}
+{"time":"2025-10-01T18:25:54.018941947+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47304"}
+{"time":"2025-10-01T18:25:54.034949947+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47304"}
+{"time":"2025-10-01T18:25:54.036403747+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47318"}
+{"time":"2025-10-01T18:25:54.053552047+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47318"}
+{"time":"2025-10-01T18:25:54.055048247+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47326"}
+{"time":"2025-10-01T18:25:54.073197046+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47326"}
+{"time":"2025-10-01T18:25:54.074674746+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47332"}
+{"time":"2025-10-01T18:25:54.095112946+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47332"}
+{"time":"2025-10-01T18:25:54.096457446+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47340"}
+{"time":"2025-10-01T18:25:54.113905946+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47340"}
+{"time":"2025-10-01T18:25:54.115266046+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47342"}
+{"time":"2025-10-01T18:25:54.131674946+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47342"}
+{"time":"2025-10-01T18:25:54.132971746+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47358"}
+{"time":"2025-10-01T18:25:54.148578146+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47358"}
+{"time":"2025-10-01T18:25:54.150062446+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47368"}
+{"time":"2025-10-01T18:25:54.166834646+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47368"}
+{"time":"2025-10-01T18:25:54.168316546+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47374"}
+{"time":"2025-10-01T18:25:54.185695145+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47374"}
+{"time":"2025-10-01T18:25:54.186982345+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47384"}
+{"time":"2025-10-01T18:25:54.203083145+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47384"}
+{"time":"2025-10-01T18:25:54.204515145+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47400"}
+{"time":"2025-10-01T18:25:54.220434645+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47400"}
+{"time":"2025-10-01T18:25:54.221787945+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47408"}
+{"time":"2025-10-01T18:25:54.239783045+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47408"}
+{"time":"2025-10-01T18:25:54.241148045+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47422"}
+{"time":"2025-10-01T18:25:54.258205345+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47422"}
+{"time":"2025-10-01T18:25:54.259480645+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47438"}
+{"time":"2025-10-01T18:25:54.276205344+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47438"}
+{"time":"2025-10-01T18:25:54.277465744+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47450"}
+{"time":"2025-10-01T18:25:54.418735143+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47450"}
+{"time":"2025-10-01T18:25:54.420049643+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47458"}
+{"time":"2025-10-01T18:25:54.540697342+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47458"}
+{"time":"2025-10-01T18:25:54.541818242+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47462"}
+{"time":"2025-10-01T18:25:54.602929741+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47462"}
+{"time":"2025-10-01T18:25:54.604272941+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47474"}
+{"time":"2025-10-01T18:25:54.666278941+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47474"}
+{"time":"2025-10-01T18:25:54.667524541+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47484"}
+{"time":"2025-10-01T18:25:54.72948424+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47484"}
+{"time":"2025-10-01T18:25:54.73077404+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47486"}
+{"time":"2025-10-01T18:25:54.788628439+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47486"}
+{"time":"2025-10-01T18:25:54.789860539+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47488"}
+{"time":"2025-10-01T18:25:54.849789839+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47488"}
+{"time":"2025-10-01T18:25:54.850987239+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47498"}
+{"time":"2025-10-01T18:25:54.911060938+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47498"}
+{"time":"2025-10-01T18:25:54.912390738+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47510"}
+{"time":"2025-10-01T18:25:54.976976838+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47510"}
+{"time":"2025-10-01T18:25:54.978513738+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47524"}
+{"time":"2025-10-01T18:25:55.035853437+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47524"}
+{"time":"2025-10-01T18:25:55.037056437+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47540"}
+{"time":"2025-10-01T18:25:55.098555636+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47540"}
+{"time":"2025-10-01T18:25:55.099734336+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47552"}
+{"time":"2025-10-01T18:25:55.163736636+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47552"}
+{"time":"2025-10-01T18:25:55.164788236+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47562"}
+{"time":"2025-10-01T18:25:55.228730435+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47562"}
+{"time":"2025-10-01T18:25:55.230017235+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47570"}
+{"time":"2025-10-01T18:25:55.304130234+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47570"}
+{"time":"2025-10-01T18:25:55.305557634+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47574"}
+{"time":"2025-10-01T18:25:55.364885934+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47574"}
+{"time":"2025-10-01T18:25:55.366099834+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47578"}
+{"time":"2025-10-01T18:25:55.421143033+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47578"}
+{"time":"2025-10-01T18:25:55.422362833+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47592"}
+{"time":"2025-10-01T18:25:55.478334433+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47592"}
+{"time":"2025-10-01T18:25:55.479567333+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47608"}
+{"time":"2025-10-01T18:25:55.536690532+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47608"}
+{"time":"2025-10-01T18:25:55.538048232+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47614"}
+{"time":"2025-10-01T18:25:55.596407631+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47614"}
+{"time":"2025-10-01T18:25:55.597642931+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47616"}
+{"time":"2025-10-01T18:25:55.656695931+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47616"}
+{"time":"2025-10-01T18:25:55.657972031+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47632"}
+{"time":"2025-10-01T18:25:55.72751103+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47632"}
+{"time":"2025-10-01T18:25:55.72878853+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47648"}
+{"time":"2025-10-01T18:25:55.78538513+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47648"}
+{"time":"2025-10-01T18:25:55.78692293+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47658"}
+{"time":"2025-10-01T18:25:55.843613229+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47658"}
+{"time":"2025-10-01T18:25:55.845012529+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47672"}
+{"time":"2025-10-01T18:25:55.903578128+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47672"}
+{"time":"2025-10-01T18:25:55.904910828+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47686"}
+{"time":"2025-10-01T18:25:55.966473128+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47686"}
+{"time":"2025-10-01T18:25:55.967726728+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47696"}
+{"time":"2025-10-01T18:25:56.029690527+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47696"}
+{"time":"2025-10-01T18:25:56.031046927+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47708"}
+{"time":"2025-10-01T18:25:56.093530327+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47708"}
+{"time":"2025-10-01T18:25:56.094723827+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47710"}
+{"time":"2025-10-01T18:25:56.160620326+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47710"}
+{"time":"2025-10-01T18:25:56.161832026+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47720"}
+{"time":"2025-10-01T18:25:56.219226925+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47720"}
+{"time":"2025-10-01T18:25:56.220395125+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47734"}
+{"time":"2025-10-01T18:25:56.277559425+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47734"}
+{"time":"2025-10-01T18:25:56.278975325+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47742"}
+{"time":"2025-10-01T18:25:56.336831324+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47742"}
+{"time":"2025-10-01T18:25:56.338105924+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47758"}
+{"time":"2025-10-01T18:25:56.401938224+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47758"}
+{"time":"2025-10-01T18:25:56.403358124+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47772"}
+{"time":"2025-10-01T18:25:56.461687323+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47772"}
+{"time":"2025-10-01T18:25:56.462787423+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47784"}
+{"time":"2025-10-01T18:25:56.516467422+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47784"}
+{"time":"2025-10-01T18:25:56.517828022+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47788"}
+{"time":"2025-10-01T18:25:56.574141222+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47788"}
+{"time":"2025-10-01T18:25:56.575313222+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47796"}
+{"time":"2025-10-01T18:25:56.634813921+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47796"}
+{"time":"2025-10-01T18:25:56.636144421+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47804"}
+{"time":"2025-10-01T18:25:56.694005321+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47804"}
+{"time":"2025-10-01T18:25:56.695406921+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47818"}
+{"time":"2025-10-01T18:25:56.75240302+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47818"}
+{"time":"2025-10-01T18:25:56.75356662+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47828"}
+{"time":"2025-10-01T18:25:56.817924119+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47828"}
+{"time":"2025-10-01T18:25:56.819231619+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47840"}
+{"time":"2025-10-01T18:25:56.881636319+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47840"}
+{"time":"2025-10-01T18:25:56.883040919+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47850"}
+{"time":"2025-10-01T18:25:56.943797518+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47850"}
+{"time":"2025-10-01T18:25:56.945212318+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47864"}
+{"time":"2025-10-01T18:25:57.006261618+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47864"}
+{"time":"2025-10-01T18:25:57.007780018+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47876"}
+{"time":"2025-10-01T18:25:57.068175717+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47876"}
+{"time":"2025-10-01T18:25:57.069354817+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47882"}
+{"time":"2025-10-01T18:25:57.127522716+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47882"}
+{"time":"2025-10-01T18:25:57.129048016+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47884"}
+{"time":"2025-10-01T18:25:57.186447616+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47884"}
+{"time":"2025-10-01T18:25:57.188075616+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47888"}
+{"time":"2025-10-01T18:25:57.244622715+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47888"}
+{"time":"2025-10-01T18:25:57.246231315+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47902"}
+{"time":"2025-10-01T18:25:57.303231515+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47902"}
+{"time":"2025-10-01T18:25:57.304533015+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47906"}
+{"time":"2025-10-01T18:25:57.361089114+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47906"}
+{"time":"2025-10-01T18:25:57.362173414+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47922"}
+{"time":"2025-10-01T18:25:57.417883414+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47922"}
+{"time":"2025-10-01T18:25:57.419237514+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47930"}
+{"time":"2025-10-01T18:25:57.473792713+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47930"}
+{"time":"2025-10-01T18:25:57.474990113+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47938"}
+{"time":"2025-10-01T18:25:57.515679713+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47938"}
+{"time":"2025-10-01T18:25:57.517185113+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47944"}
+{"time":"2025-10-01T18:25:57.560046612+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47944"}
+{"time":"2025-10-01T18:25:57.561342112+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47952"}
+{"time":"2025-10-01T18:25:57.603358412+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47952"}
+{"time":"2025-10-01T18:25:57.604689712+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47958"}
+{"time":"2025-10-01T18:25:57.648899311+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47958"}
+{"time":"2025-10-01T18:25:57.650266511+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47972"}
+{"time":"2025-10-01T18:25:57.692757011+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47972"}
+{"time":"2025-10-01T18:25:57.694106111+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47978"}
+{"time":"2025-10-01T18:25:57.73887811+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47978"}
+{"time":"2025-10-01T18:25:57.74015041+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47992"}
+{"time":"2025-10-01T18:25:57.78264201+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47992"}
+{"time":"2025-10-01T18:25:57.78391931+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:47994"}
+{"time":"2025-10-01T18:25:57.82820301+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:47994"}
+{"time":"2025-10-01T18:25:57.82958231+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48000"}
+{"time":"2025-10-01T18:25:57.871524409+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48000"}
+{"time":"2025-10-01T18:25:57.872720709+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48002"}
+{"time":"2025-10-01T18:25:57.914071309+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48002"}
+{"time":"2025-10-01T18:25:57.915420809+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48012"}
+{"time":"2025-10-01T18:25:57.958398508+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48012"}
+{"time":"2025-10-01T18:25:57.959717508+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48026"}
+{"time":"2025-10-01T18:25:58.002566008+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48026"}
+{"time":"2025-10-01T18:25:58.003720808+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48028"}
+{"time":"2025-10-01T18:25:58.045782207+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48028"}
+{"time":"2025-10-01T18:25:58.047226907+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48030"}
+{"time":"2025-10-01T18:25:58.090334707+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48030"}
+{"time":"2025-10-01T18:25:58.091422707+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48042"}
+{"time":"2025-10-01T18:25:58.133661007+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48042"}
+{"time":"2025-10-01T18:25:58.135021807+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48044"}
+{"time":"2025-10-01T18:25:58.176733906+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48044"}
+{"time":"2025-10-01T18:25:58.178093306+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48052"}
+{"time":"2025-10-01T18:25:58.223116706+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48052"}
+{"time":"2025-10-01T18:25:58.224367206+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48056"}
+{"time":"2025-10-01T18:25:58.266391705+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48056"}
+{"time":"2025-10-01T18:25:58.267683305+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48062"}
+{"time":"2025-10-01T18:25:58.316990005+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48062"}
+{"time":"2025-10-01T18:25:58.318319305+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48066"}
+{"time":"2025-10-01T18:25:58.360264804+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48066"}
+{"time":"2025-10-01T18:25:58.361500104+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:48076"}
+{"time":"2025-10-01T18:25:58.403605804+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:48076"}
+{"time":"2025-10-01T18:25:58.404930504+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60136"}
+{"time":"2025-10-01T18:25:58.446239303+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60136"}
+{"time":"2025-10-01T18:25:58.447851203+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60142"}
+{"time":"2025-10-01T18:25:58.498122903+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60142"}
+{"time":"2025-10-01T18:25:58.499654303+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60146"}
+{"time":"2025-10-01T18:25:58.541272903+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60146"}
+{"time":"2025-10-01T18:25:58.542494902+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60152"}
+{"time":"2025-10-01T18:25:58.581767702+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60152"}
+{"time":"2025-10-01T18:25:58.583085702+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60166"}
+{"time":"2025-10-01T18:25:58.623747302+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60166"}
+{"time":"2025-10-01T18:25:58.624962102+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60180"}
+{"time":"2025-10-01T18:25:58.667203901+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60180"}
+{"time":"2025-10-01T18:25:58.668682201+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60192"}
+{"time":"2025-10-01T18:25:58.711165601+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60192"}
+{"time":"2025-10-01T18:25:58.712614701+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60198"}
+{"time":"2025-10-01T18:25:58.7554602+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60198"}
+{"time":"2025-10-01T18:25:58.7565659+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60202"}
+{"time":"2025-10-01T18:25:58.7984744+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60202"}
+{"time":"2025-10-01T18:25:58.7998296+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60208"}
+{"time":"2025-10-01T18:25:58.8422315+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60208"}
+{"time":"2025-10-01T18:25:58.843374+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60216"}
+{"time":"2025-10-01T18:25:58.886054199+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60216"}
+{"time":"2025-10-01T18:25:58.887585899+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60226"}
+{"time":"2025-10-01T18:25:58.930679399+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60226"}
+{"time":"2025-10-01T18:25:58.931882899+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60236"}
+{"time":"2025-10-01T18:25:58.974264598+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60236"}
+{"time":"2025-10-01T18:25:58.975384398+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60246"}
+{"time":"2025-10-01T18:25:59.017874298+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60246"}
+{"time":"2025-10-01T18:25:59.019072798+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60254"}
+{"time":"2025-10-01T18:25:59.061044498+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60254"}
+{"time":"2025-10-01T18:25:59.062622798+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60266"}
+{"time":"2025-10-01T18:25:59.105856898+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60266"}
+{"time":"2025-10-01T18:25:59.107470498+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60278"}
+{"time":"2025-10-01T18:25:59.150421398+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60278"}
+{"time":"2025-10-01T18:25:59.152902998+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60280"}
+{"time":"2025-10-01T18:25:59.195812199+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60280"}
+{"time":"2025-10-01T18:25:59.197250099+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60292"}
+{"time":"2025-10-01T18:25:59.240242699+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60292"}
+{"time":"2025-10-01T18:25:59.241562499+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60306"}
+{"time":"2025-10-01T18:25:59.283679999+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60306"}
+{"time":"2025-10-01T18:25:59.285159199+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60308"}
+{"time":"2025-10-01T18:25:59.3287193+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60308"}
+{"time":"2025-10-01T18:25:59.3299838+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60324"}
+{"time":"2025-10-01T18:25:59.3724456+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60324"}
+{"time":"2025-10-01T18:25:59.3735694+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60330"}
+{"time":"2025-10-01T18:25:59.4174015+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60330"}
+{"time":"2025-10-01T18:25:59.4186366+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60332"}
+{"time":"2025-10-01T18:25:59.470354201+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60332"}
+{"time":"2025-10-01T18:25:59.471752401+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60348"}
+{"time":"2025-10-01T18:25:59.518751401+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60348"}
+{"time":"2025-10-01T18:25:59.520218501+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60360"}
+{"time":"2025-10-01T18:25:59.565246902+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60360"}
+{"time":"2025-10-01T18:25:59.566679802+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60376"}
+{"time":"2025-10-01T18:25:59.612935702+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60376"}
+{"time":"2025-10-01T18:25:59.614148902+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60388"}
+{"time":"2025-10-01T18:25:59.656539202+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60388"}
+{"time":"2025-10-01T18:25:59.657707602+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60390"}
+{"time":"2025-10-01T18:25:59.700095003+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60390"}
+{"time":"2025-10-01T18:25:59.701403303+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60394"}
+{"time":"2025-10-01T18:25:59.743229203+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60394"}
+{"time":"2025-10-01T18:25:59.744442903+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60396"}
+{"time":"2025-10-01T18:25:59.786350203+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60396"}
+{"time":"2025-10-01T18:25:59.787760603+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60406"}
+{"time":"2025-10-01T18:25:59.833248904+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60406"}
+{"time":"2025-10-01T18:25:59.834630004+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60412"}
+{"time":"2025-10-01T18:25:59.938802104+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60412"}
+{"time":"2025-10-01T18:25:59.939971704+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60424"}
+{"time":"2025-10-01T18:26:00.056255105+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60424"}
+{"time":"2025-10-01T18:26:00.058214805+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60430"}
+{"time":"2025-10-01T18:26:00.207565006+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60430"}
+{"time":"2025-10-01T18:26:00.209833306+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60442"}
+{"time":"2025-10-01T18:26:00.468542908+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60442"}
+{"time":"2025-10-01T18:26:00.470197808+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60450"}
+{"time":"2025-10-01T18:26:00.67273751+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60450"}
+{"time":"2025-10-01T18:26:00.67393181+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60452"}
+{"time":"2025-10-01T18:26:00.882748412+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60452"}
+{"time":"2025-10-01T18:26:00.886009312+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60468"}
+{"time":"2025-10-01T18:26:01.100855013+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60468"}
+{"time":"2025-10-01T18:26:01.102028513+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60482"}
+{"time":"2025-10-01T18:26:01.300473615+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60482"}
+{"time":"2025-10-01T18:26:01.301761515+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60490"}
+{"time":"2025-10-01T18:26:01.512657816+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60490"}
+{"time":"2025-10-01T18:26:01.517376016+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60502"}
+{"time":"2025-10-01T18:26:01.758138718+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60502"}
+{"time":"2025-10-01T18:26:01.759439718+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60510"}
+{"time":"2025-10-01T18:26:01.96206882+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60510"}
+{"time":"2025-10-01T18:26:01.96329382+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60516"}
+{"time":"2025-10-01T18:26:02.162878821+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60516"}
+{"time":"2025-10-01T18:26:02.164516421+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60526"}
+{"time":"2025-10-01T18:26:02.360260923+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60526"}
+{"time":"2025-10-01T18:26:02.361469023+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60532"}
+{"time":"2025-10-01T18:26:02.601917925+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60532"}
+{"time":"2025-10-01T18:26:02.603142125+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60536"}
+{"time":"2025-10-01T18:26:02.794000626+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60536"}
+{"time":"2025-10-01T18:26:02.795289926+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60550"}
+{"time":"2025-10-01T18:26:02.979847928+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60550"}
+{"time":"2025-10-01T18:26:02.981257428+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60562"}
+{"time":"2025-10-01T18:26:03.166831929+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60562"}
+{"time":"2025-10-01T18:26:03.168196929+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60566"}
+{"time":"2025-10-01T18:26:03.363282431+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60566"}
+{"time":"2025-10-01T18:26:03.366845731+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60574"}
+{"time":"2025-10-01T18:26:03.570820732+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60574"}
+{"time":"2025-10-01T18:26:03.572482932+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60590"}
+{"time":"2025-10-01T18:26:03.758645934+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60590"}
+{"time":"2025-10-01T18:26:03.760036834+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60604"}
+{"time":"2025-10-01T18:26:03.945279535+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60604"}
+{"time":"2025-10-01T18:26:03.946513535+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60606"}
+{"time":"2025-10-01T18:26:04.160916937+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60606"}
+{"time":"2025-10-01T18:26:04.163717037+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60618"}
+{"time":"2025-10-01T18:26:04.203793837+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60618"}
+{"time":"2025-10-01T18:26:04.206473237+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60632"}
+{"time":"2025-10-01T18:26:04.238202337+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60632"}
+{"time":"2025-10-01T18:26:04.239819837+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60640"}
+{"time":"2025-10-01T18:26:04.263553037+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60640"}
+{"time":"2025-10-01T18:26:04.265159037+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60648"}
+{"time":"2025-10-01T18:26:04.288098838+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60648"}
+{"time":"2025-10-01T18:26:04.289248938+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60656"}
+{"time":"2025-10-01T18:26:04.305739338+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60656"}
+{"time":"2025-10-01T18:26:04.306884738+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60662"}
+{"time":"2025-10-01T18:26:04.323053338+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60662"}
+{"time":"2025-10-01T18:26:04.324245638+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60676"}
+{"time":"2025-10-01T18:26:04.339258738+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60676"}
+{"time":"2025-10-01T18:26:04.340357938+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60692"}
+{"time":"2025-10-01T18:26:04.357318238+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60692"}
+{"time":"2025-10-01T18:26:04.358646838+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60708"}
+{"time":"2025-10-01T18:26:04.374528738+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60708"}
+{"time":"2025-10-01T18:26:04.375904038+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60710"}
+{"time":"2025-10-01T18:26:04.391093438+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60710"}
+{"time":"2025-10-01T18:26:04.392272038+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60712"}
+{"time":"2025-10-01T18:26:04.409550339+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60712"}
+{"time":"2025-10-01T18:26:04.410654839+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60722"}
+{"time":"2025-10-01T18:26:04.425045839+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60722"}
+{"time":"2025-10-01T18:26:04.426129539+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60736"}
+{"time":"2025-10-01T18:26:04.441712539+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60736"}
+{"time":"2025-10-01T18:26:04.442873639+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60742"}
+{"time":"2025-10-01T18:26:04.458320239+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60742"}
+{"time":"2025-10-01T18:26:04.459557639+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60748"}
+{"time":"2025-10-01T18:26:04.475054139+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60748"}
+{"time":"2025-10-01T18:26:04.476265539+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60750"}
+{"time":"2025-10-01T18:26:04.492404739+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60750"}
+{"time":"2025-10-01T18:26:04.493918939+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60756"}
+{"time":"2025-10-01T18:26:04.512074739+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60756"}
+{"time":"2025-10-01T18:26:04.513310439+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60764"}
+{"time":"2025-10-01T18:26:04.532529239+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60764"}
+{"time":"2025-10-01T18:26:04.533913539+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60778"}
+{"time":"2025-10-01T18:26:04.55079334+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60778"}
+{"time":"2025-10-01T18:26:04.55200634+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60794"}
+{"time":"2025-10-01T18:26:04.56628854+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60794"}
+{"time":"2025-10-01T18:26:04.56749854+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60804"}
+{"time":"2025-10-01T18:26:04.58518284+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60804"}
+{"time":"2025-10-01T18:26:04.58636824+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60812"}
+{"time":"2025-10-01T18:26:04.60127294+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60812"}
+{"time":"2025-10-01T18:26:04.60231224+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60828"}
+{"time":"2025-10-01T18:26:04.61762874+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60828"}
+{"time":"2025-10-01T18:26:04.61885684+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60834"}
+{"time":"2025-10-01T18:26:04.63478034+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60834"}
+{"time":"2025-10-01T18:26:04.63589594+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60850"}
+{"time":"2025-10-01T18:26:04.65111124+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60850"}
+{"time":"2025-10-01T18:26:04.65229234+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60864"}
+{"time":"2025-10-01T18:26:04.66698644+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60864"}
+{"time":"2025-10-01T18:26:04.66809844+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60874"}
+{"time":"2025-10-01T18:26:04.682579741+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60874"}
+{"time":"2025-10-01T18:26:04.683705541+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60878"}
+{"time":"2025-10-01T18:26:04.697822841+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60878"}
+{"time":"2025-10-01T18:26:04.698873541+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60882"}
+{"time":"2025-10-01T18:26:04.714205041+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60882"}
+{"time":"2025-10-01T18:26:04.715226041+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60894"}
+{"time":"2025-10-01T18:26:04.729752241+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60894"}
+{"time":"2025-10-01T18:26:04.730727441+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60908"}
+{"time":"2025-10-01T18:26:04.746636341+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60908"}
+{"time":"2025-10-01T18:26:04.747846141+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60914"}
+{"time":"2025-10-01T18:26:04.766798941+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60914"}
+{"time":"2025-10-01T18:26:04.768305541+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60920"}
+{"time":"2025-10-01T18:26:04.786445441+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60920"}
+{"time":"2025-10-01T18:26:04.787578341+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60934"}
+{"time":"2025-10-01T18:26:04.805311342+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60934"}
+{"time":"2025-10-01T18:26:04.806549542+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60944"}
+{"time":"2025-10-01T18:26:04.824093642+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60944"}
+{"time":"2025-10-01T18:26:04.825244442+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60952"}
+{"time":"2025-10-01T18:26:04.842849042+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60952"}
+{"time":"2025-10-01T18:26:04.844015842+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60968"}
+{"time":"2025-10-01T18:26:04.857923742+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60968"}
+{"time":"2025-10-01T18:26:04.858911642+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60984"}
+{"time":"2025-10-01T18:26:04.873304442+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60984"}
+{"time":"2025-10-01T18:26:04.874290942+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:60996"}
+{"time":"2025-10-01T18:26:04.890092542+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:60996"}
+{"time":"2025-10-01T18:26:04.891091142+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32772"}
+{"time":"2025-10-01T18:26:04.906242542+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32772"}
+{"time":"2025-10-01T18:26:04.907315842+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32778"}
+{"time":"2025-10-01T18:26:04.922143042+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32778"}
+{"time":"2025-10-01T18:26:04.923185742+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32784"}
+{"time":"2025-10-01T18:26:04.937588543+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32784"}
+{"time":"2025-10-01T18:26:04.938649243+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32790"}
+{"time":"2025-10-01T18:26:04.952514643+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32790"}
+{"time":"2025-10-01T18:26:04.953570643+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32800"}
+{"time":"2025-10-01T18:26:04.967806443+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32800"}
+{"time":"2025-10-01T18:26:04.968795443+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32804"}
+{"time":"2025-10-01T18:26:04.985830343+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32804"}
+{"time":"2025-10-01T18:26:04.986979843+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32814"}
+{"time":"2025-10-01T18:26:05.001949443+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32814"}
+{"time":"2025-10-01T18:26:05.003109243+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32818"}
+{"time":"2025-10-01T18:26:05.018557043+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32818"}
+{"time":"2025-10-01T18:26:05.019668343+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32826"}
+{"time":"2025-10-01T18:26:05.034597243+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32826"}
+{"time":"2025-10-01T18:26:05.035814843+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32838"}
+{"time":"2025-10-01T18:26:05.050830843+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32838"}
+{"time":"2025-10-01T18:26:05.051988043+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32844"}
+{"time":"2025-10-01T18:26:05.066798544+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32844"}
+{"time":"2025-10-01T18:26:05.067980844+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32852"}
+{"time":"2025-10-01T18:26:05.083280244+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32852"}
+{"time":"2025-10-01T18:26:05.084528944+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32854"}
+{"time":"2025-10-01T18:26:05.099205044+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32854"}
+{"time":"2025-10-01T18:26:05.100527044+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32860"}
+{"time":"2025-10-01T18:26:05.116228544+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32860"}
+{"time":"2025-10-01T18:26:05.117387644+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32872"}
+{"time":"2025-10-01T18:26:05.134034144+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32872"}
+{"time":"2025-10-01T18:26:05.134987144+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32886"}
+{"time":"2025-10-01T18:26:05.150369644+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32886"}
+{"time":"2025-10-01T18:26:05.151511544+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32902"}
+{"time":"2025-10-01T18:26:05.166312244+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32902"}
+{"time":"2025-10-01T18:26:05.167485144+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32908"}
+{"time":"2025-10-01T18:26:05.181954744+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32908"}
+{"time":"2025-10-01T18:26:05.183130844+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32918"}
+{"time":"2025-10-01T18:26:05.199128145+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32918"}
+{"time":"2025-10-01T18:26:05.200351145+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32930"}
+{"time":"2025-10-01T18:26:05.215502745+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32930"}
+{"time":"2025-10-01T18:26:05.216737645+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32938"}
+{"time":"2025-10-01T18:26:05.233220645+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32938"}
+{"time":"2025-10-01T18:26:05.234295845+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32946"}
+{"time":"2025-10-01T18:26:05.248858245+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32946"}
+{"time":"2025-10-01T18:26:05.250367745+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32954"}
+{"time":"2025-10-01T18:26:05.265734145+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32954"}
+{"time":"2025-10-01T18:26:05.266886545+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32958"}
+{"time":"2025-10-01T18:26:05.281738545+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32958"}
+{"time":"2025-10-01T18:26:05.282813245+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32964"}
+{"time":"2025-10-01T18:26:05.298293545+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32964"}
+{"time":"2025-10-01T18:26:05.299451745+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32978"}
+{"time":"2025-10-01T18:26:05.313718145+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32978"}
+{"time":"2025-10-01T18:26:05.314824145+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:32992"}
+{"time":"2025-10-01T18:26:05.329199546+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:32992"}
+{"time":"2025-10-01T18:26:05.330178846+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33004"}
+{"time":"2025-10-01T18:26:05.345001646+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33004"}
+{"time":"2025-10-01T18:26:05.346041746+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33008"}
+{"time":"2025-10-01T18:26:05.360260946+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33008"}
+{"time":"2025-10-01T18:26:05.361327546+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33018"}
+{"time":"2025-10-01T18:26:05.375510646+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33018"}
+{"time":"2025-10-01T18:26:05.376787046+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33020"}
+{"time":"2025-10-01T18:26:05.393243846+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33020"}
+{"time":"2025-10-01T18:26:05.394403146+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33032"}
+{"time":"2025-10-01T18:26:05.410294846+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33032"}
+{"time":"2025-10-01T18:26:05.411611946+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33048"}
+{"time":"2025-10-01T18:26:05.428255146+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33048"}
+{"time":"2025-10-01T18:26:05.429264946+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33058"}
+{"time":"2025-10-01T18:26:05.445204846+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33058"}
+{"time":"2025-10-01T18:26:05.446438146+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33060"}
+{"time":"2025-10-01T18:26:05.462088247+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33060"}
+{"time":"2025-10-01T18:26:05.463329347+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33070"}
+{"time":"2025-10-01T18:26:05.478697047+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33070"}
+{"time":"2025-10-01T18:26:05.480005847+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33086"}
+{"time":"2025-10-01T18:26:05.494884147+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33086"}
+{"time":"2025-10-01T18:26:05.495938747+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33102"}
+{"time":"2025-10-01T18:26:05.511472047+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33102"}
+{"time":"2025-10-01T18:26:05.512435247+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33108"}
+{"time":"2025-10-01T18:26:05.528384347+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33108"}
+{"time":"2025-10-01T18:26:05.529871847+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33114"}
+{"time":"2025-10-01T18:26:05.546523947+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33114"}
+{"time":"2025-10-01T18:26:05.547880947+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33116"}
+{"time":"2025-10-01T18:26:05.563513947+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33116"}
+{"time":"2025-10-01T18:26:05.564640347+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33122"}
+{"time":"2025-10-01T18:26:05.579910747+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33122"}
+{"time":"2025-10-01T18:26:05.580881947+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33128"}
+{"time":"2025-10-01T18:26:05.596730948+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33128"}
+{"time":"2025-10-01T18:26:05.597897048+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33144"}
+{"time":"2025-10-01T18:26:05.612625048+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33144"}
+{"time":"2025-10-01T18:26:05.613690248+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33158"}
+{"time":"2025-10-01T18:26:05.628833148+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33158"}
+{"time":"2025-10-01T18:26:05.629857548+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33170"}
+{"time":"2025-10-01T18:26:05.643481248+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33170"}
+{"time":"2025-10-01T18:26:05.644684848+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33172"}
+{"time":"2025-10-01T18:26:05.659565248+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33172"}
+{"time":"2025-10-01T18:26:05.660652048+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33188"}
+{"time":"2025-10-01T18:26:05.675061748+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33188"}
+{"time":"2025-10-01T18:26:05.676242548+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33204"}
+{"time":"2025-10-01T18:26:05.691217548+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33204"}
+{"time":"2025-10-01T18:26:05.692408548+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33218"}
+{"time":"2025-10-01T18:26:05.709618748+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33218"}
+{"time":"2025-10-01T18:26:05.710838548+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33220"}
+{"time":"2025-10-01T18:26:05.729713749+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33220"}
+{"time":"2025-10-01T18:26:05.731042149+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33232"}
+{"time":"2025-10-01T18:26:05.748604849+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33232"}
+{"time":"2025-10-01T18:26:05.749760849+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33238"}
+{"time":"2025-10-01T18:26:05.766911049+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33238"}
+{"time":"2025-10-01T18:26:05.768174149+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33244"}
+{"time":"2025-10-01T18:26:05.784301249+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33244"}
+{"time":"2025-10-01T18:26:05.785549049+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33254"}
+{"time":"2025-10-01T18:26:05.801352749+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33254"}
+{"time":"2025-10-01T18:26:05.802421749+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33266"}
+{"time":"2025-10-01T18:26:05.818749149+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33266"}
+{"time":"2025-10-01T18:26:05.819877749+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33274"}
+{"time":"2025-10-01T18:26:05.835241649+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33274"}
+{"time":"2025-10-01T18:26:05.836382249+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33282"}
+{"time":"2025-10-01T18:26:05.85336605+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33282"}
+{"time":"2025-10-01T18:26:05.85441415+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33284"}
+{"time":"2025-10-01T18:26:05.86940045+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33284"}
+{"time":"2025-10-01T18:26:05.87041395+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33294"}
+{"time":"2025-10-01T18:26:05.88470065+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33294"}
+{"time":"2025-10-01T18:26:05.88574535+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33296"}
+{"time":"2025-10-01T18:26:05.90097765+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33296"}
+{"time":"2025-10-01T18:26:05.90201465+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33310"}
+{"time":"2025-10-01T18:26:05.91658905+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33310"}
+{"time":"2025-10-01T18:26:05.91763115+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33316"}
+{"time":"2025-10-01T18:26:05.93312335+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33316"}
+{"time":"2025-10-01T18:26:05.93412395+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33318"}
+{"time":"2025-10-01T18:26:05.95766535+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33318"}
+{"time":"2025-10-01T18:26:05.95866795+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33326"}
+{"time":"2025-10-01T18:26:05.97445075+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33326"}
+{"time":"2025-10-01T18:26:05.97553775+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33342"}
+{"time":"2025-10-01T18:26:05.992752151+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33342"}
+{"time":"2025-10-01T18:26:05.993720151+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33354"}
+{"time":"2025-10-01T18:26:06.008109651+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33354"}
+{"time":"2025-10-01T18:26:06.009078051+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33358"}
+{"time":"2025-10-01T18:26:06.023514851+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33358"}
+{"time":"2025-10-01T18:26:06.024872751+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33370"}
+{"time":"2025-10-01T18:26:06.040391851+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33370"}
+{"time":"2025-10-01T18:26:06.041536051+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33376"}
+{"time":"2025-10-01T18:26:06.058941751+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33376"}
+{"time":"2025-10-01T18:26:06.060284151+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33380"}
+{"time":"2025-10-01T18:26:06.075520151+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33380"}
+{"time":"2025-10-01T18:26:06.076563051+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33396"}
+{"time":"2025-10-01T18:26:06.091598251+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33396"}
+{"time":"2025-10-01T18:26:06.092861751+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33398"}
+{"time":"2025-10-01T18:26:06.108368351+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33398"}
+{"time":"2025-10-01T18:26:06.109666151+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33404"}
+{"time":"2025-10-01T18:26:06.124500552+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33404"}
+{"time":"2025-10-01T18:26:06.125540352+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33414"}
+{"time":"2025-10-01T18:26:06.140384352+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33414"}
+{"time":"2025-10-01T18:26:06.141540852+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33422"}
+{"time":"2025-10-01T18:26:06.155814052+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33422"}
+{"time":"2025-10-01T18:26:06.156826852+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33438"}
+{"time":"2025-10-01T18:26:06.172242752+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33438"}
+{"time":"2025-10-01T18:26:06.173369652+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33452"}
+{"time":"2025-10-01T18:26:06.188649252+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33452"}
+{"time":"2025-10-01T18:26:06.189781352+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33458"}
+{"time":"2025-10-01T18:26:06.204778052+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33458"}
+{"time":"2025-10-01T18:26:06.205833052+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33460"}
+{"time":"2025-10-01T18:26:06.220972452+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33460"}
+{"time":"2025-10-01T18:26:06.221983552+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33470"}
+{"time":"2025-10-01T18:26:06.236479152+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33470"}
+{"time":"2025-10-01T18:26:06.237905752+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33486"}
+{"time":"2025-10-01T18:26:06.253853053+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33486"}
+{"time":"2025-10-01T18:26:06.254863653+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33496"}
+{"time":"2025-10-01T18:26:06.270045853+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33496"}
+{"time":"2025-10-01T18:26:06.271057453+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33510"}
+{"time":"2025-10-01T18:26:06.285463453+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33510"}
+{"time":"2025-10-01T18:26:06.286567453+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33524"}
+{"time":"2025-10-01T18:26:06.302220253+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33524"}
+{"time":"2025-10-01T18:26:06.303216453+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33540"}
+{"time":"2025-10-01T18:26:06.317922853+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33540"}
+{"time":"2025-10-01T18:26:06.319014953+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33550"}
+{"time":"2025-10-01T18:26:06.334217653+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33550"}
+{"time":"2025-10-01T18:26:06.335513253+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33564"}
+{"time":"2025-10-01T18:26:06.351107853+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33564"}
+{"time":"2025-10-01T18:26:06.352408753+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33574"}
+{"time":"2025-10-01T18:26:06.369072253+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33574"}
+{"time":"2025-10-01T18:26:06.370134953+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33586"}
+{"time":"2025-10-01T18:26:06.384962654+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33586"}
+{"time":"2025-10-01T18:26:06.386064354+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33590"}
+{"time":"2025-10-01T18:26:06.401477654+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33590"}
+{"time":"2025-10-01T18:26:06.402559454+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33606"}
+{"time":"2025-10-01T18:26:06.417294354+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33606"}
+{"time":"2025-10-01T18:26:06.418900554+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33618"}
+{"time":"2025-10-01T18:26:06.434355254+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33618"}
+{"time":"2025-10-01T18:26:06.435725854+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33630"}
+{"time":"2025-10-01T18:26:06.450497454+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33630"}
+{"time":"2025-10-01T18:26:06.451678354+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33632"}
+{"time":"2025-10-01T18:26:06.467021854+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33632"}
+{"time":"2025-10-01T18:26:06.468272954+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33646"}
+{"time":"2025-10-01T18:26:06.483524754+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33646"}
+{"time":"2025-10-01T18:26:06.484691554+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33662"}
+{"time":"2025-10-01T18:26:06.502377554+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33662"}
+{"time":"2025-10-01T18:26:06.503434354+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33666"}
+{"time":"2025-10-01T18:26:06.519047655+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33666"}
+{"time":"2025-10-01T18:26:06.520262255+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33668"}
+{"time":"2025-10-01T18:26:06.535872455+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33668"}
+{"time":"2025-10-01T18:26:06.537036755+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33672"}
+{"time":"2025-10-01T18:26:06.553216955+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33672"}
+{"time":"2025-10-01T18:26:06.554440755+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33676"}
+{"time":"2025-10-01T18:26:06.571352355+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33676"}
+{"time":"2025-10-01T18:26:06.572653855+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33688"}
+{"time":"2025-10-01T18:26:06.587446255+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33688"}
+{"time":"2025-10-01T18:26:06.588614655+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33698"}
+{"time":"2025-10-01T18:26:06.603841255+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33698"}
+{"time":"2025-10-01T18:26:06.604994655+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33700"}
+{"time":"2025-10-01T18:26:06.620203055+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33700"}
+{"time":"2025-10-01T18:26:06.621301355+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33702"}
+{"time":"2025-10-01T18:26:06.636692855+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33702"}
+{"time":"2025-10-01T18:26:06.637629356+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33704"}
+{"time":"2025-10-01T18:26:06.652986656+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33704"}
+{"time":"2025-10-01T18:26:06.654079156+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33708"}
+{"time":"2025-10-01T18:26:06.669087056+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33708"}
+{"time":"2025-10-01T18:26:06.670092956+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33722"}
+{"time":"2025-10-01T18:26:06.685676256+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33722"}
+{"time":"2025-10-01T18:26:06.686812856+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33724"}
+{"time":"2025-10-01T18:26:06.705450856+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33724"}
+{"time":"2025-10-01T18:26:06.706512056+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33734"}
+{"time":"2025-10-01T18:26:06.721065856+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33734"}
+{"time":"2025-10-01T18:26:06.722076956+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33750"}
+{"time":"2025-10-01T18:26:06.738196556+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33750"}
+{"time":"2025-10-01T18:26:06.739246356+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33756"}
+{"time":"2025-10-01T18:26:06.754676256+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33756"}
+{"time":"2025-10-01T18:26:06.755790556+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33770"}
+{"time":"2025-10-01T18:26:06.771431657+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33770"}
+{"time":"2025-10-01T18:26:06.772512457+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33772"}
+{"time":"2025-10-01T18:26:06.787572457+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33772"}
+{"time":"2025-10-01T18:26:06.789019057+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33774"}
+{"time":"2025-10-01T18:26:06.806786257+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33774"}
+{"time":"2025-10-01T18:26:06.807945857+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33778"}
+{"time":"2025-10-01T18:26:06.822299157+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33778"}
+{"time":"2025-10-01T18:26:06.823278457+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33780"}
+{"time":"2025-10-01T18:26:06.837439257+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33780"}
+{"time":"2025-10-01T18:26:06.838784857+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33796"}
+{"time":"2025-10-01T18:26:06.862788357+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33796"}
+{"time":"2025-10-01T18:26:06.864200657+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33804"}
+{"time":"2025-10-01T18:26:06.885658357+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33804"}
+{"time":"2025-10-01T18:26:06.886987257+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33812"}
+{"time":"2025-10-01T18:26:06.909719058+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33812"}
+{"time":"2025-10-01T18:26:06.910945958+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33818"}
+{"time":"2025-10-01T18:26:06.931404058+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33818"}
+{"time":"2025-10-01T18:26:06.932721658+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33830"}
+{"time":"2025-10-01T18:26:06.952447258+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33830"}
+{"time":"2025-10-01T18:26:06.953675058+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33846"}
+{"time":"2025-10-01T18:26:06.973069058+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33846"}
+{"time":"2025-10-01T18:26:06.974344158+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33848"}
+{"time":"2025-10-01T18:26:06.990791958+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33848"}
+{"time":"2025-10-01T18:26:06.991967558+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33850"}
+{"time":"2025-10-01T18:26:07.008136158+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33850"}
+{"time":"2025-10-01T18:26:07.009394558+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33862"}
+{"time":"2025-10-01T18:26:07.023827658+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33862"}
+{"time":"2025-10-01T18:26:07.024841858+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33878"}
+{"time":"2025-10-01T18:26:07.039529659+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33878"}
+{"time":"2025-10-01T18:26:07.040549459+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33890"}
+{"time":"2025-10-01T18:26:07.054514359+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33890"}
+{"time":"2025-10-01T18:26:07.055523259+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33900"}
+{"time":"2025-10-01T18:26:07.070169759+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33900"}
+{"time":"2025-10-01T18:26:07.071169659+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33904"}
+{"time":"2025-10-01T18:26:07.085490059+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33904"}
+{"time":"2025-10-01T18:26:07.086808359+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33910"}
+{"time":"2025-10-01T18:26:07.103371859+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33910"}
+{"time":"2025-10-01T18:26:07.104686359+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33922"}
+{"time":"2025-10-01T18:26:07.121962759+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33922"}
+{"time":"2025-10-01T18:26:07.122950459+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33924"}
+{"time":"2025-10-01T18:26:07.136351059+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33924"}
+{"time":"2025-10-01T18:26:07.137301359+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33938"}
+{"time":"2025-10-01T18:26:07.151914859+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33938"}
+{"time":"2025-10-01T18:26:07.152873259+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33950"}
+{"time":"2025-10-01T18:26:07.168157659+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33950"}
+{"time":"2025-10-01T18:26:07.169192159+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33952"}
+{"time":"2025-10-01T18:26:07.184553159+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33952"}
+{"time":"2025-10-01T18:26:07.185577359+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33966"}
+{"time":"2025-10-01T18:26:07.200645559+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33966"}
+{"time":"2025-10-01T18:26:07.201673859+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33974"}
+{"time":"2025-10-01T18:26:07.217391059+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33974"}
+{"time":"2025-10-01T18:26:07.218484459+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33986"}
+{"time":"2025-10-01T18:26:07.233461659+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33986"}
+{"time":"2025-10-01T18:26:07.234419559+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33996"}
+{"time":"2025-10-01T18:26:07.250023959+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33996"}
+{"time":"2025-10-01T18:26:07.251124159+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:33998"}
+{"time":"2025-10-01T18:26:07.266407459+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:33998"}
+{"time":"2025-10-01T18:26:07.267433759+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34010"}
+{"time":"2025-10-01T18:26:07.282264159+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34010"}
+{"time":"2025-10-01T18:26:07.283450259+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34016"}
+{"time":"2025-10-01T18:26:07.298651159+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34016"}
+{"time":"2025-10-01T18:26:07.299967159+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34030"}
+{"time":"2025-10-01T18:26:07.316914859+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34030"}
+{"time":"2025-10-01T18:26:07.317974959+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34040"}
+{"time":"2025-10-01T18:26:07.332755159+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34040"}
+{"time":"2025-10-01T18:26:07.333877359+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34054"}
+{"time":"2025-10-01T18:26:07.350816159+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34054"}
+{"time":"2025-10-01T18:26:07.352035459+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34060"}
+{"time":"2025-10-01T18:26:07.36910986+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34060"}
+{"time":"2025-10-01T18:26:07.37017016+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34068"}
+{"time":"2025-10-01T18:26:07.38428806+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34068"}
+{"time":"2025-10-01T18:26:07.38531416+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34078"}
+{"time":"2025-10-01T18:26:07.40014336+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34078"}
+{"time":"2025-10-01T18:26:07.40120016+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34090"}
+{"time":"2025-10-01T18:26:07.41585676+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34090"}
+{"time":"2025-10-01T18:26:07.41694776+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34098"}
+{"time":"2025-10-01T18:26:07.43165206+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34098"}
+{"time":"2025-10-01T18:26:07.43276846+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34110"}
+{"time":"2025-10-01T18:26:07.44756936+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34110"}
+{"time":"2025-10-01T18:26:07.44866846+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34120"}
+{"time":"2025-10-01T18:26:07.46410906+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34120"}
+{"time":"2025-10-01T18:26:07.46518266+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34134"}
+{"time":"2025-10-01T18:26:07.48082646+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34134"}
+{"time":"2025-10-01T18:26:07.48188296+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34142"}
+{"time":"2025-10-01T18:26:07.49728246+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34142"}
+{"time":"2025-10-01T18:26:07.49837676+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34158"}
+{"time":"2025-10-01T18:26:07.51450576+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34158"}
+{"time":"2025-10-01T18:26:07.51572876+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34164"}
+{"time":"2025-10-01T18:26:07.53093996+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34164"}
+{"time":"2025-10-01T18:26:07.53202766+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34180"}
+{"time":"2025-10-01T18:26:07.54744616+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34180"}
+{"time":"2025-10-01T18:26:07.54860626+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34184"}
+{"time":"2025-10-01T18:26:07.56342186+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34184"}
+{"time":"2025-10-01T18:26:07.56446746+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34188"}
+{"time":"2025-10-01T18:26:07.58089646+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34188"}
+{"time":"2025-10-01T18:26:07.58202046+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34198"}
+{"time":"2025-10-01T18:26:07.60102366+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34198"}
+{"time":"2025-10-01T18:26:07.60250526+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34200"}
+{"time":"2025-10-01T18:26:07.61940916+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34200"}
+{"time":"2025-10-01T18:26:07.62044926+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34212"}
+{"time":"2025-10-01T18:26:07.63484946+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34212"}
+{"time":"2025-10-01T18:26:07.63587766+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34216"}
+{"time":"2025-10-01T18:26:07.65091666+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34216"}
+{"time":"2025-10-01T18:26:07.65198986+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34232"}
+{"time":"2025-10-01T18:26:07.66784196+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34232"}
+{"time":"2025-10-01T18:26:07.66891286+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34238"}
+{"time":"2025-10-01T18:26:07.68298566+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34238"}
+{"time":"2025-10-01T18:26:07.68407686+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34250"}
+{"time":"2025-10-01T18:26:07.69724506+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34250"}
+{"time":"2025-10-01T18:26:07.69820066+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34264"}
+{"time":"2025-10-01T18:26:07.71471196+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34264"}
+{"time":"2025-10-01T18:26:07.71577446+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34280"}
+{"time":"2025-10-01T18:26:07.729399261+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34280"}
+{"time":"2025-10-01T18:26:07.730428661+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34286"}
+{"time":"2025-10-01T18:26:07.744866561+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34286"}
+{"time":"2025-10-01T18:26:07.745869061+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34298"}
+{"time":"2025-10-01T18:26:07.760772361+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34298"}
+{"time":"2025-10-01T18:26:07.761917561+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34314"}
+{"time":"2025-10-01T18:26:07.776951361+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34314"}
+{"time":"2025-10-01T18:26:07.778146961+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34318"}
+{"time":"2025-10-01T18:26:07.794235261+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34318"}
+{"time":"2025-10-01T18:26:07.795209261+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34326"}
+{"time":"2025-10-01T18:26:07.810110861+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34326"}
+{"time":"2025-10-01T18:26:07.811182661+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34338"}
+{"time":"2025-10-01T18:26:07.823258361+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34338"}
+{"time":"2025-10-01T18:26:07.824310961+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34350"}
+{"time":"2025-10-01T18:26:07.839940061+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34350"}
+{"time":"2025-10-01T18:26:07.841033461+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34352"}
+{"time":"2025-10-01T18:26:07.858215361+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34352"}
+{"time":"2025-10-01T18:26:07.859197761+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34354"}
+{"time":"2025-10-01T18:26:07.873461861+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34354"}
+{"time":"2025-10-01T18:26:07.874475461+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34356"}
+{"time":"2025-10-01T18:26:07.888560861+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34356"}
+{"time":"2025-10-01T18:26:07.889666261+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34366"}
+{"time":"2025-10-01T18:26:07.907894361+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34366"}
+{"time":"2025-10-01T18:26:07.908958661+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34370"}
+{"time":"2025-10-01T18:26:07.924272961+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34370"}
+{"time":"2025-10-01T18:26:07.925365661+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34372"}
+{"time":"2025-10-01T18:26:07.940342461+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34372"}
+{"time":"2025-10-01T18:26:07.941464261+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34378"}
+{"time":"2025-10-01T18:26:07.957090861+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34378"}
+{"time":"2025-10-01T18:26:07.958185761+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34380"}
+{"time":"2025-10-01T18:26:07.972467461+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34380"}
+{"time":"2025-10-01T18:26:07.973443661+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34382"}
+{"time":"2025-10-01T18:26:07.987090561+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34382"}
+{"time":"2025-10-01T18:26:07.988337461+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34398"}
+{"time":"2025-10-01T18:26:08.001840261+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34398"}
+{"time":"2025-10-01T18:26:08.002974361+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34404"}
+{"time":"2025-10-01T18:26:08.017331461+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34404"}
+{"time":"2025-10-01T18:26:08.018489561+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34410"}
+{"time":"2025-10-01T18:26:08.032714361+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34410"}
+{"time":"2025-10-01T18:26:08.033811861+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34422"}
+{"time":"2025-10-01T18:26:08.049502861+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34422"}
+{"time":"2025-10-01T18:26:08.050608361+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34424"}
+{"time":"2025-10-01T18:26:08.065882261+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34424"}
+{"time":"2025-10-01T18:26:08.066890761+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34440"}
+{"time":"2025-10-01T18:26:08.083267161+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34440"}
+{"time":"2025-10-01T18:26:08.084259661+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34446"}
+{"time":"2025-10-01T18:26:08.103616662+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34446"}
+{"time":"2025-10-01T18:26:08.104744162+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34450"}
+{"time":"2025-10-01T18:26:08.122942262+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34450"}
+{"time":"2025-10-01T18:26:08.124193562+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34464"}
+{"time":"2025-10-01T18:26:08.141271462+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34464"}
+{"time":"2025-10-01T18:26:08.142326062+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34474"}
+{"time":"2025-10-01T18:26:08.157993062+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34474"}
+{"time":"2025-10-01T18:26:08.159019962+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34484"}
+{"time":"2025-10-01T18:26:08.174177162+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34484"}
+{"time":"2025-10-01T18:26:08.175340062+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34500"}
+{"time":"2025-10-01T18:26:08.190623262+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34500"}
+{"time":"2025-10-01T18:26:08.191609662+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34506"}
+{"time":"2025-10-01T18:26:08.206238562+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34506"}
+{"time":"2025-10-01T18:26:08.207423962+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34518"}
+{"time":"2025-10-01T18:26:08.222102062+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34518"}
+{"time":"2025-10-01T18:26:08.223211162+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34534"}
+{"time":"2025-10-01T18:26:08.238872162+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34534"}
+{"time":"2025-10-01T18:26:08.240057762+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34538"}
+{"time":"2025-10-01T18:26:08.255333062+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34538"}
+{"time":"2025-10-01T18:26:08.256357262+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34550"}
+{"time":"2025-10-01T18:26:08.274489462+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34550"}
+{"time":"2025-10-01T18:26:08.275777162+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34560"}
+{"time":"2025-10-01T18:26:08.294049362+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34560"}
+{"time":"2025-10-01T18:26:08.295359362+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34570"}
+{"time":"2025-10-01T18:26:08.310676862+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34570"}
+{"time":"2025-10-01T18:26:08.311787962+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34582"}
+{"time":"2025-10-01T18:26:08.326686362+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34582"}
+{"time":"2025-10-01T18:26:08.328210162+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34588"}
+{"time":"2025-10-01T18:26:08.342161162+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34588"}
+{"time":"2025-10-01T18:26:08.343186562+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34602"}
+{"time":"2025-10-01T18:26:08.359409462+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34602"}
+{"time":"2025-10-01T18:26:08.360515162+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34610"}
+{"time":"2025-10-01T18:26:08.377413162+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34610"}
+{"time":"2025-10-01T18:26:08.378475862+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34616"}
+{"time":"2025-10-01T18:26:08.392743562+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34616"}
+{"time":"2025-10-01T18:26:08.393799662+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:34626"}
+{"time":"2025-10-01T18:26:08.409427862+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:34626"}
+{"time":"2025-10-01T18:26:08.410561662+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53010"}
+{"time":"2025-10-01T18:26:08.426722562+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53010"}
+{"time":"2025-10-01T18:26:08.428027662+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53020"}
+{"time":"2025-10-01T18:26:08.442748562+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53020"}
+{"time":"2025-10-01T18:26:08.443938462+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53028"}
+{"time":"2025-10-01T18:26:08.459583263+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53028"}
+{"time":"2025-10-01T18:26:08.461774163+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53034"}
+{"time":"2025-10-01T18:26:08.478276363+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53034"}
+{"time":"2025-10-01T18:26:08.479534863+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53042"}
+{"time":"2025-10-01T18:26:08.496231563+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53042"}
+{"time":"2025-10-01T18:26:08.497316063+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53058"}
+{"time":"2025-10-01T18:26:08.513288163+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53058"}
+{"time":"2025-10-01T18:26:08.514408263+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53066"}
+{"time":"2025-10-01T18:26:08.529484363+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53066"}
+{"time":"2025-10-01T18:26:08.530541263+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53080"}
+{"time":"2025-10-01T18:26:08.544871263+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53080"}
+{"time":"2025-10-01T18:26:08.545841563+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53094"}
+{"time":"2025-10-01T18:26:08.561213263+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53094"}
+{"time":"2025-10-01T18:26:08.562277363+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53102"}
+{"time":"2025-10-01T18:26:08.577613363+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53102"}
+{"time":"2025-10-01T18:26:08.578629363+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53112"}
+{"time":"2025-10-01T18:26:08.593297963+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53112"}
+{"time":"2025-10-01T18:26:08.594313063+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53114"}
+{"time":"2025-10-01T18:26:08.610991463+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53114"}
+{"time":"2025-10-01T18:26:08.612222563+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53130"}
+{"time":"2025-10-01T18:26:08.627518063+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53130"}
+{"time":"2025-10-01T18:26:08.628841363+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53146"}
+{"time":"2025-10-01T18:26:08.645836863+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53146"}
+{"time":"2025-10-01T18:26:08.647153463+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53158"}
+{"time":"2025-10-01T18:26:08.664063663+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53158"}
+{"time":"2025-10-01T18:26:08.665117163+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53174"}
+{"time":"2025-10-01T18:26:08.680695263+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53174"}
+{"time":"2025-10-01T18:26:08.681581063+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53182"}
+{"time":"2025-10-01T18:26:08.695707263+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53182"}
+{"time":"2025-10-01T18:26:08.696783963+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53184"}
+{"time":"2025-10-01T18:26:08.714898963+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53184"}
+{"time":"2025-10-01T18:26:08.716106163+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53190"}
+{"time":"2025-10-01T18:26:08.732283063+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53190"}
+{"time":"2025-10-01T18:26:08.733509163+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53200"}
+{"time":"2025-10-01T18:26:08.748823563+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53200"}
+{"time":"2025-10-01T18:26:08.749995763+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53216"}
+{"time":"2025-10-01T18:26:08.765858363+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53216"}
+{"time":"2025-10-01T18:26:08.766992063+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53232"}
+{"time":"2025-10-01T18:26:08.781982163+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53232"}
+{"time":"2025-10-01T18:26:08.783196563+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53242"}
+{"time":"2025-10-01T18:26:08.798645063+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53242"}
+{"time":"2025-10-01T18:26:08.800027363+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53250"}
+{"time":"2025-10-01T18:26:08.814473263+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53250"}
+{"time":"2025-10-01T18:26:08.815504463+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53258"}
+{"time":"2025-10-01T18:26:08.831512864+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53258"}
+{"time":"2025-10-01T18:26:08.832923364+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53268"}
+{"time":"2025-10-01T18:26:08.851569464+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53268"}
+{"time":"2025-10-01T18:26:08.853185264+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53272"}
+{"time":"2025-10-01T18:26:08.870459264+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53272"}
+{"time":"2025-10-01T18:26:08.871467064+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53280"}
+{"time":"2025-10-01T18:26:08.886445464+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53280"}
+{"time":"2025-10-01T18:26:08.887524564+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53296"}
+{"time":"2025-10-01T18:26:08.903552164+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53296"}
+{"time":"2025-10-01T18:26:08.904739664+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53312"}
+{"time":"2025-10-01T18:26:08.922020664+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53312"}
+{"time":"2025-10-01T18:26:08.923149964+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53322"}
+{"time":"2025-10-01T18:26:08.939101764+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53322"}
+{"time":"2025-10-01T18:26:08.940398464+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53328"}
+{"time":"2025-10-01T18:26:08.956804364+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53328"}
+{"time":"2025-10-01T18:26:08.958154564+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53342"}
+{"time":"2025-10-01T18:26:08.978925964+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53342"}
+{"time":"2025-10-01T18:26:08.980594864+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53346"}
+{"time":"2025-10-01T18:26:09.004302364+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53346"}
+{"time":"2025-10-01T18:26:09.005769164+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53362"}
+{"time":"2025-10-01T18:26:09.023540564+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53362"}
+{"time":"2025-10-01T18:26:09.024761664+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53368"}
+{"time":"2025-10-01T18:26:09.043619664+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53368"}
+{"time":"2025-10-01T18:26:09.044932864+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53382"}
+{"time":"2025-10-01T18:26:09.063615064+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53382"}
+{"time":"2025-10-01T18:26:09.064644164+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53388"}
+{"time":"2025-10-01T18:26:09.079895964+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53388"}
+{"time":"2025-10-01T18:26:09.081093064+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53398"}
+{"time":"2025-10-01T18:26:09.094029464+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53398"}
+{"time":"2025-10-01T18:26:09.095250764+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53406"}
+{"time":"2025-10-01T18:26:09.108796664+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53406"}
+{"time":"2025-10-01T18:26:09.109959464+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53408"}
+{"time":"2025-10-01T18:26:09.124482564+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53408"}
+{"time":"2025-10-01T18:26:09.125549464+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53418"}
+{"time":"2025-10-01T18:26:09.140834764+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53418"}
+{"time":"2025-10-01T18:26:09.141998564+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53424"}
+{"time":"2025-10-01T18:26:09.156910864+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53424"}
+{"time":"2025-10-01T18:26:09.158196864+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53434"}
+{"time":"2025-10-01T18:26:09.174026964+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53434"}
+{"time":"2025-10-01T18:26:09.175088864+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53444"}
+{"time":"2025-10-01T18:26:09.190413965+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53444"}
+{"time":"2025-10-01T18:26:09.191433865+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53446"}
+{"time":"2025-10-01T18:26:09.206612365+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53446"}
+{"time":"2025-10-01T18:26:09.207604565+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53458"}
+{"time":"2025-10-01T18:26:09.222588165+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53458"}
+{"time":"2025-10-01T18:26:09.223557665+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53474"}
+{"time":"2025-10-01T18:26:09.238851865+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53474"}
+{"time":"2025-10-01T18:26:09.239962665+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53476"}
+{"time":"2025-10-01T18:26:09.257052565+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53476"}
+{"time":"2025-10-01T18:26:09.258127265+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53484"}
+{"time":"2025-10-01T18:26:09.273994365+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53484"}
+{"time":"2025-10-01T18:26:09.275005965+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53494"}
+{"time":"2025-10-01T18:26:09.291747665+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53494"}
+{"time":"2025-10-01T18:26:09.292899365+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53500"}
+{"time":"2025-10-01T18:26:09.309297265+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53500"}
+{"time":"2025-10-01T18:26:09.310491765+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53516"}
+{"time":"2025-10-01T18:26:09.328275365+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53516"}
+{"time":"2025-10-01T18:26:09.330147165+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53526"}
+{"time":"2025-10-01T18:26:09.345305165+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53526"}
+{"time":"2025-10-01T18:26:09.346338165+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53540"}
+{"time":"2025-10-01T18:26:09.361447665+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53540"}
+{"time":"2025-10-01T18:26:09.362586465+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53544"}
+{"time":"2025-10-01T18:26:09.377994965+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53544"}
+{"time":"2025-10-01T18:26:09.379196065+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"127.0.0.1:53560"}
+{"time":"2025-10-01T18:26:09.393755665+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"127.0.0.1:53560"}
+{"time":"2025-10-01T18:26:09.407766965+08:00","level":"INFO","msg":"Enhanced query request received","method":"POST","remote_addr":"127.0.0.1:53564"}
+{"time":"2025-10-01T18:26:09.415505565+08:00","level":"INFO","msg":"Enhanced query completed successfully","collection":"products","result_count":5,"remote_addr":"127.0.0.1:53564"}
+{"time":"2025-10-01T18:26:09.442516565+08:00","level":"INFO","msg":"Enhanced query request received","method":"POST","remote_addr":"127.0.0.1:53574"}
+{"time":"2025-10-01T18:26:09.451481665+08:00","level":"INFO","msg":"Enhanced query completed successfully","collection":"products","result_count":5,"remote_addr":"127.0.0.1:53574"}
+{"time":"2025-10-01T18:26:09.477550165+08:00","level":"INFO","msg":"Enhanced query request received","method":"POST","remote_addr":"127.0.0.1:53588"}
+{"time":"2025-10-01T18:26:09.488776265+08:00","level":"INFO","msg":"Enhanced query completed successfully","collection":"products","result_count":5,"remote_addr":"127.0.0.1:53588"}
