@@ -142,7 +142,6 @@ func handleCollectionCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Create the regular SQL table for storing original documents
-	logger.Debug("Schema fields for SQL table creation", "collection", schema.Name, "fields", schema.Fields)
 	createTableSQL, err := generateCreateTableSQL(schema)
 	if err != nil {
 		logger.Error("Failed to generate CREATE TABLE SQL", "collection", schema.Name, "error", err)
