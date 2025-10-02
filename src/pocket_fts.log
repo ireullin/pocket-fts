@@ -47,3 +47,27 @@
 {"time":"2025-10-02T12:18:05.902984303+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:37394"}
 {"time":"2025-10-02T12:18:09.409380891+08:00","level":"INFO","msg":"Collection content request received","method":"GET","remote_addr":"[::1]:37394"}
 {"time":"2025-10-02T12:18:09.41888469+08:00","level":"INFO","msg":"Collection content retrieved successfully","collection":"test","total_count":0,"page":1,"limit":20,"records_count":0,"remote_addr":"[::1]:37394"}
+{"time":"2025-10-02T12:24:01.849978089+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:45662"}
+{"time":"2025-10-02T12:24:01.905756097+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:01.922718199+08:00","level":"INFO","msg":"Collections listed successfully","count":2,"remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:01.954911703+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:01.972913005+08:00","level":"INFO","msg":"Collections listed successfully","count":2,"remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:02.182375933+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:02.963960035+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:02.970860036+08:00","level":"INFO","msg":"Collections listed successfully","count":2,"remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:02.980580237+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:07.547101235+08:00","level":"INFO","msg":"Collection content request received","method":"GET","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:07.556086935+08:00","level":"INFO","msg":"Collection content retrieved successfully","collection":"products","total_count":488,"page":1,"limit":20,"records_count":20,"remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:30.527999945+08:00","level":"INFO","msg":"Search request received","method":"POST","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:24:30.570354941+08:00","level":"INFO","msg":"Search completed successfully","collection":"products","query":"電視","limit":20,"offset":0,"remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:29:13.894651293+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:29:13.957181493+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:29:13.971299193+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:49680"}
+{"time":"2025-10-02T12:29:13.979479993+08:00","level":"INFO","msg":"Collections listed successfully","count":2,"remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:29:13.998080293+08:00","level":"INFO","msg":"Collections listed successfully","count":2,"remote_addr":"[::1]:49680"}
+{"time":"2025-10-02T12:29:14.134148292+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:29:14.979944788+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:29:14.986188988+08:00","level":"INFO","msg":"Collections listed successfully","count":2,"remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:29:14.992681288+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:29:47.185854591+08:00","level":"INFO","msg":"Enhanced query request received","method":"POST","remote_addr":"[::1]:45666"}
+{"time":"2025-10-02T12:29:47.235023391+08:00","level":"INFO","msg":"Enhanced query completed successfully","collection":"products","result_count":12,"remote_addr":"[::1]:45666"}

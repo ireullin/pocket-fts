@@ -469,6 +469,67 @@
             font-family: 'Courier New', monospace;
             font-size: 13px;
         }
+
+        .search-form {
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+        }
+
+        /* 查詢條件樣式 */
+        .query-condition {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+
+        .query-condition select,
+        .query-condition input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+
+        /* 搜尋結果樣式 */
+        #search-results {
+            border-top: 2px solid #007bff;
+            padding-top: 20px;
+        }
+
+        #search-results h3 {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+
+        .search-result-item {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .search-result-score {
+            float: right;
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -501,13 +562,64 @@
         
         <!-- 資料搜尋區塊 -->
         <div class="section">
-            <h2>🔍 資料搜尋區塊</h2>
+            <h2>🔍 進階查詢</h2>
             
-            <div class="search-placeholder">
-                <div style="text-align: center; padding: 40px; color: #6c757d; border: 2px dashed #dee2e6; border-radius: 8px;">
-                    <h3>🚧 功能開發中</h3>
-                    <p>此區塊將提供進階的搜尋和篩選功能</p>
-                    <p>包含：條件查詢、全文搜尋、結果排序等功能</p>
+            <!-- 進階查詢表單 -->
+            <div class="search-form">
+                <form onsubmit="performAdvancedSearch(event)">
+                    <div class="form-group">
+                        <label for="advanced-collection">Collection:</label>
+                        <select id="advanced-collection" required>
+                            <option value="">請選擇 Collection</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 查詢條件構建器 -->
+                    <div class="form-group">
+                        <label>查詢條件:</label>
+                        <div id="query-builder">
+                            <!-- 動態生成的查詢條件 -->
+                        </div>
+                        <button type="button" onclick="addQueryCondition()" class="secondary" style="margin-top: 10px;">➕ 新增條件</button>
+                    </div>
+                    
+                    <!-- 結果設定 -->
+                    <div class="form-group">
+                        <label>結果設定:</label>
+                        <div class="two-column">
+                            <div>
+                                <label for="result-limit">數量限制:</label>
+                                <input type="number" id="result-limit" value="20" min="1" max="100">
+                            </div>
+                            <div>
+                                <label for="result-offset">跳過筆數:</label>
+                                <input type="number" id="result-offset" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 排序設定 -->
+                    <div class="form-group">
+                        <label>排序設定:</label>
+                        <div id="order-by-container" style="margin-top: 10px;">
+                            <!-- 動態生成的排序設定 -->
+                        </div>
+                        <button type="button" onclick="addOrderByField()" class="secondary" style="margin-top: 10px; font-size: 12px;">➕ 新增排序</button>
+                    </div>
+                    
+                    <div style="text-align: right;">
+                        <button type="submit">🔍 執行查詢</button>
+                        <button type="button" onclick="clearAdvancedSearch()" class="secondary" style="margin-left: 10px;">清除</button>
+                        <button type="button" onclick="loadAdvancedQueryExample()" class="secondary" style="margin-left: 10px;">範例</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- 搜尋結果顯示區域 -->
+            <div id="search-results" style="margin-top: 30px; display: none;">
+                <h3>查詢結果</h3>
+                <div id="search-results-content">
+                    <!-- 搜尋結果將顯示在這裡 -->
                 </div>
             </div>
         </div>
@@ -1058,11 +1170,13 @@
                 console.log('Collections result:', result);
                 collections = result.collections || [];
                 updateCollectionList();
+                updateSearchCollections(); // 更新搜尋表單的 Collection 選項
                 checkServerStatus();
                 showStatus(`載入了 ${collections.length} 個 Collections`);
             } catch (error) {
                 console.error('Failed to load collections:', error);
                 updateCollectionList([]); // 顯示空列表
+                updateSearchCollections(); // 清空搜尋表單選項
                 showStatus('載入 Collections 失敗: ' + error.message, 'error');
                 checkServerStatus();
             }
@@ -1184,7 +1298,371 @@
                 }
             };
             
-            document.getElementById('advanced-query').value = JSON.stringify(example, null, 2);
+            // 檢查是否存在 advanced-query 元素（舊版）
+            const advancedQueryElement = document.getElementById('advanced-query');
+            if (advancedQueryElement) {
+                advancedQueryElement.value = JSON.stringify(example, null, 2);
+            }
+        }
+
+        // ======= 搜尋功能相關函數 =======
+        
+        // 更新搜尋表單中的 Collection 選項
+        function updateSearchCollections() {
+            const advancedSelect = document.getElementById('advanced-collection');
+            
+            if (advancedSelect) {
+                advancedSelect.innerHTML = '<option value="">請選擇 Collection</option>';
+                collections.forEach(collection => {
+                    const option = document.createElement('option');
+                    option.value = collection.name;
+                    option.textContent = collection.name;
+                    advancedSelect.appendChild(option);
+                });
+                
+                // 如果有當前選擇的 collection，自動選中
+                if (currentCollection) {
+                    advancedSelect.value = currentCollection;
+                }
+            }
+        }
+
+        // 顯示搜尋結果
+        function displaySearchResults(results) {
+            const resultsContainer = document.getElementById('search-results');
+            const resultsContent = document.getElementById('search-results-content');
+            
+            resultsContainer.style.display = 'block';
+            
+            if (!results || (!results.records && !results.length)) {
+                resultsContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px;">
+                        <h4>🔍 沒有找到符合條件的結果</h4>
+                        <p>請嘗試調整查詢條件或關鍵字</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 處理不同格式的查詢結果
+            let records = results.records || results;
+            if (!Array.isArray(records)) {
+                records = [records];
+            }
+            
+            let html = `
+                <div style="margin-bottom: 15px; color: #6c757d;">
+                    找到 ${records.length} 筆結果
+                </div>
+            `;
+            
+            records.forEach((record, index) => {
+                const score = record._score || record.score || '未知';
+                
+                html += `
+                    <div class="search-result-item">
+                        <div class="search-result-score">評分: ${typeof score === 'number' ? score.toFixed(3) : score}</div>
+                        <div style="clear: both;">
+                            ${Object.keys(record).map(key => {
+                                if (key.startsWith('_')) return ''; // 跳過內部字段
+                                const value = record[key];
+                                return `<div style="margin-bottom: 8px;">
+                                    <strong>${key}:</strong> 
+                                    <span style="margin-left: 10px;">${formatSearchResultValue(value)}</span>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsContent.innerHTML = html;
+        }
+
+        // 格式化搜尋結果值
+        function formatSearchResultValue(value) {
+            if (value === null || value === undefined) {
+                return '<span style="color: #6c757d; font-style: italic;">null</span>';
+            }
+            
+            const str = String(value);
+            if (str.length > 200) {
+                return str.substring(0, 200) + '...';
+            }
+            
+            return str;
+        }
+
+        // 隱藏搜尋結果
+        function hideSearchResults() {
+            document.getElementById('search-results').style.display = 'none';
+        }
+
+        // ======= 進階查詢功能 =======
+        
+        let queryConditionCounter = 0;
+        let orderByCounter = 0;
+
+        // 新增查詢條件
+        function addQueryCondition(type = 'search', field = '', operator = 'contains', value = '') {
+            const container = document.getElementById('query-builder');
+            queryConditionCounter++;
+            
+            const conditionDiv = document.createElement('div');
+            conditionDiv.className = 'query-condition';
+            conditionDiv.id = `query-condition-${queryConditionCounter}`;
+            
+            conditionDiv.innerHTML = `
+                <div style="flex: 0.8;">
+                    <select data-field="type" onchange="updateConditionFields('${queryConditionCounter}')">
+                        <option value="search" ${type === 'search' ? 'selected' : ''}>全文搜尋</option>
+                        <option value="sql" ${type === 'sql' ? 'selected' : ''}>SQL 條件</option>
+                    </select>
+                </div>
+                <div style="flex: 1;" id="condition-fields-${queryConditionCounter}">
+                    <!-- 動態生成的條件字段 -->
+                </div>
+                <div style="flex: 0.2;">
+                    <button type="button" onclick="removeQueryCondition('${queryConditionCounter}')" 
+                            class="danger" style="padding: 5px 8px; font-size: 12px; margin: 0;">
+                        🗑️
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(conditionDiv);
+            updateConditionFields(queryConditionCounter);
+        }
+
+        // 更新條件字段
+        function updateConditionFields(conditionId) {
+            const condition = document.getElementById(`query-condition-${conditionId}`);
+            const type = condition.querySelector('[data-field="type"]').value;
+            const fieldsContainer = document.getElementById(`condition-fields-${conditionId}`);
+            
+            if (type === 'search') {
+                fieldsContainer.innerHTML = `
+                    <input type="text" placeholder="搜尋關鍵字" data-field="term" 
+                           style="flex: 1; margin-right: 5px;">
+                    <select data-field="operator" style="flex: 0.5;">
+                        <option value="AND">AND</option>
+                        <option value="OR">OR</option>
+                    </select>
+                `;
+            } else if (type === 'sql') {
+                fieldsContainer.innerHTML = `
+                    <input type="text" placeholder="字段名稱" data-field="field" 
+                           style="flex: 0.8; margin-right: 5px;">
+                    <select data-field="operator" style="flex: 0.5; margin-right: 5px;">
+                        <option value="=">=</option>
+                        <option value="!=">!=</option>
+                        <option value=">">></option>
+                        <option value="<"><</option>
+                        <option value=">=">>=</option>
+                        <option value="<="><=</option>
+                        <option value="LIKE">LIKE</option>
+                    </select>
+                    <input type="text" placeholder="值" data-field="value" style="flex: 1;">
+                `;
+            }
+        }
+
+        // 移除查詢條件
+        function removeQueryCondition(conditionId) {
+            const condition = document.getElementById(`query-condition-${conditionId}`);
+            if (condition) {
+                condition.remove();
+            }
+        }
+
+        // 新增排序字段
+        function addOrderByField(field = '', direction = 'asc') {
+            const container = document.getElementById('order-by-container');
+            orderByCounter++;
+            
+            const orderDiv = document.createElement('div');
+            orderDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 5px; align-items: center;';
+            orderDiv.id = `order-by-${orderByCounter}`;
+            
+            orderDiv.innerHTML = `
+                <input type="text" placeholder="字段名稱" value="${field}" 
+                       style="flex: 1; padding: 5px; border: 1px solid #ccc; border-radius: 3px;"
+                       data-field="field">
+                <select style="flex: 0.5; padding: 5px; border: 1px solid #ccc; border-radius: 3px;" 
+                        data-field="direction">
+                    <option value="asc" ${direction === 'asc' ? 'selected' : ''}>升序</option>
+                    <option value="desc" ${direction === 'desc' ? 'selected' : ''}>降序</option>
+                </select>
+                <button type="button" onclick="removeOrderByField('${orderByCounter}')" 
+                        class="danger" style="padding: 5px 8px; font-size: 12px; margin: 0;">
+                    🗑️
+                </button>
+            `;
+            
+            container.appendChild(orderDiv);
+        }
+
+        // 移除排序字段
+        function removeOrderByField(orderId) {
+            const orderDiv = document.getElementById(`order-by-${orderId}`);
+            if (orderDiv) {
+                orderDiv.remove();
+            }
+        }
+
+        // 執行進階查詢
+        async function performAdvancedSearch(event) {
+            event.preventDefault();
+            
+            const collection = document.getElementById('advanced-collection').value;
+            const limit = parseInt(document.getElementById('result-limit').value) || 20;
+            const offset = parseInt(document.getElementById('result-offset').value) || 0;
+            
+            if (!collection) {
+                showStatus('請選擇 Collection', 'error');
+                return;
+            }
+            
+            try {
+                // 構建查詢條件
+                const queryConditions = [];
+                const conditionElements = document.querySelectorAll('.query-condition');
+                
+                conditionElements.forEach(condition => {
+                    const type = condition.querySelector('[data-field="type"]').value;
+                    
+                    if (type === 'search') {
+                        const term = condition.querySelector('[data-field="term"]').value.trim();
+                        const operator = condition.querySelector('[data-field="operator"]').value;
+                        
+                        if (term) {
+                            queryConditions.push({
+                                search: {
+                                    term: term,
+                                    operator: operator
+                                }
+                            });
+                        }
+                    } else if (type === 'sql') {
+                        const field = condition.querySelector('[data-field="field"]').value.trim();
+                        const operator = condition.querySelector('[data-field="operator"]').value;
+                        const value = condition.querySelector('[data-field="value"]').value.trim();
+                        
+                        if (field && value) {
+                            const whereCondition = {};
+                            if (operator === 'LIKE') {
+                                whereCondition[field] = { '$like': `%${value}%` };
+                            } else {
+                                whereCondition[field] = { [`$${operator}`]: value };
+                            }
+                            
+                            queryConditions.push({
+                                sql: { where: whereCondition }
+                            });
+                        }
+                    }
+                });
+                
+                if (queryConditions.length === 0) {
+                    showStatus('請至少新增一個查詢條件', 'error');
+                    return;
+                }
+                
+                // 構建排序條件
+                const orderBy = [];
+                const orderElements = document.querySelectorAll('#order-by-container > div');
+                
+                orderElements.forEach(orderDiv => {
+                    const field = orderDiv.querySelector('[data-field="field"]').value.trim();
+                    const direction = orderDiv.querySelector('[data-field="direction"]').value;
+                    
+                    if (field) {
+                        orderBy.push({
+                            field: field,
+                            direction: direction
+                        });
+                    }
+                });
+                
+                // 構建最終查詢
+                let query;
+                if (queryConditions.length === 1) {
+                    query = queryConditions[0];
+                } else {
+                    query = { '$and': queryConditions };
+                }
+                
+                const queryRequest = {
+                    collection: collection,
+                    query: query,
+                    result: {
+                        limit: limit,
+                        offset: offset
+                    }
+                };
+                
+                if (orderBy.length > 0) {
+                    queryRequest.result.order_by = orderBy;
+                }
+                
+                console.log('執行進階查詢:', queryRequest);
+                
+                const result = await apiCall('/query', 'POST', queryRequest);
+                displaySearchResults(result);
+                showStatus('進階查詢完成！');
+                
+            } catch (error) {
+                showStatus(`進階查詢失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 清除進階查詢表單
+        function clearAdvancedSearch() {
+            document.getElementById('query-builder').innerHTML = '';
+            document.getElementById('order-by-container').innerHTML = '';
+            document.getElementById('result-limit').value = '20';
+            document.getElementById('result-offset').value = '0';
+            queryConditionCounter = 0;
+            orderByCounter = 0;
+            hideSearchResults();
+        }
+
+        // 載入進階查詢範例
+        function loadAdvancedQueryExample() {
+            // 清除現有條件
+            clearAdvancedSearch();
+            
+            // 添加範例條件
+            addQueryCondition('search');
+            addQueryCondition('sql');
+            
+            // 設定範例值
+            setTimeout(() => {
+                const conditions = document.querySelectorAll('.query-condition');
+                
+                // 第一個條件：全文搜尋
+                if (conditions[0]) {
+                    const termInput = conditions[0].querySelector('[data-field="term"]');
+                    const operatorSelect = conditions[0].querySelector('[data-field="operator"]');
+                    if (termInput) termInput.value = '電視';
+                    if (operatorSelect) operatorSelect.value = 'AND';
+                }
+                
+                // 第二個條件：SQL 條件
+                if (conditions[1]) {
+                    const fieldInput = conditions[1].querySelector('[data-field="field"]');
+                    const operatorSelect = conditions[1].querySelector('[data-field="operator"]');
+                    const valueInput = conditions[1].querySelector('[data-field="value"]');
+                    if (fieldInput) fieldInput.value = 'price';
+                    if (operatorSelect) operatorSelect.value = '>';
+                    if (valueInput) valueInput.value = '1000';
+                }
+            }, 100);
+            
+            // 添加排序範例
+            addOrderByField('_score', 'desc');
+            
+            showStatus('已載入查詢範例');
         }
 
         // Footer 功能函數
