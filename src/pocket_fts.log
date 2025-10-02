@@ -1,26 +1,24 @@
-{"time":"2025-10-02T11:13:10.71948855+08:00","level":"INFO","msg":"Database initialized successfully."}
-{"time":"2025-10-02T11:13:10.74988755+08:00","level":"INFO","msg":"FTS engine initialized successfully."}
-{"time":"2025-10-02T11:13:10.75023825+08:00","level":"INFO","msg":"FTS logging setup completed."}
-{"time":"2025-10-02T11:13:10.75051075+08:00","level":"INFO","msg":"FTS core version","version":"v0.8"}
-{"time":"2025-10-02T11:13:10.75074465+08:00","level":"INFO","msg":"Query executor initialized successfully."}
-{"time":"2025-10-02T11:13:10.75110325+08:00","level":"INFO","msg":"Server listening","address":"http://localhost:5122"}
-{"time":"2025-10-02T11:13:10.75132245+08:00","level":"INFO","msg":"Database file","path":"db.sqlite"}
-{"time":"2025-10-02T11:13:16.587589273+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:13:16.669762074+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:13:16.679218274+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:47996"}
-{"time":"2025-10-02T11:13:16.691299474+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:13:16.702316274+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:47996"}
-{"time":"2025-10-02T11:13:16.872092175+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:13:17.682584578+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:13:17.688130978+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:13:17.695872678+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:13:21.796969821+08:00","level":"INFO","msg":"Collection content request received","method":"GET","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:13:21.808271921+08:00","level":"INFO","msg":"Collection content retrieved successfully","collection":"products","total_count":487,"page":1,"limit":20,"records_count":20,"remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:14:17.151548223+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:14:17.231876024+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:14:17.241768624+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:14:18.257826541+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:14:18.263612541+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:14:18.272358141+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:14:19.44342286+08:00","level":"INFO","msg":"Collection content request received","method":"GET","remote_addr":"[::1]:47980"}
-{"time":"2025-10-02T11:14:19.45114976+08:00","level":"INFO","msg":"Collection content retrieved successfully","collection":"products","total_count":487,"page":1,"limit":20,"records_count":20,"remote_addr":"[::1]:47980"}
+{"time":"2025-10-02T12:07:33.875725591+08:00","level":"INFO","msg":"Database initialized successfully."}
+{"time":"2025-10-02T12:07:33.905478691+08:00","level":"INFO","msg":"FTS engine initialized successfully."}
+{"time":"2025-10-02T12:07:33.905760091+08:00","level":"INFO","msg":"FTS logging setup completed."}
+{"time":"2025-10-02T12:07:33.906035291+08:00","level":"INFO","msg":"FTS core version","version":"v0.8"}
+{"time":"2025-10-02T12:07:33.906323991+08:00","level":"INFO","msg":"Query executor initialized successfully."}
+{"time":"2025-10-02T12:07:33.906679091+08:00","level":"INFO","msg":"Server listening","address":"http://localhost:5122"}
+{"time":"2025-10-02T12:07:33.906896391+08:00","level":"INFO","msg":"Database file","path":"db.sqlite"}
+{"time":"2025-10-02T12:07:36.845021812+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:36.905831913+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:36.920604313+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:37.033419813+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:37.039736514+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:37.209242715+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:38.067150721+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:38.071554621+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:38.080406421+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:47.757615303+08:00","level":"INFO","msg":"Collection content request received","method":"GET","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:47.766556702+08:00","level":"INFO","msg":"Collection content retrieved successfully","collection":"products","total_count":488,"page":1,"limit":20,"records_count":20,"remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:52.017969836+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:52.024315335+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:59.661685422+08:00","level":"INFO","msg":"Document upsert request received","method":"POST","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:59.72785802+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:59.73442302+08:00","level":"INFO","msg":"Collection content request received","method":"GET","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:07:59.74259502+08:00","level":"INFO","msg":"Collection content retrieved successfully","collection":"products","total_count":488,"page":1,"limit":20,"records_count":20,"remote_addr":"[::1]:57780"}

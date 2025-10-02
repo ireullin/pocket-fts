@@ -20,7 +20,8 @@
       "Bash(../test_score.sh)",
       "Bash(../test_data_load.sh)",
       "Bash(./data_loader)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": []
   }

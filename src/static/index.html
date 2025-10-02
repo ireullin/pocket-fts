@@ -413,6 +413,62 @@
             max-width: none !important;
             word-wrap: break-word;
         }
+
+        /* 模態視窗樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #007bff;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal textarea {
+            height: 200px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -479,9 +535,14 @@
             
             <!-- 分頁控制 -->
             <div id="pagination-container" style="display: none; margin-top: 20px; text-align: center;">
-                <button onclick="changePage(-1)" id="prev-btn" class="secondary">⬅️ 上一頁</button>
-                <span id="page-info" style="margin: 0 20px; color: #6c757d;">第 1 頁，共 1 頁</span>
-                <button onclick="changePage(1)" id="next-btn" class="secondary">下一頁 ➡️</button>
+                <div style="display: inline-flex; align-items: center; gap: 15px;">
+                    <span style="color: #6c757d;">跳轉到第</span>
+                    <select id="page-select" onchange="selectPage()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                        <option value="1">1</option>
+                    </select>
+                    <span style="color: #6c757d;">頁</span>
+                    <span id="page-info" style="color: #6c757d; margin-left: 15px;">共 1 頁 (總計 0 筆)</span>
+                </div>
             </div>
         </div>
         
@@ -502,6 +563,58 @@
             </div>
         </div>
     </footer>
+
+    <!-- 新增文檔模態視窗 -->
+    <div id="add-doc-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ 新增文檔</h2>
+                <span class="close" onclick="hideAddDocumentModal()">&times;</span>
+            </div>
+            
+            <form id="add-doc-form" onsubmit="submitNewDocumentForm(event)">
+                <div class="form-group">
+                    <label for="new-doc-collection">Collection:</label>
+                    <input type="text" id="new-doc-collection" placeholder="Collection 名稱" readonly>
+                </div>
+                
+                <div id="doc-fields-container">
+                    <!-- 動態生成的表單字段 -->
+                </div>
+                
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" onclick="hideAddDocumentModal()" class="secondary" style="margin-right: 10px;">取消</button>
+                    <button type="submit">新增文檔</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 編輯文檔模態視窗 -->
+    <div id="edit-doc-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ 編輯文檔</h2>
+                <span class="close" onclick="hideEditDocumentModal()">&times;</span>
+            </div>
+            
+            <form id="edit-doc-form" onsubmit="submitEditDocumentForm(event)">
+                <div class="form-group">
+                    <label for="edit-doc-collection">Collection:</label>
+                    <input type="text" id="edit-doc-collection" placeholder="Collection 名稱" readonly>
+                </div>
+                
+                <div id="edit-doc-fields-container">
+                    <!-- 動態生成的表單字段 -->
+                </div>
+                
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" onclick="hideEditDocumentModal()" class="secondary" style="margin-right: 10px;">取消</button>
+                    <button type="submit">更新文檔</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
     <script>
         console.log('HTML loaded, about to load app.js');
@@ -1207,8 +1320,7 @@
 
         function updatePaginationControls(pagination) {
             const paginationElement = document.getElementById('pagination-container');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
+            const pageSelect = document.getElementById('page-select');
             const pageInfo = document.getElementById('page-info');
             
             if (pagination.total_pages <= 1) {
@@ -1217,15 +1329,26 @@
             }
             
             paginationElement.style.display = 'block';
-            prevBtn.disabled = !pagination.has_prev;
-            nextBtn.disabled = !pagination.has_next;
-            pageInfo.textContent = `第 ${pagination.page} 頁，共 ${pagination.total_pages} 頁 (總計 ${pagination.total_count} 筆)`;
+            pageInfo.textContent = `共 ${pagination.total_pages} 頁 (總計 ${pagination.total_count} 筆)`;
+            
+            // 更新下拉選單選項
+            pageSelect.innerHTML = '';
+            for (let i = 1; i <= pagination.total_pages; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                if (i === pagination.page) {
+                    option.selected = true;
+                }
+                pageSelect.appendChild(option);
+            }
         }
 
-        function changePage(direction) {
-            const newPage = currentPage + direction;
-            if (newPage >= 1 && collectionContent && newPage <= collectionContent.pagination.total_pages) {
-                loadCollectionContent(currentCollection, newPage);
+        function selectPage() {
+            const pageSelect = document.getElementById('page-select');
+            const selectedPage = parseInt(pageSelect.value);
+            if (selectedPage && selectedPage !== currentPage) {
+                loadCollectionContent(currentCollection, selectedPage);
             }
         }
 
@@ -1240,8 +1363,7 @@
         function editRecord(index) {
             if (collectionContent && collectionContent.records[index]) {
                 const record = collectionContent.records[index];
-                showStatus('編輯功能開發中...', 'error');
-                console.log('Edit record:', record);
+                showEditDocumentModal(record);
             }
         }
 
@@ -1255,14 +1377,598 @@
         }
 
         function showAddDocumentModal() {
-            showStatus('新增文檔功能開發中...', 'error');
+            if (!currentCollection) {
+                showStatus('請先選擇一個 Collection', 'error');
+                return;
+            }
+            document.getElementById('add-doc-modal').style.display = 'block';
+            document.getElementById('new-doc-collection').value = currentCollection;
+            
+            // 生成表單字段
+            generateFormFields();
         }
+
+        async function generateFormFields() {
+            const container = document.getElementById('doc-fields-container');
+            container.innerHTML = '';
+            
+            try {
+                // 從 collection schema 獲取正確的字段定義
+                const collectionsResult = await apiCall('/collections/list', 'GET');
+                const currentCol = collectionsResult.collections.find(c => c.name === currentCollection);
+                
+                if (currentCol && collectionContent && collectionContent.schema) {
+                    const schema = JSON.parse(collectionContent.schema);
+                    
+                    if (schema.fields && Array.isArray(schema.fields)) {
+                        schema.fields.forEach(field => {
+                            const formGroup = document.createElement('div');
+                            formGroup.className = 'form-group';
+                            
+                            const label = document.createElement('label');
+                            label.textContent = `${field.name} (${field.type}):`;
+                            label.setAttribute('for', `field-${field.name}`);
+                            
+                            let input;
+                            if (field.type === 'integer') {
+                                input = document.createElement('input');
+                                input.type = 'number';
+                                input.step = '1';
+                                input.placeholder = `輸入整數`;
+                                input.value = '';
+                            } else if (field.type === 'real' || field.type === 'number') {
+                                input = document.createElement('input');
+                                input.type = 'number';
+                                input.step = 'any';
+                                input.placeholder = `輸入小數`;
+                                input.value = '';
+                            } else if (field.type === 'text') {
+                                if (field.name.includes('content') || field.name.includes('description')) {
+                                    input = document.createElement('textarea');
+                                    input.style.height = '80px';
+                                    input.placeholder = `輸入${field.name}`;
+                                } else {
+                                    input = document.createElement('input');
+                                    input.type = 'text';
+                                    input.placeholder = `輸入${field.name}`;
+                                }
+                                
+                                input.value = "";
+                            } else {
+                                input = document.createElement('input');
+                                input.type = 'text';
+                                input.placeholder = `輸入${field.name}`;
+                                input.value = "";
+                            }
+                            
+                            input.id = `field-${field.name}`;
+                            input.name = field.name;
+                            input.required = true;
+                            input.style.width = '100%';
+                            input.style.padding = '10px';
+                            input.style.border = '1px solid #ddd';
+                            input.style.borderRadius = '4px';
+                            input.style.fontSize = '14px';
+                            input.style.boxSizing = 'border-box';
+                            
+                            formGroup.appendChild(label);
+                            formGroup.appendChild(input);
+                            container.appendChild(formGroup);
+                        });
+                        return;
+                    }
+                }
+                
+                // 如果無法獲取 schema，使用現有資料結構作為後備
+                if (collectionContent && collectionContent.records && collectionContent.records.length > 0) {
+                    const firstRecord = collectionContent.records[0];
+                    
+                    Object.keys(firstRecord).forEach(fieldName => {
+                        const fieldValue = firstRecord[fieldName];
+                        const fieldType = typeof fieldValue;
+                        
+                        const formGroup = document.createElement('div');
+                        formGroup.className = 'form-group';
+                        
+                        let typeLabel = fieldType;
+                        if (fieldType === 'number') {
+                            typeLabel = Number.isInteger(fieldValue) ? 'integer' : 'real';
+                        }
+                        
+                        const label = document.createElement('label');
+                        label.textContent = `${fieldName} (${typeLabel}):`;
+                        label.setAttribute('for', `field-${fieldName}`);
+                        
+                        let input;
+                        if (fieldType === 'number') {
+                            input = document.createElement('input');
+                            
+                            if (Number.isInteger(fieldValue)) {
+                                input.type = 'number';
+                                input.step = '1';
+                                input.placeholder = `輸入整數`;
+                                input.value = '';
+                            } else {
+                                input.type = 'number';
+                                input.step = 'any';
+                                input.placeholder = `輸入小數`;
+                                input.value = '';
+                            }
+                        } else if (fieldType === 'string') {
+                            if (fieldValue && fieldValue.length > 100) {
+                                input = document.createElement('textarea');
+                                input.style.height = '80px';
+                                input.placeholder = `輸入${fieldName}`;
+                            } else {
+                                input = document.createElement('input');
+                                input.type = 'text';
+                                input.placeholder = `輸入${fieldName}`;
+                            }
+                            
+                            input.value = "";
+                        } else {
+                            input = document.createElement('input');
+                            input.type = 'text';
+                            input.placeholder = `輸入${fieldName}`;
+                            input.value = "";
+                        }
+                        
+                        input.id = `field-${fieldName}`;
+                        input.name = fieldName;
+                        input.required = true;
+                        input.style.width = '100%';
+                        input.style.padding = '10px';
+                        input.style.border = '1px solid #ddd';
+                        input.style.borderRadius = '4px';
+                        input.style.fontSize = '14px';
+                        input.style.boxSizing = 'border-box';
+                        
+                        formGroup.appendChild(label);
+                        formGroup.appendChild(input);
+                        container.appendChild(formGroup);
+                    });
+                } else {
+                    // 如果沒有資料，生成基本字段
+                    const basicFields = [
+                        { name: 'id', type: 'text', value: '' },
+                        { name: 'title', type: 'text', value: '' },
+                        { name: 'content', type: 'textarea', value: '' },
+                        { name: 'created_at', type: 'number', value: '' }
+                    ];
+                    
+                    basicFields.forEach(field => {
+                        const formGroup = document.createElement('div');
+                        formGroup.className = 'form-group';
+                        
+                        const label = document.createElement('label');
+                        label.textContent = `${field.name}:`;
+                        label.setAttribute('for', `field-${field.name}`);
+                        
+                        let input;
+                        if (field.type === 'textarea') {
+                            input = document.createElement('textarea');
+                            input.style.height = '80px';
+                        } else {
+                            input = document.createElement('input');
+                            input.type = field.type;
+                        }
+                        
+                        input.id = `field-${field.name}`;
+                        input.name = field.name;
+                        input.value = field.value;
+                        input.required = true;
+                        input.style.width = '100%';
+                        input.style.padding = '10px';
+                        input.style.border = '1px solid #ddd';
+                        input.style.borderRadius = '4px';
+                        input.style.fontSize = '14px';
+                        input.style.boxSizing = 'border-box';
+                        
+                        formGroup.appendChild(label);
+                        formGroup.appendChild(input);
+                        container.appendChild(formGroup);
+                    });
+                }
+            } catch (error) {
+                console.error('Error generating form fields:', error);
+                showStatus('產生表單欄位時發生錯誤', 'error');
+            }
+        }
+
+        function hideAddDocumentModal() {
+            document.getElementById('add-doc-modal').style.display = 'none';
+        }
+
+        // 編輯文檔相關函數
+        function showEditDocumentModal(record) {
+            if (!currentCollection) {
+                showStatus('請先選擇一個 Collection', 'error');
+                return;
+            }
+            document.getElementById('edit-doc-modal').style.display = 'block';
+            document.getElementById('edit-doc-collection').value = currentCollection;
+            
+            // 生成編輯表單字段並填入現有資料
+            generateEditFormFields(record);
+        }
+
+        function hideEditDocumentModal() {
+            document.getElementById('edit-doc-modal').style.display = 'none';
+        }
+
+        async function generateEditFormFields(record) {
+            const container = document.getElementById('edit-doc-fields-container');
+            container.innerHTML = '';
+            
+            try {
+                // 從 collection schema 獲取正確的字段定義
+                const collectionsResult = await apiCall('/collections/list', 'GET');
+                const currentCol = collectionsResult.collections.find(c => c.name === currentCollection);
+                
+                let schema = null;
+                let primaryKeyField = null;
+                
+                if (currentCol && collectionContent && collectionContent.schema) {
+                    schema = JSON.parse(collectionContent.schema);
+                    primaryKeyField = schema.primary_key;
+                }
+                
+                if (schema && schema.fields && Array.isArray(schema.fields)) {
+                    schema.fields.forEach(field => {
+                        const formGroup = document.createElement('div');
+                        formGroup.className = 'form-group';
+                        
+                        const label = document.createElement('label');
+                        const isPrimaryKey = field.name === primaryKeyField;
+                        label.textContent = `${field.name} (${field.type})${isPrimaryKey ? ' - Primary Key' : ''}:`;
+                        label.setAttribute('for', `edit-field-${field.name}`);
+                        
+                        let input;
+                        if (field.type === 'integer') {
+                            input = document.createElement('input');
+                            input.type = 'number';
+                            input.step = '1';
+                            input.placeholder = `輸入整數`;
+                            input.value = record[field.name] || '';
+                        } else if (field.type === 'real' || field.type === 'number') {
+                            input = document.createElement('input');
+                            input.type = 'number';
+                            input.step = 'any';
+                            input.placeholder = `輸入小數`;
+                            input.value = record[field.name] || '';
+                        } else if (field.type === 'text') {
+                            if (field.name.includes('content') || field.name.includes('description')) {
+                                input = document.createElement('textarea');
+                                input.style.height = '80px';
+                                input.placeholder = `輸入${field.name}`;
+                            } else {
+                                input = document.createElement('input');
+                                input.type = 'text';
+                                input.placeholder = `輸入${field.name}`;
+                            }
+                            input.value = record[field.name] || '';
+                        } else {
+                            input = document.createElement('input');
+                            input.type = 'text';
+                            input.placeholder = `輸入${field.name}`;
+                            input.value = record[field.name] || '';
+                        }
+                        
+                        input.id = `edit-field-${field.name}`;
+                        input.name = field.name;
+                        input.required = true;
+                        input.style.width = '100%';
+                        input.style.padding = '10px';
+                        input.style.border = '1px solid #ddd';
+                        input.style.borderRadius = '4px';
+                        input.style.fontSize = '14px';
+                        input.style.boxSizing = 'border-box';
+                        
+                        // 如果是 Primary Key 則設為只讀
+                        if (isPrimaryKey) {
+                            input.readOnly = true;
+                            input.style.backgroundColor = '#f8f9fa';
+                            input.style.color = '#6c757d';
+                            input.title = 'Primary Key 不可修改';
+                        }
+                        
+                        formGroup.appendChild(label);
+                        formGroup.appendChild(input);
+                        container.appendChild(formGroup);
+                    });
+                    return;
+                }
+                
+                // 如果無法獲取 schema，使用現有資料結構作為後備
+                Object.keys(record).forEach(fieldName => {
+                    const fieldValue = record[fieldName];
+                    const fieldType = typeof fieldValue;
+                    
+                    const formGroup = document.createElement('div');
+                    formGroup.className = 'form-group';
+                    
+                    let typeLabel = fieldType;
+                    if (fieldType === 'number') {
+                        typeLabel = Number.isInteger(fieldValue) ? 'integer' : 'real';
+                    }
+                    
+                    const label = document.createElement('label');
+                    const isPrimaryKey = fieldName === 'id'; // 假設第一個字段是 primary key
+                    label.textContent = `${fieldName} (${typeLabel})${isPrimaryKey ? ' - Primary Key' : ''}:`;
+                    label.setAttribute('for', `edit-field-${fieldName}`);
+                    
+                    let input;
+                    if (fieldType === 'number') {
+                        input = document.createElement('input');
+                        
+                        if (Number.isInteger(fieldValue)) {
+                            input.type = 'number';
+                            input.step = '1';
+                            input.placeholder = `輸入整數`;
+                        } else {
+                            input.type = 'number';
+                            input.step = 'any';
+                            input.placeholder = `輸入小數`;
+                        }
+                        input.value = fieldValue;
+                    } else if (fieldType === 'string') {
+                        if (fieldValue && fieldValue.length > 100) {
+                            input = document.createElement('textarea');
+                            input.style.height = '80px';
+                            input.placeholder = `輸入${fieldName}`;
+                        } else {
+                            input = document.createElement('input');
+                            input.type = 'text';
+                            input.placeholder = `輸入${fieldName}`;
+                        }
+                        input.value = fieldValue || '';
+                    } else {
+                        input = document.createElement('input');
+                        input.type = 'text';
+                        input.placeholder = `輸入${fieldName}`;
+                        input.value = String(fieldValue) || '';
+                    }
+                    
+                    input.id = `edit-field-${fieldName}`;
+                    input.name = fieldName;
+                    input.required = true;
+                    input.style.width = '100%';
+                    input.style.padding = '10px';
+                    input.style.border = '1px solid #ddd';
+                    input.style.borderRadius = '4px';
+                    input.style.fontSize = '14px';
+                    input.style.boxSizing = 'border-box';
+                    
+                    // 如果是假定的 Primary Key 則設為只讀
+                    if (isPrimaryKey) {
+                        input.readOnly = true;
+                        input.style.backgroundColor = '#f8f9fa';
+                        input.style.color = '#6c757d';
+                        input.title = 'Primary Key 不可修改';
+                    }
+                    
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(input);
+                    container.appendChild(formGroup);
+                });
+                
+            } catch (error) {
+                console.error('Error generating edit form fields:', error);
+                showStatus('產生編輯表單欄位時發生錯誤', 'error');
+            }
+        }
+
+        function submitEditDocumentForm(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('edit-doc-form');
+            const formData = new FormData(form);
+            const documentObj = {};
+            let hasErrors = false;
+            
+            // 獲取 schema 進行類型驗證
+            let schema = null;
+            if (collectionContent && collectionContent.schema) {
+                try {
+                    schema = JSON.parse(collectionContent.schema);
+                } catch (e) {
+                    console.error('Failed to parse schema:', e);
+                }
+            }
+            
+            // 收集並驗證表單資料
+            for (let [fieldName, fieldValue] of formData.entries()) {
+                let fieldType = 'text'; // 預設類型
+                
+                // 從 schema 獲取正確的字段類型
+                if (schema && schema.fields) {
+                    const field = schema.fields.find(f => f.name === fieldName);
+                    if (field) {
+                        fieldType = field.type;
+                    }
+                }
+                
+                // 根據 schema 定義的類型進行驗證
+                if (fieldType === 'integer') {
+                    const intValue = parseInt(fieldValue);
+                    if (isNaN(intValue)) {
+                        showStatus(`${fieldName} 必須是整數`, 'error');
+                        hasErrors = true;
+                        continue;
+                    }
+                    documentObj[fieldName] = intValue;
+                } else if (fieldType === 'real' || fieldType === 'number') {
+                    const floatValue = parseFloat(fieldValue);
+                    if (isNaN(floatValue)) {
+                        showStatus(`${fieldName} 必須是數字`, 'error');
+                        hasErrors = true;
+                        continue;
+                    }
+                    documentObj[fieldName] = floatValue;
+                } else if (fieldType === 'text') {
+                    if (!fieldValue.trim()) {
+                        showStatus(`${fieldName} 不能為空`, 'error');
+                        hasErrors = true;
+                        continue;
+                    }
+                    documentObj[fieldName] = fieldValue.trim();
+                } else {
+                    // 其他類型或未知類型，當作字串處理
+                    if (!fieldValue.trim()) {
+                        showStatus(`${fieldName} 不能為空`, 'error');
+                        hasErrors = true;
+                        continue;
+                    }
+                    documentObj[fieldName] = fieldValue.trim();
+                }
+            }
+            
+            if (hasErrors) {
+                return;
+            }
+            
+            // 提交編輯後的文檔
+            submitEditedDocument(documentObj);
+        }
+
+        async function submitEditedDocument(documentData) {
+            const collection = document.getElementById('edit-doc-collection').value.trim();
+            
+            try {
+                const payload = {
+                    collection: collection,
+                    document: documentData
+                };
+                
+                const result = await apiCall('/documents/upsert', 'POST', payload);
+                showStatus('Document 更新成功！');
+                
+                // 隱藏模態視窗
+                hideEditDocumentModal();
+                
+                // 重新載入當前 collection 內容
+                if (currentCollection === collection) {
+                    loadCollectionContent(currentCollection, currentPage);
+                }
+                
+            } catch (error) {
+                showStatus(`Document 更新失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 點擊模態視窗背景關閉
+        window.onclick = function(event) {
+            const addModal = document.getElementById('add-doc-modal');
+            const editModal = document.getElementById('edit-doc-modal');
+            if (event.target === addModal) {
+                hideAddDocumentModal();
+            } else if (event.target === editModal) {
+                hideEditDocumentModal();
+            }
+        }
+
+
+        function submitNewDocumentForm(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('add-doc-form');
+            const formData = new FormData(form);
+            const documentObj = {};
+            let hasErrors = false;
+            
+            // 獲取 schema 進行類型驗證
+            let schema = null;
+            if (collectionContent && collectionContent.schema) {
+                try {
+                    schema = JSON.parse(collectionContent.schema);
+                } catch (e) {
+                    console.error('Failed to parse schema:', e);
+                }
+            }
+            
+            // 收集並驗證表單資料
+            for (let [fieldName, fieldValue] of formData.entries()) {
+                let fieldType = 'text'; // 預設類型
+                
+                // 從 schema 獲取正確的字段類型
+                if (schema && schema.fields) {
+                    const field = schema.fields.find(f => f.name === fieldName);
+                    if (field) {
+                        fieldType = field.type;
+                    }
+                }
+                
+                // 根據 schema 定義的類型進行驗證
+                if (fieldType === 'integer') {
+                    const intValue = parseInt(fieldValue);
+                    if (isNaN(intValue)) {
+                        showStatus(`${fieldName} 必須是整數`, 'error');
+                        hasErrors = true;
+                        continue;
+                    }
+                    documentObj[fieldName] = intValue;
+                } else if (fieldType === 'real' || fieldType === 'number') {
+                    const floatValue = parseFloat(fieldValue);
+                    if (isNaN(floatValue)) {
+                        showStatus(`${fieldName} 必須是數字`, 'error');
+                        hasErrors = true;
+                        continue;
+                    }
+                    documentObj[fieldName] = floatValue;
+                } else if (fieldType === 'text') {
+                    if (!fieldValue.trim()) {
+                        showStatus(`${fieldName} 不能為空`, 'error');
+                        hasErrors = true;
+                        continue;
+                    }
+                    documentObj[fieldName] = fieldValue.trim();
+                } else {
+                    // 其他類型或未知類型，當作字串處理
+                    if (!fieldValue.trim()) {
+                        showStatus(`${fieldName} 不能為空`, 'error');
+                        hasErrors = true;
+                        continue;
+                    }
+                    documentObj[fieldName] = fieldValue.trim();
+                }
+            }
+            
+            if (hasErrors) {
+                return;
+            }
+            
+            // 提交文檔
+            submitValidatedDocument(documentObj);
+        }
+
+        async function submitValidatedDocument(document) {
+            const collection = document.getElementById('new-doc-collection').value.trim();
+            
+            try {
+                const payload = {
+                    collection: collection,
+                    document: document
+                };
+                
+                const result = await apiCall('/documents/upsert', 'POST', payload);
+                showStatus('Document 新增成功！');
+                
+                // 隱藏模態視窗
+                hideAddDocumentModal();
+                
+                // 重新載入當前 collection 內容
+                if (currentCollection === collection) {
+                    loadCollectionContent(currentCollection, 1);
+                }
+                
+            } catch (error) {
+                showStatus(`Document 新增失敗: ${error.message}`, 'error');
+            }
+        }
+
 
         // 頁面載入完成後的初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 設置預設值
-            document.getElementById('search-limit').value = '10';
-            
             // 載入 Collections
             loadCollections();
             
