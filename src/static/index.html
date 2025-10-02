@@ -493,7 +493,7 @@
             <ul class="collection-list" id="collection-list">
                 <li class="no-collections">載入中...</li>
             </ul>
-            <button class="refresh-btn" onclick="loadCollections()">🔄 重新載入</button>
+            <button class="refresh-btn" onclick="showCreateCollectionModal()">➕ 新增 Collection</button>
         </aside>
         
         <!-- Content Area -->
@@ -611,6 +611,59 @@
                 <div style="text-align: right; margin-top: 20px;">
                     <button type="button" onclick="hideEditDocumentModal()" class="secondary" style="margin-right: 10px;">取消</button>
                     <button type="submit">更新文檔</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 新增 Collection 模態視窗 -->
+    <div id="create-collection-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>📁 新增 Collection</h2>
+                <span class="close" onclick="hideCreateCollectionModal()">&times;</span>
+            </div>
+            
+            <form id="create-collection-form" onsubmit="submitCreateCollectionForm(event)">
+                <!-- 基本資訊 -->
+                <div class="form-group">
+                    <label for="new-collection-name">Collection 名稱:</label>
+                    <input type="text" id="new-collection-name" placeholder="輸入 Collection 名稱" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="new-primary-key">Primary Key 欄位:</label>
+                    <input type="text" id="new-primary-key" placeholder="預設為 id" value="id" required>
+                </div>
+                
+                <!-- FTS 配置 -->
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="fts-stemming" checked>
+                        啟用 FTS Stemming (詞幹分析)
+                    </label>
+                </div>
+                
+                <!-- 字段配置 -->
+                <div class="form-group">
+                    <label>字段配置:</label>
+                    <!-- 字段標題行 -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 12px;">
+                        <div style="flex: 1;">字段名稱</div>
+                        <div style="flex: 1;">資料類型</div>
+                        <div style="flex: 0.8;">搜尋權重</div>
+                        <div style="flex: 0.5; text-align: center;">建立索引</div>
+                        <div style="flex: 0.3; text-align: center;">操作</div>
+                    </div>
+                    <div id="fields-container">
+                        <!-- 動態生成的字段配置 -->
+                    </div>
+                    <button type="button" onclick="addFieldRow()" class="secondary" style="margin-top: 10px;">➕ 新增字段</button>
+                </div>
+                
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" onclick="hideCreateCollectionModal()" class="secondary" style="margin-right: 10px;">取消</button>
+                    <button type="submit">建立 Collection</button>
                 </div>
             </form>
         </div>
@@ -1856,14 +1909,188 @@
             }
         }
 
+        // 新增 Collection 相關函數
+        let fieldRowCounter = 0;
+
+        function showCreateCollectionModal() {
+            document.getElementById('create-collection-modal').style.display = 'block';
+            // 清空表單
+            document.getElementById('new-collection-name').value = '';
+            document.getElementById('new-primary-key').value = 'id';
+            document.getElementById('fts-stemming').checked = true;
+            
+            // 重置字段容器
+            fieldRowCounter = 0;
+            const container = document.getElementById('fields-container');
+            container.innerHTML = '';
+            
+            // 添加預設字段
+            addFieldRow('id', 'text', '', true);
+            addFieldRow('title', 'text', '2.0', true);
+            addFieldRow('content', 'text', '1.0', true);
+            addFieldRow('created_at', 'integer', '', true);
+        }
+
+        function hideCreateCollectionModal() {
+            document.getElementById('create-collection-modal').style.display = 'none';
+        }
+
+        function addFieldRow(name = '', type = 'text', weight = '', indexed = true) {
+            const container = document.getElementById('fields-container');
+            fieldRowCounter++;
+            
+            const fieldRow = document.createElement('div');
+            fieldRow.className = 'field-row';
+            fieldRow.style.cssText = `
+                display: flex; 
+                gap: 10px; 
+                margin-bottom: 10px; 
+                align-items: center; 
+                padding: 10px; 
+                border: 1px solid #ddd; 
+                border-radius: 4px; 
+                background: #f9f9f9;
+            `;
+            fieldRow.id = `field-row-${fieldRowCounter}`;
+            
+            fieldRow.innerHTML = `
+                <div style="flex: 1;">
+                    <input type="text" placeholder="字段名稱" value="${name}" 
+                           style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px;" 
+                           data-field="name" required>
+                </div>
+                <div style="flex: 1;">
+                    <select style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px;" 
+                            data-field="type" required>
+                        <option value="text" ${type === 'text' ? 'selected' : ''}>text</option>
+                        <option value="integer" ${type === 'integer' ? 'selected' : ''}>integer</option>
+                        <option value="real" ${type === 'real' ? 'selected' : ''}>real</option>
+                    </select>
+                </div>
+                <div style="flex: 0.8;">
+                    <input type="number" placeholder="權重" value="${weight}" step="0.1"
+                           style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px;" 
+                           data-field="weight">
+                </div>
+                <div style="flex: 0.5; text-align: center;">
+                    <label style="margin: 0; display: flex; align-items: center; justify-content: center;">
+                        <input type="checkbox" ${indexed ? 'checked' : ''} data-field="indexed" style="margin-right: 5px;">
+                        索引
+                    </label>
+                </div>
+                <div style="flex: 0.3;">
+                    <button type="button" onclick="removeFieldRow('${fieldRowCounter}')" 
+                            class="danger" style="padding: 5px 8px; font-size: 12px; margin: 0;">
+                        🗑️
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(fieldRow);
+        }
+
+        function removeFieldRow(rowId) {
+            const row = document.getElementById(`field-row-${rowId}`);
+            if (row) {
+                row.remove();
+            }
+        }
+
+        async function submitCreateCollectionForm(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('new-collection-name').value.trim();
+            const primaryKey = document.getElementById('new-primary-key').value.trim();
+            const stemming = document.getElementById('fts-stemming').checked;
+            
+            if (!name) {
+                showStatus('請輸入 Collection 名稱', 'error');
+                return;
+            }
+            
+            if (!primaryKey) {
+                showStatus('請輸入 Primary Key 欄位名稱', 'error');
+                return;
+            }
+            
+            // 收集字段配置
+            const fields = [];
+            const fieldRows = document.querySelectorAll('.field-row');
+            
+            for (let row of fieldRows) {
+                const fieldName = row.querySelector('[data-field="name"]').value.trim();
+                const fieldType = row.querySelector('[data-field="type"]').value;
+                const fieldWeight = parseFloat(row.querySelector('[data-field="weight"]').value) || undefined;
+                const fieldIndexed = row.querySelector('[data-field="indexed"]').checked;
+                
+                if (!fieldName) {
+                    showStatus('所有字段都必須有名稱', 'error');
+                    return;
+                }
+                
+                const field = {
+                    name: fieldName,
+                    type: fieldType,
+                    indexed: fieldIndexed
+                };
+                
+                // 只有當權重值存在且大於 0 時才加入
+                if (fieldWeight && fieldWeight > 0) {
+                    field.weight = fieldWeight;
+                }
+                
+                fields.push(field);
+            }
+            
+            if (fields.length === 0) {
+                showStatus('至少需要一個字段', 'error');
+                return;
+            }
+            
+            // 檢查 Primary Key 是否存在於字段中
+            const primaryKeyExists = fields.some(field => field.name === primaryKey);
+            if (!primaryKeyExists) {
+                showStatus(`Primary Key "${primaryKey}" 必須在字段列表中`, 'error');
+                return;
+            }
+            
+            try {
+                const schema = {
+                    name: name,
+                    primary_key: primaryKey,
+                    fts: { 
+                        stemming: stemming 
+                    },
+                    fields: fields
+                };
+                
+                console.log('Sending schema:', schema);
+                
+                const result = await apiCall('/collections/create', 'POST', schema);
+                showStatus('Collection 建立成功！');
+                
+                // 隱藏模態視窗
+                hideCreateCollectionModal();
+                
+                // 重新載入 Collection 列表
+                await loadCollections();
+                
+            } catch (error) {
+                showStatus(`Collection 建立失敗: ${error.message}`, 'error');
+            }
+        }
+
         // 點擊模態視窗背景關閉
         window.onclick = function(event) {
             const addModal = document.getElementById('add-doc-modal');
             const editModal = document.getElementById('edit-doc-modal');
+            const createModal = document.getElementById('create-collection-modal');
             if (event.target === addModal) {
                 hideAddDocumentModal();
             } else if (event.target === editModal) {
                 hideEditDocumentModal();
+            } else if (event.target === createModal) {
+                hideCreateCollectionModal();
             }
         }
 

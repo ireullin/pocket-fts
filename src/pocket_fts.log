@@ -22,3 +22,28 @@
 {"time":"2025-10-02T12:07:59.72785802+08:00","level":"INFO","msg":"Document upserted successfully","collection":"products","remote_addr":"[::1]:57780"}
 {"time":"2025-10-02T12:07:59.73442302+08:00","level":"INFO","msg":"Collection content request received","method":"GET","remote_addr":"[::1]:57780"}
 {"time":"2025-10-02T12:07:59.74259502+08:00","level":"INFO","msg":"Collection content retrieved successfully","collection":"products","total_count":488,"page":1,"limit":20,"records_count":20,"remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:12:23.432321939+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:12:23.481880443+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:12:23.483556543+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57786"}
+{"time":"2025-10-02T12:12:23.514412345+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:12:23.518276845+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57786"}
+{"time":"2025-10-02T12:12:23.672981755+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:57786"}
+{"time":"2025-10-02T12:12:24.500933808+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57786"}
+{"time":"2025-10-02T12:12:24.505103908+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57786"}
+{"time":"2025-10-02T12:12:24.514412409+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:57786"}
+{"time":"2025-10-02T12:17:13.376797663+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:57786"}
+{"time":"2025-10-02T12:17:13.466773362+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57786"}
+{"time":"2025-10-02T12:17:13.480695861+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:17:13.497327661+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57786"}
+{"time":"2025-10-02T12:17:13.501468961+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:17:13.652111658+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:17:14.494958143+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:17:14.501403142+08:00","level":"INFO","msg":"Collections listed successfully","count":1,"remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:17:14.513629542+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:57780"}
+{"time":"2025-10-02T12:18:05.841428705+08:00","level":"INFO","msg":"Collection create request received","method":"POST","remote_addr":"[::1]:37394"}
+{"time":"2025-10-02T12:18:05.882405704+08:00","level":"INFO","msg":"Successfully created collection, FTS index, and SQL table","collection":"test"}
+{"time":"2025-10-02T12:18:05.886585304+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:37394"}
+{"time":"2025-10-02T12:18:05.897356103+08:00","level":"INFO","msg":"Collections listed successfully","count":2,"remote_addr":"[::1]:37394"}
+{"time":"2025-10-02T12:18:05.902984303+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:37394"}
+{"time":"2025-10-02T12:18:09.409380891+08:00","level":"INFO","msg":"Collection content request received","method":"GET","remote_addr":"[::1]:37394"}
+{"time":"2025-10-02T12:18:09.41888469+08:00","level":"INFO","msg":"Collection content retrieved successfully","collection":"test","total_count":0,"page":1,"limit":20,"records_count":0,"remote_addr":"[::1]:37394"}
