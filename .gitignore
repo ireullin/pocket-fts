@@ -18,8 +18,9 @@ vendor/
 # SQLite database files
 *.sqlite
 *.sqlite3
-db.sqlite
-.db
+*.sqlite
+*.db
+*.indices
 # Environment files
 .env
 

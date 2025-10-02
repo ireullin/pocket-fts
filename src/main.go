@@ -16,6 +16,17 @@ var logger *slog.Logger
 var fts *FTS
 var queryExecutor *QueryExecutor
 
+// addNoCacheHeaders 添加防快取標頭的中間件
+func addNoCacheHeaders(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger.Info("Static file request", "path", r.URL.Path, "remote_addr", r.RemoteAddr)
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		handler.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	logFile, err := os.OpenFile("pocket_fts.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
@@ -60,12 +71,22 @@ func main() {
 	queryExecutor = NewQueryExecutor(db, fts)
 	logger.Info("Query executor initialized successfully.")
 
-	// Register API handlers
+	// 提供靜態檔案服務（添加防快取標頭）
+	fs := http.FileServer(http.Dir("./static/"))
+	http.Handle("/static/", addNoCacheHeaders(http.StripPrefix("/static/", fs)))
+	
+	// 根路徑重導向到管理介面
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "/static/", http.StatusFound)
+			return
+		}
 		fmt.Fprintf(w, "Pocket FTS is running.")
 	})
 	http.HandleFunc("/collections/create", handleCollectionCreate)
 	http.HandleFunc("/collections/delete", handleCollectionDelete)
+	http.HandleFunc("/collections/list", handleCollectionList)
+	http.HandleFunc("/collections/content", handleCollectionContent)
 	http.HandleFunc("/documents/upsert", handleDocumentUpsert)
 	http.HandleFunc("/documents/delete", handleDocumentDelete)
 	http.HandleFunc("/search", handleSearch)

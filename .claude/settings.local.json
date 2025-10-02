@@ -19,7 +19,8 @@
       "Bash(LD_LIBRARY_PATH=../lib ../test_query.sh)",
       "Bash(../test_score.sh)",
       "Bash(../test_data_load.sh)",
-      "Bash(./data_loader)"
+      "Bash(./data_loader)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }

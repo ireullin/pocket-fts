@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -199,6 +200,241 @@ func handleCollectionDelete(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("Successfully deleted collection, FTS index, and SQL table", "collection", req.Name)
 	respondWithJSON(w, http.StatusOK, map[string]string{"status": "success", "collection": req.Name})
+}
+
+func handleCollectionList(w http.ResponseWriter, r *http.Request) {
+	logger.Info("Collection list request received", "method", r.Method, "remote_addr", r.RemoteAddr)
+	
+	if r.Method != http.MethodGet {
+		logger.Warn("Invalid method for collection list", "method", r.Method, "remote_addr", r.RemoteAddr)
+		respondWithError(w, http.StatusMethodNotAllowed, "Only GET method is allowed")
+		return
+	}
+
+	// 先檢查 collections 表是否存在
+	checkTableQuery := "SELECT name FROM sqlite_master WHERE type='table' AND name='collections'"
+	var tableName string
+	err := db.QueryRow(checkTableQuery).Scan(&tableName)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			logger.Info("Collections table does not exist yet, returning empty list")
+			respondWithJSON(w, http.StatusOK, map[string]interface{}{
+				"collections": []map[string]interface{}{},
+				"count":       0,
+			})
+			return
+		}
+		logger.Error("Failed to check collections table existence", "error", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to check database structure")
+		return
+	}
+
+	// 查詢所有 collections
+	query := "SELECT name, schema_json FROM collections"
+	logger.Debug("Executing query", "query", query)
+	rows, err := db.Query(query)
+	if err != nil {
+		logger.Error("Failed to query collections", "error", err, "query", query)
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to query collections: %v", err))
+		return
+	}
+	defer rows.Close()
+
+	var collections []map[string]interface{}
+	for rows.Next() {
+		var name, schemaStr string
+		if err := rows.Scan(&name, &schemaStr); err != nil {
+			logger.Error("Failed to scan collection row", "error", err)
+			continue
+		}
+
+		logger.Debug("Processing collection", "name", name, "schema_length", len(schemaStr))
+
+		// 解析 schema 以獲取額外信息
+		var schema CollectionSchema
+		collection := map[string]interface{}{
+			"name": name,
+		}
+		
+		if err := json.Unmarshal([]byte(schemaStr), &schema); err == nil {
+			collection["primary_key"] = schema.PrimaryKey
+			collection["field_count"] = len(schema.Fields)
+			collection["has_fts"] = schema.FTS.Stemming
+			
+			// 統計文檔數量（安全檢查 collection 名稱）
+			if isValidIdentifier(name) {
+				countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s", name)
+				var docCount int
+				if err := db.QueryRow(countQuery).Scan(&docCount); err == nil {
+					collection["document_count"] = docCount
+					logger.Debug("Collection document count", "name", name, "count", docCount)
+				} else {
+					logger.Debug("Failed to count documents in collection", "name", name, "error", err)
+					collection["document_count"] = 0
+				}
+			} else {
+				logger.Warn("Invalid collection name for counting", "name", name)
+				collection["document_count"] = 0
+			}
+		} else {
+			logger.Error("Failed to parse collection schema", "name", name, "error", err)
+			collection["primary_key"] = "unknown"
+			collection["field_count"] = 0
+			collection["has_fts"] = false
+			collection["document_count"] = 0
+		}
+		
+		collections = append(collections, collection)
+	}
+
+	// 檢查 rows 是否有錯誤
+	if err := rows.Err(); err != nil {
+		logger.Error("Error iterating over collection rows", "error", err)
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error reading collections: %v", err))
+		return
+	}
+
+	logger.Info("Collections listed successfully", "count", len(collections), "remote_addr", r.RemoteAddr)
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"collections": collections,
+		"count":       len(collections),
+	})
+}
+
+func handleCollectionContent(w http.ResponseWriter, r *http.Request) {
+	logger.Info("Collection content request received", "method", r.Method, "remote_addr", r.RemoteAddr)
+	
+	if r.Method != http.MethodGet {
+		logger.Warn("Invalid method for collection content", "method", r.Method, "remote_addr", r.RemoteAddr)
+		respondWithError(w, http.StatusMethodNotAllowed, "Only GET method is allowed")
+		return
+	}
+
+	collectionName := r.URL.Query().Get("collection")
+	if collectionName == "" {
+		respondWithError(w, http.StatusBadRequest, "Collection parameter is required")
+		return
+	}
+
+	if !isValidIdentifier(collectionName) {
+		logger.Warn("Invalid collection name for content", "collection_name", collectionName, "remote_addr", r.RemoteAddr)
+		respondWithError(w, http.StatusBadRequest, "Invalid collection name")
+		return
+	}
+
+	// 解析分頁參數
+	page := 1
+	limit := 20
+	if pageParam := r.URL.Query().Get("page"); pageParam != "" {
+		if p, err := parsePositiveInt(pageParam); err == nil {
+			page = p
+		}
+	}
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		if l, err := parsePositiveInt(limitParam); err == nil && l <= 100 {
+			limit = l
+		}
+	}
+
+	offset := (page - 1) * limit
+
+	// 檢查 collection 是否存在
+	schema, err := getCollectionSchema(collectionName)
+	if err != nil {
+		logger.Error("Collection not found", "collection", collectionName, "error", err)
+		respondWithError(w, http.StatusNotFound, fmt.Sprintf("Collection '%s' not found", collectionName))
+		return
+	}
+
+	// 獲取總記錄數
+	var totalCount int
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s", collectionName)
+	if err := db.QueryRow(countQuery).Scan(&totalCount); err != nil {
+		logger.Error("Failed to count records", "collection", collectionName, "error", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to count records")
+		return
+	}
+
+	// 獲取記錄資料
+	query := fmt.Sprintf("SELECT * FROM %s ORDER BY rowid LIMIT ? OFFSET ?", collectionName)
+	rows, err := db.Query(query, limit, offset)
+	if err != nil {
+		logger.Error("Failed to query collection content", "collection", collectionName, "error", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to query collection content")
+		return
+	}
+	defer rows.Close()
+
+	// 獲取欄位名稱
+	columns, err := rows.Columns()
+	if err != nil {
+		logger.Error("Failed to get columns", "collection", collectionName, "error", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to get columns")
+		return
+	}
+
+	// 讀取資料
+	var records []map[string]interface{}
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePointers := make([]interface{}, len(columns))
+		for i := range values {
+			valuePointers[i] = &values[i]
+		}
+
+		if err := rows.Scan(valuePointers...); err != nil {
+			logger.Error("Failed to scan row", "collection", collectionName, "error", err)
+			continue
+		}
+
+		record := make(map[string]interface{})
+		for i, column := range columns {
+			record[column] = values[i]
+		}
+		records = append(records, record)
+	}
+
+	if err := rows.Err(); err != nil {
+		logger.Error("Error iterating over rows", "collection", collectionName, "error", err)
+		respondWithError(w, http.StatusInternalServerError, "Error reading collection content")
+		return
+	}
+
+	totalPages := (totalCount + limit - 1) / limit
+
+	logger.Info("Collection content retrieved successfully", 
+		"collection", collectionName, 
+		"total_count", totalCount,
+		"page", page,
+		"limit", limit,
+		"records_count", len(records),
+		"remote_addr", r.RemoteAddr)
+
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"collection":    collectionName,
+		"schema":        schema,
+		"columns":       columns,
+		"records":       records,
+		"pagination": map[string]interface{}{
+			"page":        page,
+			"limit":       limit,
+			"total_count": totalCount,
+			"total_pages": totalPages,
+			"has_next":    page < totalPages,
+			"has_prev":    page > 1,
+		},
+	})
+}
+
+func parsePositiveInt(s string) (int, error) {
+	var result int
+	if _, err := fmt.Sscanf(s, "%d", &result); err != nil {
+		return 0, err
+	}
+	if result <= 0 {
+		return 0, fmt.Errorf("value must be positive")
+	}
+	return result, nil
 }
 
 func handleDocumentUpsert(w http.ResponseWriter, r *http.Request) {

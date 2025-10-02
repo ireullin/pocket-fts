@@ -1,0 +1,141 @@
+/* 額外的樣式改進 */
+
+.section {
+    transition: box-shadow 0.3s ease;
+}
+
+.section:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* 美化按鈕 */
+button {
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* 改善表單輸入 */
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+/* 改善結果區塊 */
+.result {
+    border-left: 4px solid #007bff;
+}
+
+.result.error {
+    border-left-color: #dc3545;
+}
+
+.result.success {
+    border-left-color: #28a745;
+}
+
+/* 響應式改進 */
+@media (max-width: 992px) {
+    .container {
+        margin: 10px;
+        padding: 20px;
+    }
+}
+
+/* 載入動畫 */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: " 載入中...";
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* 工具提示 */
+.tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s;
+    z-index: 1000;
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* JSON 高亮 */
+.json-highlight {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* 成功/錯誤狀態動畫 */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.status {
+    animation: slideInRight 0.3s ease;
+}
+
+/* 表單驗證樣式 */
+.form-group.error input,
+.form-group.error textarea {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.form-group.success input,
+.form-group.success textarea {
+    border-color: #28a745;
+    background-color: #f8fff9;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+
+.form-group.error .error-message {
+    display: block;
+}

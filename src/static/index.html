@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Pocket FTS - 全文搜尋引擎管理介面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        
+        .header-info {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        /* Main layout */
+        .main-layout {
+            flex: 1;
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .sidebar h3 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+        }
+        
+        .collection-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .collection-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .collection-item:hover {
+            background: #e9ecef;
+            border-left-color: #007bff;
+            transform: translateX(5px);
+        }
+        
+        .collection-item.active {
+            background: #e3f2fd;
+            border-left-color: #007bff;
+            color: #0056b3;
+            font-weight: 500;
+        }
+        
+        .collection-item-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .collection-item-info {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        
+        .no-collections {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .refresh-btn {
+            width: 100%;
+            margin-top: 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .refresh-btn:hover {
+            background: #218838;
+        }
+        
+        /* Content area */
+        .content {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #343a40;
+            color: white;
+            padding: 20px 0;
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            opacity: 1;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        
+        .section h2 {
+            color: #007bff;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button.secondary {
+            background-color: #6c757d;
+        }
+        
+        button.secondary:hover {
+            background-color: #545b62;
+        }
+        
+        button.danger {
+            background-color: #dc3545;
+        }
+        
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: static;
+                margin-bottom: 20px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content,
+            .footer-content {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+        
+        .example {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: #28a745;
+        }
+        
+        .status.error {
+            background-color: #dc3545;
+        }
+        
+        /* 表格樣式 */
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .content-table th {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+        }
+        
+        .content-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .content-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .content-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .content-table .actions {
+            white-space: nowrap;
+            width: 120px;
+        }
+        
+        .content-table .actions button {
+            padding: 4px 8px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+        
+        .cell-content {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .cell-content:hover {
+            background: #e9ecef;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .expanded-cell {
+            white-space: normal !important;
+            max-width: none !important;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="status" id="status"></div>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>🔍 Pocket FTS 管理介面</h1>
+            <div class="header-info">
+                <div>全文搜尋引擎管理系統</div>
+                <div id="server-status">伺服器狀態: <span id="status-indicator">檢查中...</span></div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <div class="main-layout">
+        <!-- Sidebar with Collection List -->
+        <aside class="sidebar">
+            <h3>📁 Collections</h3>
+            <ul class="collection-list" id="collection-list">
+                <li class="no-collections">載入中...</li>
+            </ul>
+            <button class="refresh-btn" onclick="loadCollections()">🔄 重新載入</button>
+        </aside>
+        
+        <!-- Content Area -->
+        <main class="content">
+        
+        <!-- 資料搜尋區塊 -->
+        <div class="section">
+            <h2>🔍 資料搜尋區塊</h2>
+            
+            <div class="search-placeholder">
+                <div style="text-align: center; padding: 40px; color: #6c757d; border: 2px dashed #dee2e6; border-radius: 8px;">
+                    <h3>🚧 功能開發中</h3>
+                    <p>此區塊將提供進階的搜尋和篩選功能</p>
+                    <p>包含：條件查詢、全文搜尋、結果排序等功能</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Collection 內容顯示 -->
+        <div class="section">
+            <h2 id="content-title">📄 Collection 內容</h2>
+            
+            <div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div id="collection-info" style="color: #6c757d;">
+                    請從左側選擇一個 Collection
+                </div>
+                <div class="content-actions">
+                    <button onclick="refreshContent()" class="secondary" style="margin-right: 10px;">🔄 重新載入</button>
+                    <button onclick="showAddDocumentModal()" id="add-doc-btn" style="display: none;">➕ 新增文檔</button>
+                </div>
+            </div>
+            
+            <div id="content-table-container">
+                <div class="no-content" style="text-align: center; padding: 60px; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px;">
+                    <h3>📂 未選擇 Collection</h3>
+                    <p>請從左側 Collection 列表中選擇一個 Collection 來查看其內容</p>
+                </div>
+            </div>
+            
+            <!-- 分頁控制 -->
+            <div id="pagination-container" style="display: none; margin-top: 20px; text-align: center;">
+                <button onclick="changePage(-1)" id="prev-btn" class="secondary">⬅️ 上一頁</button>
+                <span id="page-info" style="margin: 0 20px; color: #6c757d;">第 1 頁，共 1 頁</span>
+                <button onclick="changePage(1)" id="next-btn" class="secondary">下一頁 ➡️</button>
+            </div>
+        </div>
+        
+        
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div>
+                <strong>Pocket FTS</strong> &copy; 2025 | 全文搜尋引擎管理系統
+            </div>
+            <div class="footer-links">
+                <a href="#" onclick="showAbout()">關於</a>
+                <a href="#" onclick="showHelp()">說明</a>
+                <a href="https://github.com" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        console.log('HTML loaded, about to load app.js');
+        
+        // 添加範例按鈕功能 - 直接在 HTML 中定義
+        function addExampleButtons() {
+            try {
+                // 為進階查詢添加範例按鈕（檢查元素是否存在）
+                const queryTextarea = document.querySelector('#advanced-query');
+                if (queryTextarea) {
+                    const querySection = queryTextarea.parentElement;
+                    if (querySection) {
+                        // 檢查是否已經添加過按鈕
+                        if (!querySection.querySelector('.query-example-btn')) {
+                            const queryExampleBtn = document.createElement('button');
+                            queryExampleBtn.textContent = '載入查詢範例';
+                            queryExampleBtn.className = 'secondary query-example-btn';
+                            queryExampleBtn.onclick = function() {
+                                if (typeof loadQueryExample === 'function') {
+                                    loadQueryExample();
+                                } else {
+                                    console.log('loadQueryExample function not available');
+                                }
+                            };
+                            querySection.appendChild(queryExampleBtn);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('addExampleButtons error (ignored):', error);
+            }
+        }
+        
+        // 直接測試 API 連線
+        async function testAPI() {
+            console.log('Testing API connection...');
+            try {
+                const response = await fetch('/collections/list');
+                console.log('API response status:', response.status);
+                const data = await response.text();
+                console.log('API response data:', data);
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    console.log('Parsed JSON:', jsonData);
+                } catch (e) {
+                    console.log('Response is not JSON:', e);
+                }
+            } catch (error) {
+                console.error('API test failed:', error);
+            }
+        }
+        
+        // 立即測試 API
+        testAPI();
+    </script>
+    <script>
+        // 原 app.js 內容 - 全域變數
+        console.log('All JS now in index.html');
+        const API_BASE = '';
+        let currentCollection = null;
+        let collections = [];
+        let currentPage = 1;
+        let currentLimit = 20;
+        let collectionContent = null;
+        console.log('Global variables initialized');
+
+        // 通用函數
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isError ? 'error' : 'success'}`;
+            
+            if (typeof data === 'object') {
+                element.textContent = JSON.stringify(data, null, 2);
+            } else {
+                element.textContent = data;
+            }
+        }
+
+        function clearResult(elementId) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'none';
+            element.textContent = '';
+        }
+
+        // API 呼叫通用函數
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                // 添加時間戳參數來防止快取
+                const separator = endpoint.includes('?') ? '&' : '?';
+                const urlWithTimestamp = `${API_BASE}${endpoint}${separator}_t=${Date.now()}`;
+                
+                const response = await fetch(urlWithTimestamp, options);
+                const result = await response.text();
+                
+                let parsedResult;
+                try {
+                    parsedResult = JSON.parse(result);
+                } catch (e) {
+                    parsedResult = result;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${parsedResult.error || parsedResult}`);
+                }
+                
+                return parsedResult;
+            } catch (error) {
+                console.error('API call error:', error);
+                throw error;
+            }
+        }
+
+        // Collection 管理函數
+        function generateSchema() {
+            const name = document.getElementById('collection-name').value.trim();
+            const primaryKey = document.getElementById('primary-key').value.trim() || 'id';
+            
+            if (!name) {
+                showStatus('請輸入 Collection 名稱', 'error');
+                return;
+            }
+            
+            const schema = {
+                name: name,
+                primary_key: primaryKey,
+                fts: { stemming: true },
+                fields: [
+                    { name: primaryKey, type: "text" },
+                    { name: "title", type: "text", weight: 2 },
+                    { name: "content", type: "text", weight: 1 },
+                    { name: "created_at", type: "integer" }
+                ]
+            };
+            
+            document.getElementById('collection-schema').value = JSON.stringify(schema, null, 2);
+            showStatus('Schema 已自動生成，請根據需要修改');
+        }
+
+        async function createCollection() {
+            clearResult('collection-result');
+            
+            const schemaText = document.getElementById('collection-schema').value.trim();
+            
+            if (!schemaText) {
+                showResult('collection-result', 'Error: 請輸入 Collection Schema', true);
+                return;
+            }
+            
+            try {
+                const schema = JSON.parse(schemaText);
+                
+                // 驗證必要欄位
+                if (!schema.name || !schema.primary_key || !schema.fields) {
+                    throw new Error('Schema 必須包含 name, primary_key, 和 fields 欄位');
+                }
+                
+                const result = await apiCall('/collections/create', 'POST', schema);
+                showResult('collection-result', result);
+                showStatus('Collection 建立成功！');
+                
+                // 重新載入 Collection 列表
+                await loadCollections();
+                
+                // 清除表單
+                document.getElementById('collection-name').value = '';
+                document.getElementById('primary-key').value = '';
+                document.getElementById('collection-schema').value = '';
+                
+            } catch (error) {
+                showResult('collection-result', `Error: ${error.message}`, true);
+                showStatus('Collection 建立失敗', 'error');
+            }
+        }
+
+        async function deleteCollection() {
+            clearResult('collection-result');
+            
+            const name = document.getElementById('delete-collection-name').value.trim();
+            
+            if (!name) {
+                showResult('collection-result', 'Error: 請輸入要刪除的 Collection 名稱', true);
+                return;
+            }
+            
+            if (!confirm(`確定要刪除 Collection "${name}" 嗎？此操作無法復原。`)) {
+                return;
+            }
+            
+            try {
+                const result = await apiCall('/collections/delete', 'POST', { name: name });
+                showResult('collection-result', result);
+                showStatus('Collection 刪除成功！');
+                
+                // 重新載入 Collection 列表
+                await loadCollections();
+                
+                // 清除當前選擇
+                if (currentCollection === name) {
+                    currentCollection = null;
+                }
+                
+                // 清除表單
+                document.getElementById('delete-collection-name').value = '';
+                
+            } catch (error) {
+                showResult('collection-result', `Error: ${error.message}`, true);
+                showStatus('Collection 刪除失敗', 'error');
+            }
+        }
+
+        // Document 管理函數
+        async function upsertDocument() {
+            clearResult('document-result');
+            
+            const collection = document.getElementById('doc-collection').value.trim();
+            const documentText = document.getElementById('document-data').value.trim();
+            
+            if (!collection) {
+                showResult('document-result', 'Error: 請輸入 Collection 名稱', true);
+                return;
+            }
+            
+            if (!documentText) {
+                showResult('document-result', 'Error: 請輸入 Document 資料', true);
+                return;
+            }
+            
+            try {
+                const document = JSON.parse(documentText);
+                
+                const payload = {
+                    collection: collection,
+                    document: document
+                };
+                
+                const result = await apiCall('/documents/upsert', 'POST', payload);
+                showResult('document-result', result);
+                showStatus('Document 新增/更新成功！');
+                
+                // 清除表單
+                document.getElementById('document-data').value = '';
+                
+            } catch (error) {
+                showResult('document-result', `Error: ${error.message}`, true);
+                showStatus('Document 操作失敗', 'error');
+            }
+        }
+
+        async function deleteDocument() {
+            clearResult('document-result');
+            
+            const collection = document.getElementById('delete-doc-collection').value.trim();
+            const id = document.getElementById('delete-doc-id').value.trim();
+            
+            if (!collection) {
+                showResult('document-result', 'Error: 請輸入 Collection 名稱', true);
+                return;
+            }
+            
+            if (!id) {
+                showResult('document-result', 'Error: 請輸入 Document ID', true);
+                return;
+            }
+            
+            if (!confirm(`確定要刪除 Document "${id}" 嗎？此操作無法復原。`)) {
+                return;
+            }
+            
+            try {
+                const payload = {
+                    collection: collection,
+                    id: id
+                };
+                
+                const result = await apiCall('/documents/delete', 'POST', payload);
+                showResult('document-result', result);
+                showStatus('Document 刪除成功！');
+                
+                // 清除表單
+                document.getElementById('delete-doc-id').value = '';
+                
+            } catch (error) {
+                showResult('document-result', `Error: ${error.message}`, true);
+                showStatus('Document 刪除失敗', 'error');
+            }
+        }
+
+        // 搜尋函數
+        async function performSearch() {
+            clearResult('search-result');
+            
+            const collection = document.getElementById('search-collection').value.trim();
+            const query = document.getElementById('search-query').value.trim();
+            const limit = parseInt(document.getElementById('search-limit').value) || 10;
+            
+            if (!collection) {
+                showResult('search-result', 'Error: 請輸入 Collection 名稱', true);
+                return;
+            }
+            
+            if (!query) {
+                showResult('search-result', 'Error: 請輸入搜尋關鍵字', true);
+                return;
+            }
+            
+            try {
+                const payload = {
+                    collection: collection,
+                    query: query,
+                    limit: limit
+                };
+                
+                const result = await apiCall('/search', 'POST', payload);
+                showResult('search-result', result);
+                showStatus('搜尋完成！');
+                
+            } catch (error) {
+                showResult('search-result', `Error: ${error.message}`, true);
+                showStatus('搜尋失敗', 'error');
+            }
+        }
+
+        async function performAdvancedQuery() {
+            clearResult('search-result');
+            
+            const collection = document.getElementById('advanced-collection').value.trim();
+            const queryText = document.getElementById('advanced-query').value.trim();
+            
+            if (!collection) {
+                showResult('search-result', 'Error: 請輸入 Collection 名稱', true);
+                return;
+            }
+            
+            if (!queryText) {
+                showResult('search-result', 'Error: 請輸入查詢 DSL', true);
+                return;
+            }
+            
+            try {
+                let queryData = JSON.parse(queryText);
+                
+                // 如果 queryData 沒有 collection 欄位，就加上
+                if (!queryData.collection) {
+                    queryData.collection = collection;
+                }
+                
+                const result = await apiCall('/query', 'POST', queryData);
+                showResult('search-result', result);
+                showStatus('進階查詢完成！');
+                
+            } catch (error) {
+                showResult('search-result', `Error: ${error.message}`, true);
+                showStatus('進階查詢失敗', 'error');
+            }
+        }
+
+        // Collection 管理函數
+        async function loadCollections() {
+            try {
+                console.log('Loading collections...');
+                const result = await apiCall('/collections/list', 'GET');
+                console.log('Collections result:', result);
+                collections = result.collections || [];
+                updateCollectionList();
+                checkServerStatus();
+                showStatus(`載入了 ${collections.length} 個 Collections`);
+            } catch (error) {
+                console.error('Failed to load collections:', error);
+                updateCollectionList([]); // 顯示空列表
+                showStatus('載入 Collections 失敗: ' + error.message, 'error');
+                checkServerStatus();
+            }
+        }
+
+        function updateCollectionList(collectionList = collections) {
+            const listElement = document.getElementById('collection-list');
+            console.log('Updating collection list with:', collectionList);
+            
+            if (collectionList.length === 0) {
+                listElement.innerHTML = `
+                    <li class="no-collections">暫無 Collections</li>
+                    <li class="no-collections">
+                        <button onclick="createTestCollection()" style="margin-top: 10px; width: 100%; background: #007bff; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">
+                            建立測試 Collection
+                        </button>
+                    </li>
+                `;
+                return;
+            }
+            
+            listElement.innerHTML = collectionList.map(collection => `
+                <li class="collection-item" onclick="selectCollection('${collection.name}')" 
+                    data-collection="${collection.name}">
+                    <div class="collection-item-name">${collection.name}</div>
+                    <div class="collection-item-info">
+                        📄 ${collection.document_count || 0} 文檔 | 
+                        🔑 ${collection.primary_key || 'N/A'} | 
+                        🔍 ${collection.has_fts ? '啟用' : '停用'}
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function selectCollection(name) {
+            currentCollection = name;
+            currentPage = 1; // 重置頁面
+            
+            // 更新視覺狀態
+            document.querySelectorAll('.collection-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.collection === name);
+            });
+            
+            // 自動填入表單
+            fillCollectionForms(name);
+            
+            // 載入 Collection 內容
+            loadCollectionContent(name);
+            
+            showStatus(`已選擇 Collection: ${name}`);
+        }
+
+        function fillCollectionForms(name) {
+            // 填入各種表單中的 collection 欄位
+            const collectionInputs = [
+                'doc-collection',
+                'delete-doc-collection', 
+                'search-collection',
+                'advanced-collection'
+            ];
+            
+            collectionInputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.value = name;
+                }
+            });
+        }
+
+        async function checkServerStatus() {
+            const statusElement = document.getElementById('status-indicator');
+            try {
+                // 使用一個簡單的端點來檢查伺服器狀態
+                const response = await fetch('/');
+                if (response.ok) {
+                    statusElement.textContent = '正常運行';
+                    statusElement.style.color = '#28a745';
+                } else {
+                    throw new Error('Server response not ok');
+                }
+            } catch (error) {
+                statusElement.textContent = '連接異常';
+                statusElement.style.color = '#dc3545';
+            }
+        }
+
+        function loadDocumentExample() {
+            // 這個函數已不再使用，因為 Document 管理區塊已被移除
+            console.log('loadDocumentExample called but document-data element no longer exists');
+        }
+
+        function loadQueryExample() {
+            const example = {
+                collection: "articles",
+                query: {
+                    "$and": [
+                        {
+                            "sql": {
+                                "where": {
+                                    "category": "教學"
+                                }
+                            }
+                        },
+                        {
+                            "search": {
+                                "term": "搜尋"
+                            }
+                        }
+                    ]
+                },
+                result: {
+                    "limit": 5,
+                    "order_by": [
+                        {
+                            "field": "_score",
+                            "direction": "asc"
+                        }
+                    ]
+                }
+            };
+            
+            document.getElementById('advanced-query').value = JSON.stringify(example, null, 2);
+        }
+
+        // Footer 功能函數
+        function showAbout() {
+            alert(`Pocket FTS 管理介面 v1.0
+
+這是一個全文搜尋引擎的管理系統，提供：
+• Collection 管理
+• Document 操作
+• 全文搜尋功能
+• 進階查詢 DSL
+
+技術棧：Go + SQLite + FTS + Vanilla JavaScript`);
+        }
+
+        function showHelp() {
+            const helpText = `使用說明：
+
+1. Collection 管理
+   - 建立：輸入名稱和 Schema 來建立新的 Collection
+   - 刪除：選擇要刪除的 Collection
+
+2. Document 管理
+   - 新增：輸入 JSON 格式的文檔資料
+   - 刪除：指定 Collection 和 Document ID
+
+3. 搜尋功能
+   - FTS 搜尋：基本的全文搜尋
+   - 進階查詢：使用 DSL 進行複雜查詢
+
+4. 左側 Collection 列表
+   - 點擊可選擇 Collection
+   - 自動填入相關表單欄位
+   - 顯示文檔數量和配置信息
+
+更多詳細資訊請參考 FRONTEND.md 文檔。`;
+            
+            alert(helpText);
+        }
+
+        // 建立測試 Collection
+        async function createTestCollection() {
+            const testSchema = {
+                name: "test_collection",
+                primary_key: "id",
+                fts: { stemming: true },
+                fields: [
+                    { name: "id", type: "text" },
+                    { name: "title", type: "text", weight: 2 },
+                    { name: "content", type: "text", weight: 1 },
+                    { name: "created_at", type: "integer" }
+                ]
+            };
+            
+            try {
+                await apiCall('/collections/create', 'POST', testSchema);
+                showStatus('測試 Collection 建立成功！');
+                await loadCollections();
+            } catch (error) {
+                showStatus('測試 Collection 建立失敗: ' + error.message, 'error');
+            }
+        }
+
+        // Collection 內容管理函數
+        async function loadCollectionContent(collectionName = currentCollection, page = currentPage) {
+            if (!collectionName) {
+                updateContentDisplay(null);
+                return;
+            }
+            
+            try {
+                console.log(`Loading content for collection: ${collectionName}, page: ${page}`);
+                const url = `/collections/content?collection=${encodeURIComponent(collectionName)}&page=${page}&limit=${currentLimit}`;
+                const result = await apiCall(url, 'GET');
+                
+                collectionContent = result;
+                currentPage = page;
+                updateContentDisplay(result);
+                
+                console.log('Collection content loaded:', result);
+                
+            } catch (error) {
+                console.error('Failed to load collection content:', error);
+                showStatus(`載入 Collection 內容失敗: ${error.message}`, 'error');
+                updateContentDisplay(null, error.message);
+            }
+        }
+
+        function updateContentDisplay(content, errorMessage = null) {
+            const titleElement = document.getElementById('content-title');
+            const infoElement = document.getElementById('collection-info');
+            const containerElement = document.getElementById('content-table-container');
+            const paginationElement = document.getElementById('pagination-container');
+            const addBtnElement = document.getElementById('add-doc-btn');
+            
+            if (!content) {
+                titleElement.textContent = '📄 Collection 內容';
+                infoElement.textContent = errorMessage || '請從左側選擇一個 Collection';
+                containerElement.innerHTML = `
+                    <div class="no-content" style="text-align: center; padding: 60px; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px;">
+                        <h3>📂 ${errorMessage ? '載入失敗' : '未選擇 Collection'}</h3>
+                        <p>${errorMessage || '請從左側 Collection 列表中選擇一個 Collection 來查看其內容'}</p>
+                    </div>
+                `;
+                paginationElement.style.display = 'none';
+                addBtnElement.style.display = 'none';
+                return;
+            }
+            
+            // 更新標題和資訊
+            titleElement.textContent = `📄 ${content.collection} - 內容`;
+            infoElement.innerHTML = `
+                <strong>${content.collection}</strong> | 
+                共 ${content.pagination.total_count} 筆資料 | 
+                第 ${content.pagination.page} 頁，共 ${content.pagination.total_pages} 頁
+            `;
+            addBtnElement.style.display = 'inline-block';
+            
+            // 建立表格
+            if (content.records && content.records.length > 0) {
+                const table = createContentTable(content.columns, content.records);
+                containerElement.innerHTML = `<div class="table-container">${table}</div>`;
+            } else {
+                containerElement.innerHTML = `
+                    <div class="no-content" style="text-align: center; padding: 40px; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px;">
+                        <h3>📄 Collection 為空</h3>
+                        <p>此 Collection 目前沒有任何資料</p>
+                        <button onclick="showAddDocumentModal()" style="margin-top: 15px;">➕ 新增第一筆資料</button>
+                    </div>
+                `;
+            }
+            
+            // 更新分頁控制
+            updatePaginationControls(content.pagination);
+        }
+
+        function createContentTable(columns, records) {
+            const thead = `
+                <thead>
+                    <tr>
+                        ${columns.map(col => `<th>${col}</th>`).join('')}
+                        <th class="actions">操作</th>
+                    </tr>
+                </thead>
+            `;
+            
+            const tbody = `
+                <tbody>
+                    ${records.map((record, index) => `
+                        <tr>
+                            ${columns.map(col => `
+                                <td>
+                                    <div class="cell-content" onclick="toggleCellExpansion(this)" title="點擊展開/收合">
+                                        ${formatCellValue(record[col])}
+                                    </div>
+                                </td>
+                            `).join('')}
+                            <td class="actions">
+                                <button onclick="editRecord(${index})" class="secondary" title="編輯">✏️</button>
+                                <button onclick="deleteRecord('${record[columns[0]]}')" class="danger" title="刪除">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            
+            return `<table class="content-table">${thead}${tbody}</table>`;
+        }
+
+        function formatCellValue(value) {
+            if (value === null || value === undefined) {
+                return '<span style="color: #6c757d; font-style: italic;">null</span>';
+            }
+            
+            const str = String(value);
+            if (str.length > 50) {
+                return str.substring(0, 50) + '...';
+            }
+            
+            return str;
+        }
+
+        function toggleCellExpansion(element) {
+            element.classList.toggle('expanded-cell');
+        }
+
+        function updatePaginationControls(pagination) {
+            const paginationElement = document.getElementById('pagination-container');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const pageInfo = document.getElementById('page-info');
+            
+            if (pagination.total_pages <= 1) {
+                paginationElement.style.display = 'none';
+                return;
+            }
+            
+            paginationElement.style.display = 'block';
+            prevBtn.disabled = !pagination.has_prev;
+            nextBtn.disabled = !pagination.has_next;
+            pageInfo.textContent = `第 ${pagination.page} 頁，共 ${pagination.total_pages} 頁 (總計 ${pagination.total_count} 筆)`;
+        }
+
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && collectionContent && newPage <= collectionContent.pagination.total_pages) {
+                loadCollectionContent(currentCollection, newPage);
+            }
+        }
+
+        function refreshContent() {
+            if (currentCollection) {
+                currentPage = 1;
+                loadCollectionContent(currentCollection);
+                showStatus('內容已重新載入');
+            }
+        }
+
+        function editRecord(index) {
+            if (collectionContent && collectionContent.records[index]) {
+                const record = collectionContent.records[index];
+                showStatus('編輯功能開發中...', 'error');
+                console.log('Edit record:', record);
+            }
+        }
+
+        function deleteRecord(id) {
+            if (!currentCollection || !id) return;
+            
+            if (confirm(`確定要刪除 ID 為 "${id}" 的記錄嗎？`)) {
+                showStatus('刪除功能開發中...', 'error');
+                console.log('Delete record:', id);
+            }
+        }
+
+        function showAddDocumentModal() {
+            showStatus('新增文檔功能開發中...', 'error');
+        }
+
+        // 頁面載入完成後的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 設置預設值
+            document.getElementById('search-limit').value = '10';
+            
+            // 載入 Collections
+            loadCollections();
+            
+            // 為輸入框添加 Enter 鍵支援
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                    e.target.blur(); // 移除焦點以觸發任何相關事件
+                }
+            });
+            
+            // 添加一些範例按鈕功能
+            if (typeof addExampleButtons === 'function') {
+                addExampleButtons();
+            }
+            
+            console.log('Pocket FTS 管理介面已載入');
+        });
+    </script>
+    
+    <!-- 後備函數，如果 app.js 載入失敗 -->
+    <script>
+        if (typeof loadCollections !== 'function') {
+            console.log('Creating fallback loadCollections function');
+            window.loadCollections = async function() {
+                console.log('Fallback loadCollections executing...');
+                try {
+                    const response = await fetch('/collections/list');
+                    const data = await response.json();
+                    console.log('Fallback API result:', data);
+                    
+                    const listElement = document.getElementById('collection-list');
+                    if (data.collections && data.collections.length > 0) {
+                        listElement.innerHTML = data.collections.map(c => 
+                            `<li class="collection-item" style="padding: 12px; margin: 8px 0; background: #f8f9fa; border-radius: 6px; cursor: pointer;" 
+                                onclick="fillCollectionForm('${c.name}')">
+                                <div style="font-weight: 500;">${c.name}</div>
+                                <div style="font-size: 0.8em; color: #6c757d;">
+                                    📄 ${c.document_count || 0} 文檔 | 🔑 ${c.primary_key || 'N/A'}
+                                </div>
+                            </li>`
+                        ).join('');
+                    } else {
+                        listElement.innerHTML = '<li style="padding: 20px; text-align: center; color: #6c757d;">暫無 Collections</li>';
+                    }
+                } catch (error) {
+                    console.error('Fallback loadCollections failed:', error);
+                    document.getElementById('collection-list').innerHTML = 
+                        '<li style="padding: 20px; text-align: center; color: #dc3545;">載入失敗</li>';
+                }
+            };
+            
+            window.fillCollectionForm = function(name) {
+                console.log('Filling forms with collection:', name);
+                const inputs = ['doc-collection', 'delete-doc-collection', 'search-collection', 'advanced-collection'];
+                inputs.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.value = name;
+                });
+            };
+        }
+    </script>
+    
+    <script>
+        console.log('app.js should be loaded now');
+        // 測試基本功能
+        setTimeout(() => {
+            console.log('Testing after 1 second...');
+            console.log('Available functions:', Object.getOwnPropertyNames(window).filter(name => typeof window[name] === 'function' && name.includes('load')));
+            
+            if (typeof loadCollections === 'function') {
+                console.log('loadCollections function exists');
+                loadCollections();
+            } else {
+                console.error('loadCollections function not found!');
+                console.log('Trying to manually check collections...');
+                
+                // 手動測試 API
+                fetch('/collections/list')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Manual API test result:', data);
+                        if (data.collections && data.collections.length > 0) {
+                            document.getElementById('collection-list').innerHTML = 
+                                data.collections.map(c => `<li style="padding: 10px; background: #f0f0f0; margin: 5px;">${c.name}</li>`).join('');
+                        } else {
+                            document.getElementById('collection-list').innerHTML = '<li style="padding: 10px;">暫無 Collections</li>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Manual API test failed:', error);
+                        document.getElementById('collection-list').innerHTML = '<li style="padding: 10px; color: red;">載入失敗</li>';
+                    });
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
