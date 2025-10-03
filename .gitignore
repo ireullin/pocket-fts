@@ -3,6 +3,7 @@
 *.exe~
 *.dll
 *.so
+!src/embedded/*.so
 *.dylib
 pocket_fts
 
@@ -18,9 +19,9 @@ vendor/
 # SQLite database files
 *.sqlite
 *.sqlite3
-*.sqlite
 *.db
 *.indices
+*.indices2
 # Environment files
 .env
 

@@ -21,7 +21,13 @@
       "Bash(../test_data_load.sh)",
       "Bash(./data_loader)",
       "Bash(mkdir:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Read(//mnt/f/**)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(netstat:*)",
+      "Bash(ss:*)",
+      "Bash(kill:*)"
     ],
     "deny": []
   }

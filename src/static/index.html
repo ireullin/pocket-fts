@@ -615,13 +615,6 @@
                 </form>
             </div>
             
-            <!-- 搜尋結果顯示區域 -->
-            <div id="search-results" style="margin-top: 30px; display: none;">
-                <h3>查詢結果</h3>
-                <div id="search-results-content">
-                    <!-- 搜尋結果將顯示在這裡 -->
-                </div>
-            </div>
         </div>
         
         <!-- Collection 內容顯示 -->
@@ -1327,56 +1320,108 @@
             }
         }
 
-        // 顯示搜尋結果
+        // 顯示查詢結果
         function displaySearchResults(results) {
-            const resultsContainer = document.getElementById('search-results');
-            const resultsContent = document.getElementById('search-results-content');
-            
-            resultsContainer.style.display = 'block';
-            
-            if (!results || (!results.records && !results.length)) {
-                resultsContent.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px;">
-                        <h4>🔍 沒有找到符合條件的結果</h4>
-                        <p>請嘗試調整查詢條件或關鍵字</p>
-                    </div>
-                `;
-                return;
-            }
-            
             // 處理不同格式的查詢結果
             let records = results.records || results;
             if (!Array.isArray(records)) {
                 records = [records];
             }
             
-            let html = `
-                <div style="margin-bottom: 15px; color: #6c757d;">
-                    找到 ${records.length} 筆結果
-                </div>
-            `;
+            if (!records || records.length === 0) {
+                updateContentDisplay(null, '查詢結果為空');
+                return;
+            }
             
-            records.forEach((record, index) => {
-                const score = record._score || record.score || '未知';
-                
-                html += `
-                    <div class="search-result-item">
-                        <div class="search-result-score">評分: ${typeof score === 'number' ? score.toFixed(3) : score}</div>
-                        <div style="clear: both;">
-                            ${Object.keys(record).map(key => {
-                                if (key.startsWith('_')) return ''; // 跳過內部字段
-                                const value = record[key];
-                                return `<div style="margin-bottom: 8px;">
-                                    <strong>${key}:</strong> 
-                                    <span style="margin-left: 10px;">${formatSearchResultValue(value)}</span>
-                                </div>`;
-                            }).join('')}
-                        </div>
+            // 從查詢結果推斷 columns
+            const columns = records.length > 0 ? Object.keys(records[0]).filter(key => !key.startsWith('_')) : [];
+            
+            // 構造類似 collectionContent 的結構
+            const queryContent = {
+                collection: document.getElementById('advanced-collection').value || '查詢結果',
+                records: records,
+                columns: columns,
+                pagination: {
+                    page: 1,
+                    total_pages: 1,
+                    total_count: records.length,
+                    has_next: false,
+                    has_prev: false
+                }
+            };
+            
+            // 使用現有的 updateContentDisplay 函數，但修改標題
+            updateQueryResultDisplay(queryContent);
+        }
+
+        // 專門用於顯示查詢結果的函數
+        function updateQueryResultDisplay(content) {
+            const titleElement = document.getElementById('content-title');
+            const infoElement = document.getElementById('collection-info');
+            const containerElement = document.getElementById('content-table-container');
+            const paginationElement = document.getElementById('pagination-container');
+            const addBtnElement = document.getElementById('add-doc-btn');
+            
+            // 更新標題和資訊
+            titleElement.textContent = `🔍 查詢結果 - ${content.collection}`;
+            infoElement.innerHTML = `
+                <strong>查詢結果</strong> | 
+                共找到 ${content.pagination.total_count} 筆符合條件的資料
+            `;
+            addBtnElement.style.display = 'none'; // 隱藏新增按鈕
+            
+            // 建立表格，但修改為查詢結果樣式
+            if (content.records && content.records.length > 0) {
+                const table = createQueryResultTable(content.columns, content.records);
+                containerElement.innerHTML = `<div class="table-container">${table}</div>`;
+            } else {
+                containerElement.innerHTML = `
+                    <div class="no-content" style="text-align: center; padding: 40px; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px;">
+                        <h3>🔍 查詢結果為空</h3>
+                        <p>沒有找到符合條件的資料</p>
                     </div>
                 `;
-            });
+            }
             
-            resultsContent.innerHTML = html;
+            // 隱藏分頁控制（查詢結果通常不需要分頁）
+            paginationElement.style.display = 'none';
+        }
+
+        // 創建查詢結果表格
+        function createQueryResultTable(columns, records) {
+            const thead = `
+                <thead>
+                    <tr>
+                        ${columns.map(col => `<th>${col}</th>`).join('')}
+                        <th style="width: 80px;">評分</th>
+                    </tr>
+                </thead>
+            `;
+            
+            const tbody = `
+                <tbody>
+                    ${records.map((record, index) => {
+                        const score = record._score || record.score || 0;
+                        return `
+                        <tr>
+                            ${columns.map(col => `
+                                <td>
+                                    <div class="cell-content" onclick="toggleCellExpansion(this)" title="點擊展開/收合">
+                                        ${formatCellValue(record[col])}
+                                    </div>
+                                </td>
+                            `).join('')}
+                            <td style="text-align: center;">
+                                <span class="search-result-score" style="font-size: 10px; padding: 2px 6px;">
+                                    ${typeof score === 'number' ? score.toFixed(3) : score}
+                                </span>
+                            </td>
+                        </tr>
+                    `}).join('')}
+                </tbody>
+            `;
+            
+            return `<table class="content-table">${thead}${tbody}</table>`;
         }
 
         // 格式化搜尋結果值
@@ -1393,9 +1438,24 @@
             return str;
         }
 
-        // 隱藏搜尋結果
-        function hideSearchResults() {
-            document.getElementById('search-results').style.display = 'none';
+        // 重置內容顯示為原始狀態
+        function resetContentDisplay() {
+            const titleElement = document.getElementById('content-title');
+            const infoElement = document.getElementById('collection-info');
+            const containerElement = document.getElementById('content-table-container');
+            const paginationElement = document.getElementById('pagination-container');
+            const addBtnElement = document.getElementById('add-doc-btn');
+            
+            titleElement.textContent = '📄 Collection 內容';
+            infoElement.textContent = '請從左側選擇一個 Collection';
+            containerElement.innerHTML = `
+                <div class="no-content" style="text-align: center; padding: 60px; color: #6c757d; border: 1px solid #dee2e6; border-radius: 8px;">
+                    <h3>📂 未選擇 Collection</h3>
+                    <p>請從左側 Collection 列表中選擇一個 Collection 來查看其內容</p>
+                </div>
+            `;
+            paginationElement.style.display = 'none';
+            addBtnElement.style.display = 'none';
         }
 
         // ======= 進階查詢功能 =======
@@ -1442,6 +1502,9 @@
             
             if (type === 'search') {
                 fieldsContainer.innerHTML = `
+                    <select data-field="fields" style="flex: 0.8; margin-right: 5px;">
+                        <option value="">載入字段...</option>
+                    </select>
                     <input type="text" placeholder="搜尋關鍵字" data-field="term" 
                            style="flex: 1; margin-right: 5px;">
                     <select data-field="operator" style="flex: 0.5;">
@@ -1449,10 +1512,13 @@
                         <option value="OR">OR</option>
                     </select>
                 `;
+                // 載入全文檢索字段（只有 text 類型）
+                loadSearchFields(conditionId);
             } else if (type === 'sql') {
                 fieldsContainer.innerHTML = `
-                    <input type="text" placeholder="字段名稱" data-field="field" 
-                           style="flex: 0.8; margin-right: 5px;">
+                    <select data-field="field" style="flex: 0.8; margin-right: 5px;">
+                        <option value="">載入字段...</option>
+                    </select>
                     <select data-field="operator" style="flex: 0.5; margin-right: 5px;">
                         <option value="=">=</option>
                         <option value="!=">!=</option>
@@ -1464,6 +1530,75 @@
                     </select>
                     <input type="text" placeholder="值" data-field="value" style="flex: 1;">
                 `;
+                // 載入 SQL 字段（所有類型）
+                loadSqlFields(conditionId);
+            }
+        }
+
+        // 載入全文檢索字段（只有 text 類型）
+        async function loadSearchFields(conditionId) {
+            const collectionName = document.getElementById('advanced-collection').value;
+            if (!collectionName) return;
+            
+            try {
+                const collectionsResult = await apiCall('/collections/list', 'GET');
+                const collection = collectionsResult.collections.find(c => c.name === collectionName);
+                
+                if (collection && collectionContent && collectionContent.schema) {
+                    const schema = JSON.parse(collectionContent.schema);
+                    const condition = document.getElementById(`query-condition-${conditionId}`);
+                    const fieldsSelect = condition.querySelector('[data-field="fields"]');
+                    
+                    if (fieldsSelect && schema.fields) {
+                        fieldsSelect.innerHTML = '<option value="">所有文字字段</option>';
+                        
+                        // 只添加 text 類型的字段
+                        const textFields = schema.fields.filter(field => field.type === 'text');
+                        textFields.forEach(field => {
+                            const option = document.createElement('option');
+                            option.value = field.name;
+                            option.textContent = `${field.name} (${field.type})`;
+                            fieldsSelect.appendChild(option);
+                        });
+                        
+                        if (textFields.length === 0) {
+                            fieldsSelect.innerHTML = '<option value="">無可搜尋的文字字段</option>';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('載入搜尋字段失敗:', error);
+            }
+        }
+
+        // 載入 SQL 字段（所有類型）
+        async function loadSqlFields(conditionId) {
+            const collectionName = document.getElementById('advanced-collection').value;
+            if (!collectionName) return;
+            
+            try {
+                const collectionsResult = await apiCall('/collections/list', 'GET');
+                const collection = collectionsResult.collections.find(c => c.name === collectionName);
+                
+                if (collection && collectionContent && collectionContent.schema) {
+                    const schema = JSON.parse(collectionContent.schema);
+                    const condition = document.getElementById(`query-condition-${conditionId}`);
+                    const fieldSelect = condition.querySelector('[data-field="field"]');
+                    
+                    if (fieldSelect && schema.fields) {
+                        fieldSelect.innerHTML = '<option value="">選擇字段</option>';
+                        
+                        // 添加所有字段
+                        schema.fields.forEach(field => {
+                            const option = document.createElement('option');
+                            option.value = field.name;
+                            option.textContent = `${field.name} (${field.type})`;
+                            fieldSelect.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('載入 SQL 字段失敗:', error);
             }
         }
 
@@ -1624,7 +1759,7 @@
             document.getElementById('result-offset').value = '0';
             queryConditionCounter = 0;
             orderByCounter = 0;
-            hideSearchResults();
+            resetContentDisplay();
         }
 
         // 載入進階查詢範例

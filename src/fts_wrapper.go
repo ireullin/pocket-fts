@@ -1,9 +1,9 @@
 package main
 
 /*
-#cgo LDFLAGS: -L../lib -lftscore
 #include <stdlib.h>
-#include "../lib/libftscore.h"
+
+typedef void (*fts_log_cb_t)(int level, const char* message, void* user_data);
 
 // C callback function that will forward to Go
 extern void logCallback(int level, char* message, void* user_data);
@@ -25,7 +25,7 @@ func cToGoError(errOut *C.char) error {
 		return errors.New("unknown C error")
 	}
 	err := errors.New(C.GoString(errOut))
-	C.FtsFree(unsafe.Pointer(errOut))
+	callFtsFree(unsafe.Pointer(errOut))
 	return err
 }
 
@@ -42,7 +42,7 @@ func NewFTS(dbPath string, busyTimeoutMs int64, stemming bool) (*FTS, error) {
 	}
 
 	var errOut *C.char
-	handle := C.FtsEngineNew(cDbPath, C.longlong(busyTimeoutMs), cStemming, &errOut)
+	handle := callFtsEngineNew(cDbPath, C.longlong(busyTimeoutMs), cStemming, &errOut)
 
 	if handle == 0 {
 		return nil, cToGoError(errOut)
@@ -54,7 +54,7 @@ func NewFTS(dbPath string, busyTimeoutMs int64, stemming bool) (*FTS, error) {
 // Close closes the FTS engine.
 func (f *FTS) Close() error {
 	var errOut *C.char
-	ret := C.FtsEngineClose(f.handle, &errOut)
+	ret := callFtsEngineClose(f.handle, &errOut)
 	if ret != 0 {
 		return cToGoError(errOut)
 	}
@@ -67,7 +67,7 @@ func (f *FTS) CreateCollection(schemaJSON string) error {
 	defer C.free(unsafe.Pointer(cSchemaJSON))
 
 	var errOut *C.char
-	ret := C.FtsCreateCollection(f.handle, cSchemaJSON, &errOut)
+	ret := callFtsCreateCollection(f.handle, cSchemaJSON, &errOut)
 	if ret != 0 {
 		return cToGoError(errOut)
 	}
@@ -82,7 +82,7 @@ func (f *FTS) UpsertDocument(collectionName, documentJSON string) error {
 	defer C.free(unsafe.Pointer(cDocumentJSON))
 
 	var errOut *C.char
-	ret := C.FtsUpsertDocument(f.handle, cCollectionName, cDocumentJSON, &errOut)
+	ret := callFtsUpsertDocument(f.handle, cCollectionName, cDocumentJSON, &errOut)
 	if ret != 0 {
 		return cToGoError(errOut)
 	}
@@ -98,24 +98,24 @@ func (f *FTS) Search(collectionName, requestJSON string) (string, error) {
 
 	var resultOut *C.char
 	var errOut *C.char
-	ret := C.FtsSearch(f.handle, cCollectionName, cRequestJSON, &resultOut, &errOut)
+	ret := callFtsSearch(f.handle, cCollectionName, cRequestJSON, &resultOut, &errOut)
 
 	if ret != 0 {
 		if resultOut != nil {
-			C.FtsFree(unsafe.Pointer(resultOut))
+			callFtsFree(unsafe.Pointer(resultOut))
 		}
 		return "", cToGoError(errOut)
 	}
 
 	if errOut != nil {
 		if resultOut != nil {
-			C.FtsFree(unsafe.Pointer(resultOut))
+			callFtsFree(unsafe.Pointer(resultOut))
 		}
 		return "", cToGoError(errOut)
 	}
-	
+
 	result := C.GoString(resultOut)
-	C.FtsFree(unsafe.Pointer(resultOut))
+	callFtsFree(unsafe.Pointer(resultOut))
 
 	return result, nil
 }
@@ -126,7 +126,7 @@ func (f *FTS) DeleteCollection(name string) error {
 	defer C.free(unsafe.Pointer(cName))
 
 	var errOut *C.char
-	ret := C.FtsDeleteCollection(f.handle, cName, &errOut)
+	ret := callFtsDeleteCollection(f.handle, cName, &errOut)
 	if ret != 0 {
 		return cToGoError(errOut)
 	}
@@ -141,7 +141,7 @@ func (f *FTS) DeleteDocument(collectionName, primaryKeyJSON string) error {
 	defer C.free(unsafe.Pointer(cPrimaryKeyJSON))
 
 	var errOut *C.char
-	ret := C.FtsDeleteDocument(f.handle, cCollectionName, cPrimaryKeyJSON, &errOut)
+	ret := callFtsDeleteDocument(f.handle, cCollectionName, cPrimaryKeyJSON, &errOut)
 	if ret != 0 {
 		return cToGoError(errOut)
 	}
@@ -150,18 +150,18 @@ func (f *FTS) DeleteDocument(collectionName, primaryKeyJSON string) error {
 
 // GetVersion returns the FTS core version string
 func GetFTSVersion() string {
-	versionCStr := C.FtsVersion()
+	versionCStr := callFtsVersion()
 	if versionCStr == nil {
 		return "unknown"
 	}
 	version := C.GoString(versionCStr)
-	C.FtsFree(unsafe.Pointer(versionCStr))
+	callFtsFree(unsafe.Pointer(versionCStr))
 	return version
 }
 
 // SetupFTSLogging sets up the FTS C library to forward its logs to the Go logger
 func SetupFTSLogging() {
-	C.FtsSetLogCallback((C.fts_log_cb_t)(unsafe.Pointer(C.logCallback)), nil)
+	callFtsSetLogCallback((C.fts_log_cb_t)(unsafe.Pointer(C.logCallback)), nil)
 }
 
 //export logCallback

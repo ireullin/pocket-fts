@@ -33,7 +33,7 @@ func main() {
 		log.Fatalf("failed to open log file: %v", err)
 	}
 	defer logFile.Close()
-	
+
 	// 使用 MultiWriter 同時寫到檔案和 console
 	multiWriter := io.MultiWriter(os.Stdout, logFile)
 	logger = slog.New(slog.NewJSONHandler(multiWriter, nil))
@@ -42,6 +42,14 @@ func main() {
 	dbFile := flag.String("f", "db.sqlite", "Database file path")
 	startupOnly := flag.Bool("startup-only", false, "Run startup logic only and then exit.")
 	flag.Parse()
+
+	// Load FTS dynamic library (extracts to same directory as database)
+	if err := LoadFTSLibrary(*dbFile); err != nil {
+		logger.Error("Failed to load FTS library", "error", err)
+		os.Exit(1)
+	}
+	defer UnloadFTSLibrary()
+	logger.Info("FTS library loaded successfully")
 
 	db, err = initDB(*dbFile)
 	if err != nil {
