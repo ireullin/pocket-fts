@@ -27,7 +27,12 @@
       "Bash(lsof:*)",
       "Bash(netstat:*)",
       "Bash(ss:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(curl:*)",
+      "Bash(LD_LIBRARY_PATH=./lib ./pocket_fts --startup-only)",
+      "Read(///**)",
+      "Bash(awk:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

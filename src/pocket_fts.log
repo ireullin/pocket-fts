@@ -1,17 +1,8 @@
-{"time":"2025-10-03T18:35:02.602037486+08:00","level":"INFO","msg":"FTS library loaded successfully"}
-{"time":"2025-10-03T18:35:02.610268286+08:00","level":"INFO","msg":"Database initialized successfully."}
-{"time":"2025-10-03T18:35:02.632206086+08:00","level":"INFO","msg":"FTS engine initialized successfully."}
-{"time":"2025-10-03T18:35:02.632833586+08:00","level":"INFO","msg":"FTS logging setup completed."}
-{"time":"2025-10-03T18:35:02.633235386+08:00","level":"INFO","msg":"FTS core version","version":"v0.9"}
-{"time":"2025-10-03T18:35:02.633581286+08:00","level":"INFO","msg":"Query executor initialized successfully."}
-{"time":"2025-10-03T18:35:02.634070386+08:00","level":"INFO","msg":"Server listening","address":"http://localhost:5122"}
-{"time":"2025-10-03T18:35:02.634324986+08:00","level":"INFO","msg":"Database file","path":"db.sqlite"}
-{"time":"2025-10-03T18:35:14.437120676+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:52706"}
-{"time":"2025-10-03T18:35:14.507000383+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:52706"}
-{"time":"2025-10-03T18:35:14.513748584+08:00","level":"INFO","msg":"Collections listed successfully","count":0,"remote_addr":"[::1]:52706"}
-{"time":"2025-10-03T18:35:14.518948584+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:52706"}
-{"time":"2025-10-03T18:35:14.523342685+08:00","level":"INFO","msg":"Collections listed successfully","count":0,"remote_addr":"[::1]:52706"}
-{"time":"2025-10-03T18:35:14.76482801+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:52706"}
-{"time":"2025-10-03T18:35:15.525658589+08:00","level":"INFO","msg":"Collection list request received","method":"GET","remote_addr":"[::1]:52706"}
-{"time":"2025-10-03T18:35:15.530307189+08:00","level":"INFO","msg":"Collections listed successfully","count":0,"remote_addr":"[::1]:52706"}
-{"time":"2025-10-03T18:35:15.53714879+08:00","level":"INFO","msg":"Static file request","path":"/static/","remote_addr":"[::1]:52706"}
+{"time":"2025-10-06T16:10:47.713531205+08:00","level":"INFO","msg":"FTS library loaded successfully"}
+{"time":"2025-10-06T16:10:47.741837805+08:00","level":"INFO","msg":"Database initialized successfully."}
+{"time":"2025-10-06T16:10:47.766135906+08:00","level":"INFO","msg":"FTS engine initialized successfully."}
+{"time":"2025-10-06T16:10:47.766391406+08:00","level":"INFO","msg":"FTS logging setup completed."}
+{"time":"2025-10-06T16:10:47.766620606+08:00","level":"INFO","msg":"FTS core version","version":"v0.9"}
+{"time":"2025-10-06T16:10:47.766818106+08:00","level":"INFO","msg":"Query executor initialized successfully."}
+{"time":"2025-10-06T16:10:47.767749406+08:00","level":"INFO","msg":"Server listening","address":"http://localhost:5122"}
+{"time":"2025-10-06T16:10:47.768084106+08:00","level":"INFO","msg":"Database file","path":"db.sqlite"}
