@@ -24,6 +24,8 @@ vendor/
 *.indices2
 # Environment files
 .env
+*.log
+
 
 # OS-specific files
 .DS_Store

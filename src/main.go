@@ -2,14 +2,19 @@ package main
 
 import (
 	"database/sql"
+	"embed"
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 )
+
+//go:embed static
+var staticFS embed.FS
 
 var db *sql.DB
 var logger *slog.Logger
@@ -79,9 +84,13 @@ func main() {
 	queryExecutor = NewQueryExecutor(db, fts)
 	logger.Info("Query executor initialized successfully.")
 
-	// 提供靜態檔案服務（添加防快取標頭）
-	fs := http.FileServer(http.Dir("./static/"))
-	http.Handle("/static/", addNoCacheHeaders(http.StripPrefix("/static/", fs)))
+	// 提供靜態檔案服務（從 embedded FS，添加防快取標頭）
+	staticFiles, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		logger.Error("Failed to load static files", "error", err)
+		os.Exit(1)
+	}
+	http.Handle("/static/", addNoCacheHeaders(http.StripPrefix("/static/", http.FileServer(http.FS(staticFiles)))))
 	
 	// 根路徑重導向到管理介面
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
