@@ -26,11 +26,8 @@
         refs.statusIndicator = document.getElementById('status-indicator');
         refs.statusText = document.getElementById('status-text');
         refs.collectionList = document.getElementById('collection-list');
-        refs.refreshCollections = document.getElementById('refresh-collections');
-        refs.deleteCollection = document.getElementById('delete-collection');
         refs.openCreateCollection = document.getElementById('open-create-collection');
         refs.openAddDocument = document.getElementById('open-add-document');
-        refs.advancedCollection = document.getElementById('advanced-collection');
         refs.resultLimit = document.getElementById('result-limit');
         refs.resultOffset = document.getElementById('result-offset');
         refs.queryBuilder = document.getElementById('query-builder');
@@ -57,8 +54,6 @@
 
     function bindEvents() {
         refs.collectionList.addEventListener('click', handleCollectionClick);
-        refs.refreshCollections.addEventListener('click', loadCollections);
-        refs.deleteCollection.addEventListener('click', handleDeleteCollection);
         refs.openCreateCollection.addEventListener('click', () => toggleModal(refs.modalCreateCollection, true));
         refs.openAddDocument.addEventListener('click', handleOpenAddDocument);
         refs.addCondition.addEventListener('click', () => addCondition());
@@ -69,7 +64,6 @@
         refs.queryBuilder.addEventListener('click', handleConditionAction);
         refs.resultLimit.addEventListener('input', updateQueryPreview);
         refs.resultOffset.addEventListener('input', updateQueryPreview);
-        refs.advancedCollection.addEventListener('change', handleAdvancedCollectionChange);
         refs.contentTableContainer.addEventListener('click', handleTableAction);
         refs.addDocumentForm.addEventListener('submit', submitAddDocument);
         refs.editDocumentForm.addEventListener('submit', submitEditDocument);
@@ -99,12 +93,10 @@
             const result = await apiCall('/collections/list');
             state.collections = result.collections || [];
             renderCollections();
-            updateAdvancedCollectionOptions();
-            showToast(`載入 ${state.collections.length} 個 Collections`);
+            showToast(`Loaded ${state.collections.length} collections`);
         } catch (error) {
             renderCollections([]);
-            updateAdvancedCollectionOptions();
-            showToast(`載入 Collections 失敗：${error.message}`, true);
+            showToast(`Failed to load collections: ${error.message}`, true);
         } finally {
             checkServerStatus();
         }
@@ -112,7 +104,7 @@
 
     function renderCollections(list = state.collections) {
         if (!list.length) {
-            refs.collectionList.innerHTML = '<li class="collection-list__item collection-list__item--empty">暫無資料</li>';
+            refs.collectionList.innerHTML = '<li class="collection-list__item collection-list__item--empty">No data</li>';
             return;
         }
 
@@ -121,6 +113,7 @@
             const count = collection.document_count ?? '–';
             return `
                 <li class="collection-list__item ${activeClass}" data-collection="${collection.name}">
+                    <button type="button" class="delete-icon" data-action="delete-collection" data-collection="${collection.name}" title="Delete collection">🗑️</button>
                     <span>${collection.name}</span>
                     <span class="collection-list__meta">${count}</span>
                 </li>
@@ -129,6 +122,16 @@
     }
 
     function handleCollectionClick(event) {
+        // Check if delete button was clicked
+        const deleteBtn = event.target.closest('[data-action="delete-collection"]');
+        if (deleteBtn) {
+            event.stopPropagation();
+            const collectionName = deleteBtn.getAttribute('data-collection');
+            deleteCollectionByName(collectionName);
+            return;
+        }
+
+        // Handle collection selection
         const item = event.target.closest('[data-collection]');
         if (!item) return;
         const name = item.getAttribute('data-collection');
@@ -142,9 +145,8 @@
         state.showingQuery = false;
         renderCollections();
         refs.openAddDocument.disabled = false;
-        updateAdvancedCollectionOptions();
         loadCollectionContent(name, 1);
-        showToast(`已選擇 Collection：${name}`);
+        showToast(`Selected collection: ${name}`);
     }
 
     async function loadCollectionContent(collectionName = state.currentCollection, page = state.currentPage) {
@@ -161,7 +163,7 @@
             state.content = null;
             state.schema = null;
             renderEmptyContent(error.message);
-            showToast(`載入內容失敗：${error.message}`, true);
+            showToast(`Failed to load content: ${error.message}`, true);
         }
     }
 
@@ -178,10 +180,10 @@
     function renderCollectionContent(content) {
         const columns = content.columns || inferColumns(content.records);
         const pagination = content.pagination || { page: 1, total_pages: 1, total_count: content.records?.length || 0 };
-        const collectionName = content.collection || state.currentCollection || '未命名';
+        const collectionName = content.collection || state.currentCollection || 'Untitled';
 
-        refs.contentTitle.textContent = `${collectionName} - 內容`;
-        refs.collectionInfo.textContent = `共 ${pagination.total_count} 筆資料，頁數 ${pagination.page}/${pagination.total_pages}`;
+        refs.contentTitle.textContent = `${collectionName} - Content`;
+        refs.collectionInfo.textContent = `${pagination.total_count} records, page ${pagination.page}/${pagination.total_pages}`;
         refs.openAddDocument.disabled = false;
 
         renderTable(columns, content.records || []);
@@ -189,13 +191,13 @@
     }
 
     function renderEmptyContent(message) {
-        refs.contentTitle.textContent = 'Collection 內容';
-        refs.collectionInfo.textContent = message || '請先選擇 Collection';
+        refs.contentTitle.textContent = 'Collection Content';
+        refs.collectionInfo.textContent = message || 'Please select a collection';
         refs.openAddDocument.disabled = !state.currentCollection;
         refs.contentTableContainer.innerHTML = `
             <div class="placeholder">
-                <h3>${message ? '載入失敗' : '未選擇 Collection'}</h3>
-                <p>${message || '請從左側列表選擇 Collection'}</p>
+                <h3>${message ? 'Load failed' : 'No collection selected'}</h3>
+                <p>${message || 'Please select a collection from the left'}</p>
             </div>
         `;
         refs.pagination.innerHTML = '';
@@ -217,7 +219,7 @@
             <thead>
                 <tr>
                     ${columns.map(col => `<th>${col}</th>`).join('')}
-                    <th style="width: 80px;">操作</th>
+                    <th style="width: 80px;">actions</th>
                 </tr>
             </thead>
         `;
@@ -228,15 +230,15 @@
                     <tr data-row="${index}" data-id="${record[primaryKey] ?? ''}">
                         ${columns.map(col => `
                             <td>
-                                <div class="cell-content" title="點擊展開" data-action="toggle-cell">
+                                <div class="cell-content" title="Click to expand" data-action="toggle-cell">
                                     ${formatCell(record[col])}
                                 </div>
                             </td>
                         `).join('')}
                         <td>
                             <div class="table-actions">
-                                <button type="button" class="ghost" data-action="edit" data-index="${index}">編輯</button>
-                                <button type="button" class="ghost" data-action="delete" data-id="${record[primaryKey] ?? ''}">刪除</button>
+                                <a href="#" data-action="edit" data-index="${index}">Edit</a>
+                                <a href="#" data-action="delete" data-id="${record[primaryKey] ?? ''}">Delete</a>
                             </div>
                         </td>
                     </tr>
@@ -254,10 +256,10 @@
         }
 
         refs.pagination.innerHTML = `
-            <span>第 ${pagination.page} / ${pagination.total_pages} 頁，總筆數 ${pagination.total_count}</span>
+            <span>Page ${pagination.page} / ${pagination.total_pages}, Total: ${pagination.total_count}</span>
             <div class="pagination__controls">
-                <button type="button" class="ghost" data-page="prev" ${pagination.page <= 1 ? 'disabled' : ''}>上一頁</button>
-                <button type="button" class="ghost" data-page="next" ${pagination.page >= pagination.total_pages ? 'disabled' : ''}>下一頁</button>
+                <button type="button" class="ghost" data-page="prev" ${pagination.page <= 1 ? 'disabled' : ''}>Previous</button>
+                <button type="button" class="ghost" data-page="next" ${pagination.page >= pagination.total_pages ? 'disabled' : ''}>Next</button>
             </div>
         `;
 
@@ -288,6 +290,7 @@
         }
 
         if (action === 'edit') {
+            event.preventDefault();
             const index = Number(actionButton.getAttribute('data-index'));
             const record = state.content?.records?.[index];
             if (record) openEditDocument(record);
@@ -295,18 +298,14 @@
         }
 
         if (action === 'delete') {
+            event.preventDefault();
             const id = actionButton.getAttribute('data-id');
             deleteRecord(id);
         }
     }
 
-    function handleAdvancedCollectionChange() {
-        updateQueryPreview();
-        const conditions = refs.queryBuilder.querySelectorAll('.query-condition');
-        conditions.forEach(condition => refreshConditionOptions(condition));
-    }
 
-    function handleConditionAction(event) {
+    async function handleConditionAction(event) {
         const removeBtn = event.target.closest('[data-role="remove-condition"]');
         if (removeBtn) {
             const condition = removeBtn.closest('.query-condition');
@@ -318,12 +317,12 @@
         const typeSelect = event.target.closest('[data-role="condition-type"]');
         if (typeSelect) {
             const condition = typeSelect.closest('.query-condition');
-            renderConditionFields(condition, typeSelect.value);
+            await renderConditionFields(condition, typeSelect.value);
             updateQueryPreview();
         }
     }
 
-    function addCondition(type = 'search') {
+    async function addCondition(type = 'search') {
         state.conditionCounter += 1;
         const id = `condition-${state.conditionCounter}`;
         const element = document.createElement('div');
@@ -335,27 +334,27 @@
                 <option value="sql" ${type === 'sql' ? 'selected' : ''}>sql</option>
             </select>
             <div class="query-condition__fields"></div>
-            <button type="button" class="ghost" data-role="remove-condition" title="移除">✕</button>
+            <button type="button" class="ghost" data-role="remove-condition" title="Remove">✕</button>
         `;
         refs.queryBuilder.appendChild(element);
-        renderConditionFields(element, type);
+        await renderConditionFields(element, type);
         updateQueryPreview();
     }
 
-    function renderConditionFields(condition, type) {
+    async function renderConditionFields(condition, type) {
         const fieldsContainer = condition.querySelector('.query-condition__fields');
         if (!fieldsContainer) return;
 
         if (type === 'search') {
             fieldsContainer.innerHTML = `
                 <select data-role="search-fields"></select>
-                <input type="text" placeholder="關鍵字" data-role="search-term">
+                <input type="text" placeholder="Keyword" data-role="search-term">
                 <select data-role="search-operator">
                     <option value="AND">AND</option>
                     <option value="OR">OR</option>
                 </select>
             `;
-            populateSearchFields(fieldsContainer.querySelector('[data-role="search-fields"]'));
+            await populateSearchFields(fieldsContainer.querySelector('[data-role="search-fields"]'));
         } else {
             fieldsContainer.innerHTML = `
                 <select data-role="sql-field"></select>
@@ -368,41 +367,53 @@
                     <option value="<="><=</option>
                     <option value="LIKE">LIKE</option>
                 </select>
-                <input type="text" placeholder="值" data-role="sql-value">
+                <input type="text" placeholder="Value" data-role="sql-value">
             `;
-            populateSqlFields(fieldsContainer.querySelector('[data-role="sql-field"]'));
+            await populateSqlFields(fieldsContainer.querySelector('[data-role="sql-field"]'));
         }
     }
 
     async function populateSearchFields(selectElement) {
         const fields = await fetchSchemaFields('text');
-        selectElement.innerHTML = '<option value="">所有字段</option>' +
+        selectElement.innerHTML = '<option value="">All fields</option>' +
             fields.map(field => `<option value="${field.name}">${field.name} (${field.type})</option>`).join('');
     }
 
     async function populateSqlFields(selectElement) {
         const fields = await fetchSchemaFields();
-        selectElement.innerHTML = '<option value="">選擇字段</option>' +
+        selectElement.innerHTML = '<option value="">Select field</option>' +
             fields.map(field => `<option value="${field.name}">${field.name} (${field.type})</option>`).join('');
     }
 
     async function fetchSchemaFields(filterType) {
-        if (!state.currentCollection) return [];
+        // Use the currently selected collection
+        const collection = state.currentCollection;
+        if (!collection) return [];
+
+        // Load schema if not available
         if (!state.schema) {
-            await loadCollectionContent(state.currentCollection, state.currentPage);
+            try {
+                const url = `/collections/content?collection=${encodeURIComponent(collection)}&page=1&limit=1`;
+                const result = await apiCall(url);
+                state.schema = parseSchema(result.schema, collection);
+            } catch (error) {
+                console.warn('Failed to load schema:', error);
+                return [];
+            }
         }
+
         const schema = state.schema;
         if (!schema?.fields) return [];
         return schema.fields.filter(field => !filterType || field.type === filterType);
     }
 
-    function refreshConditionOptions(condition) {
+    async function refreshConditionOptions(condition) {
         const type = condition.querySelector('[data-role="condition-type"]').value;
-        renderConditionFields(condition, type);
+        await renderConditionFields(condition, type);
     }
 
     function updateQueryPreview() {
-        const collection = refs.advancedCollection.value || '';
+        const collection = state.currentCollection || '';
         const limit = Number(refs.resultLimit.value) || 20;
         const offset = Number(refs.resultOffset.value) || 0;
         const conditions = Array.from(refs.queryBuilder.querySelectorAll('.query-condition'));
@@ -444,9 +455,12 @@
         });
 
         let query = {};
-        if (queryParts.length === 1) {
+        if (queryParts.length === 0) {
+            // When no conditions, use SQL query to get all data
+            query = { sql: { where: {} } };
+        } else if (queryParts.length === 1) {
             query = queryParts[0];
-        } else if (queryParts.length > 1) {
+        } else {
             query = { '$and': queryParts };
         }
 
@@ -468,33 +482,34 @@
         try {
             const payload = JSON.parse(refs.queryPreview.textContent);
             if (!payload.collection) {
-                showToast('請先選擇 Collection', true);
+                showToast('Please select a collection', true);
                 return;
             }
             const result = await apiCall('/query', 'POST', payload);
             displayQueryResult(payload.collection, result);
-            showToast('進階查詢完成');
+            showToast('Advanced query completed');
         } catch (error) {
-            showToast(`查詢失敗：${error.message}`, true);
+            showToast(`Query failed: ${error.message}`, true);
         }
     }
 
     function displayQueryResult(collectionName, result) {
         state.showingQuery = true;
-        const records = Array.isArray(result.records) ? result.records : (result.records ? [result.records] : []);
+        // 後端可能直接返回陣列，或返回包含 records 的物件
+        const records = Array.isArray(result) ? result : (Array.isArray(result.records) ? result.records : (result.records ? [result.records] : []));
         const columns = result.columns || inferColumns(records);
         const total = result.pagination?.total_count ?? records.length;
         const pagination = result.pagination || { page: 1, total_pages: 1, total_count: total };
 
-        refs.contentTitle.textContent = `查詢結果 - ${collectionName}`;
-        refs.collectionInfo.textContent = `共 ${pagination.total_count} 筆符合條件的資料`;
+        refs.contentTitle.textContent = `Query Results - ${collectionName}`;
+        refs.collectionInfo.textContent = `${pagination.total_count} matching records`;
         refs.openAddDocument.disabled = true;
 
         if (!records.length) {
             refs.contentTableContainer.innerHTML = `
                 <div class="placeholder">
-                    <h3>查無資料</h3>
-                    <p>沒有符合條件的結果。</p>
+                    <h3>No Data</h3>
+                    <p>No matching results.</p>
                 </div>
             `;
             refs.pagination.innerHTML = '';
@@ -514,9 +529,9 @@
         if (state.currentCollection) {
             loadCollectionContent(state.currentCollection, 1);
         } else {
-            renderEmptyContent('請先選擇 Collection');
+            renderEmptyContent('Please select a collection');
         }
-        showToast('查詢條件已清除');
+        showToast('Query cleared');
     }
 
     function formatCell(value) {
@@ -549,11 +564,11 @@
 
     function handleOpenAddDocument() {
         if (!state.currentCollection) {
-            showToast('請先選擇 Collection', true);
+            showToast('Please select a collection', true);
             return;
         }
         if (!state.schema) {
-            showToast('尚未取得 schema', true);
+            showToast('Schema not available', true);
             return;
         }
         buildDocumentFields(refs.addFields, state.schema.fields, {});
@@ -562,7 +577,7 @@
 
     function openEditDocument(record) {
         if (!state.schema) {
-            showToast('尚未取得 schema', true);
+            showToast('Schema not available', true);
             return;
         }
         buildDocumentFields(refs.editFields, state.schema.fields, record, true, state.schema.primary_key);
@@ -572,7 +587,7 @@
     function buildDocumentFields(container, fields, record = {}, isEdit = false, primaryKey) {
         container.innerHTML = '';
         if (!Array.isArray(fields) || !fields.length) {
-            container.innerHTML = '<p class="section-subtitle">缺少 schema 定義。</p>';
+            container.innerHTML = '<p class="section-subtitle">Missing schema definition。</p>';
             return;
         }
 
@@ -621,10 +636,10 @@
                 document: documentData,
             });
             toggleModal(refs.modalAddDocument, false);
-            showToast('文檔新增成功');
+            showToast('Document added successfully');
             loadCollectionContent(state.currentCollection, 1);
         } catch (error) {
-            showToast(`新增文檔失敗：${error.message}`, true);
+            showToast(`Failed to add document: ${error.message}`, true);
         }
     }
 
@@ -637,15 +652,15 @@
                 document: documentData,
             });
             toggleModal(refs.modalEditDocument, false);
-            showToast('文檔更新成功');
+            showToast('Document updated successfully');
             loadCollectionContent(state.currentCollection, state.currentPage);
         } catch (error) {
-            showToast(`更新文檔失敗：${error.message}`, true);
+            showToast(`Failed to update document: ${error.message}`, true);
         }
     }
 
     function collectDocumentData(container, schema, preservePrimary) {
-        if (!schema?.fields) throw new Error('缺少 schema');
+        if (!schema?.fields) throw new Error('Missing schema');
         const data = {};
         const primaryKey = schema.primary_key;
 
@@ -683,11 +698,11 @@
 
     async function deleteRecord(id) {
         if (!state.currentCollection || !id) {
-            showToast('缺少刪除所需資訊', true);
+            showToast('Missing delete information', true);
             return;
         }
 
-        const confirmDelete = window.confirm(`確定刪除 ID 為 ${id} 的文檔？`);
+        const confirmDelete = window.confirm(`Delete document with ID ${id}?`);
         if (!confirmDelete) return;
 
         try {
@@ -695,10 +710,10 @@
                 collection: state.currentCollection,
                 id,
             });
-            showToast('文檔刪除成功');
+            showToast('Document deleted successfully');
             loadCollectionContent(state.currentCollection, state.currentPage);
         } catch (error) {
-            showToast(`刪除失敗：${error.message}`, true);
+            showToast(`Delete failed: ${error.message}`, true);
         }
     }
 
@@ -710,7 +725,7 @@
             const stemming = document.getElementById('fts-stemming').checked;
 
             if (!name || !primaryKey) {
-                showToast('請填寫必要欄位', true);
+                showToast('Please fill required fields', true);
                 return;
             }
 
@@ -720,7 +735,7 @@
                 const fieldWeight = row.querySelector('[data-field="weight"]').value;
                 const indexed = row.querySelector('[data-field="indexed"]').checked;
 
-                if (!fieldName) throw new Error('字段名稱不可為空');
+                if (!fieldName) throw new Error('Field name cannot be empty');
 
                 const field = { name: fieldName, type: fieldType, indexed };
                 if (fieldWeight) {
@@ -731,7 +746,7 @@
             });
 
             if (!fields.length) {
-                showToast('至少需要一個字段', true);
+                showToast('At least one field required', true);
                 return;
             }
 
@@ -744,34 +759,35 @@
 
             await apiCall('/collections/create', 'POST', schema);
             toggleModal(refs.modalCreateCollection, false);
-            showToast('Collection 建立成功');
+            showToast('Collection created successfully');
             loadCollections();
         } catch (error) {
-            showToast(`建立失敗：${error.message}`, true);
+            showToast(`Create failed: ${error.message}`, true);
         }
     }
 
-    async function handleDeleteCollection() {
-        if (!state.currentCollection) {
-            showToast('請先選擇 Collection', true);
-            return;
-        }
+    async function deleteCollectionByName(collectionName) {
+        if (!collectionName) return;
 
-        const confirmDelete = window.confirm(`確定刪除 Collection 「${state.currentCollection}」？`);
+        const confirmDelete = window.confirm(`Delete collection "${collectionName}"?`);
         if (!confirmDelete) return;
 
         try {
-            await apiCall('/collections/delete', 'POST', { name: state.currentCollection });
-            showToast('Collection 刪除成功');
-            state.currentCollection = null;
-            state.content = null;
-            state.schema = null;
-            refs.openAddDocument.disabled = true;
-            renderCollections();
-            renderEmptyContent('請選擇 Collection');
+            await apiCall('/collections/delete', 'POST', { name: collectionName });
+            showToast('Collection deleted successfully');
+
+            // Clear state if deleted collection was selected
+            if (state.currentCollection === collectionName) {
+                state.currentCollection = null;
+                state.content = null;
+                state.schema = null;
+                refs.openAddDocument.disabled = true;
+                renderEmptyContent('Please select a collection');
+            }
+
             loadCollections();
         } catch (error) {
-            showToast(`刪除失敗：${error.message}`, true);
+            showToast(`Delete failed: ${error.message}`, true);
         }
     }
 
@@ -779,18 +795,18 @@
         const row = document.createElement('div');
         row.className = 'field-row';
         row.innerHTML = `
-            <input type="text" placeholder="字段名稱" value="${name}" data-field="name" required>
+            <input type="text" placeholder="Field name" value="${name}" data-field="name" required>
             <select data-field="type">
                 <option value="text" ${type === 'text' ? 'selected' : ''}>text</option>
                 <option value="integer" ${type === 'integer' ? 'selected' : ''}>integer</option>
                 <option value="real" ${type === 'real' ? 'selected' : ''}>real</option>
             </select>
-            <input type="number" step="0.1" min="0" placeholder="權重" value="${weight}" data-field="weight">
+            <input type="number" step="0.1" min="0" placeholder="Weight" value="${weight}" data-field="weight">
             <label class="form-field form-field--inline" style="margin:0;">
                 <input type="checkbox" data-field="indexed" ${indexed ? 'checked' : ''}>
-                <span>索引</span>
+                <span>Index</span>
             </label>
-            <button type="button" class="ghost" title="移除" aria-label="移除字段">✕</button>
+            <button type="button" class="ghost" title="Remove" aria-label="Remove field">✕</button>
         `;
         row.querySelector('button').addEventListener('click', () => row.remove());
         refs.fieldsContainer.appendChild(row);
@@ -851,26 +867,16 @@
             const response = await fetch('/');
             if (response.ok) {
                 refs.statusIndicator.style.background = '#d0d0d0';
-                refs.statusText.textContent = '正常運行';
+                refs.statusText.textContent = 'Running';
             } else {
-                throw new Error('狀態異常');
+                throw new Error('Status error');
             }
         } catch (error) {
             refs.statusIndicator.style.background = '#616161';
-            refs.statusText.textContent = '連線異常';
+            refs.statusText.textContent = 'Connection error';
         }
     }
 
-    function updateAdvancedCollectionOptions() {
-        const options = state.collections
-            .map(collection => `<option value="${collection.name}">${collection.name}</option>`)
-            .join('');
-        const placeholder = '<option value="">選擇 Collection</option>';
-        refs.advancedCollection.innerHTML = placeholder + options;
-        if (state.currentCollection) {
-            refs.advancedCollection.value = state.currentCollection;
-        }
-    }
 
     function toggleModal(modal, visible) {
         if (!modal) return;

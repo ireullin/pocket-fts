@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Pocket FTS 管理介面</title>
+    <title>Pocket FTS</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <header class="top-bar">
-        <div class="top-bar__title">Pocket FTS 管理介面</div>
+        <div class="top-bar__title">Pocket FTS</div>
         <div class="top-bar__status" id="server-status">
             <span class="status-indicator" id="status-indicator"></span>
-            <span id="status-text">檢查中...</span>
+            <span id="status-text">Checking...</span>
         </div>
     </header>
 
@@ -24,26 +24,18 @@
         <section class="panel panel--collections">
             <header class="panel__header">
                 <h2 class="panel__title">Collections</h2>
-                <div class="panel__tools">
-                    <button type="button" id="refresh-collections" class="ghost">刷新</button>
-                    <button type="button" id="delete-collection" class="ghost" title="刪除所選 Collection">刪除</button>
-                </div>
             </header>
             <ul class="collection-list" id="collection-list">
-                <li class="collection-list__item collection-list__item--empty">載入中...</li>
+                <li class="collection-list__item collection-list__item--empty">Loading...</li>
             </ul>
-            <button type="button" id="open-create-collection" class="primary-block">新增 Collection</button>
+            <button type="button" id="open-create-collection" class="primary-block">New Collection</button>
         </section>
 
         <section class="panel panel--workspace">
             <section class="workspace__queries">
                 <header class="section-header">
-                    <h2>進階查詢</h2>
+                    <h2>Advanced Query</h2>
                     <div class="section-controls">
-                        <label class="inline-field">
-                            <span>Collection</span>
-                            <select id="advanced-collection"></select>
-                        </label>
                         <label class="inline-field">
                             <span>Limit</span>
                             <input type="number" id="result-limit" min="1" max="100" value="20">
@@ -56,10 +48,10 @@
                 </header>
                 <div id="query-builder" class="query-builder"></div>
                 <div class="query-actions">
-                    <button type="button" id="add-condition" class="ghost">新增條件</button>
+                    <button type="button" id="add-condition" class="ghost">Add Condition</button>
                     <div class="query-actions__group">
-                        <button type="button" id="execute-query" class="primary">執行查詢</button>
-                        <button type="button" id="clear-query" class="ghost">清除</button>
+                        <button type="button" id="execute-query" class="primary">Execute Query</button>
+                        <button type="button" id="clear-query" class="ghost">Clear</button>
                     </div>
                 </div>
             </section>
@@ -67,26 +59,26 @@
             <section class="workspace__results">
                 <header class="section-header">
                     <div>
-                        <h2 id="content-title">Collection 內容</h2>
-                        <p id="collection-info" class="section-subtitle">請從左側選擇 Collection</p>
+                        <h2 id="content-title">Collection Content</h2>
+                        <p id="collection-info" class="section-subtitle">Select a collection from the left</p>
                     </div>
                     <div class="section-controls">
-                        <button type="button" id="open-add-document" class="primary" disabled>新增文檔</button>
+                        <button type="button" id="open-add-document" class="primary" disabled>Add Document</button>
                     </div>
                 </header>
                 <div id="content-table-container" class="table-shell">
                     <div class="placeholder">
-                        <h3>未選擇 Collection</h3>
-                        <p>選擇左側列表以查看內容。</p>
+                        <h3>No Collection Selected</h3>
+                        <p>Select a collection from the left to view content.</p>
                     </div>
                 </div>
-                <footer id="pagination" class="pagination" aria-label="分頁"></footer>
+                <footer id="pagination" class="pagination" aria-label="Pagination"></footer>
             </section>
         </section>
 
         <aside class="panel panel--preview">
             <header class="panel__header">
-                <h2 class="panel__title">查詢 JSON</h2>
+                <h2 class="panel__title">Query JSON</h2>
             </header>
             <pre id="query-json-preview" class="code-preview" aria-label="Query JSON Preview">{
   "collection": "",
@@ -102,14 +94,14 @@
     <div class="modal" id="modal-add-document" aria-hidden="true">
         <div class="modal__content" role="dialog" aria-modal="true">
             <header class="modal__header">
-                <h3>新增文檔</h3>
+                <h3>Add Document</h3>
                 <button type="button" class="modal__close" data-close="modal-add-document" aria-label="Close">×</button>
             </header>
             <form id="add-document-form" class="modal__body">
                 <div id="add-fields" class="form-grid"></div>
                 <footer class="modal__footer">
-                    <button type="button" class="ghost" data-close="modal-add-document">取消</button>
-                    <button type="submit" class="primary">新增</button>
+                    <button type="button" class="ghost" data-close="modal-add-document">Cancel</button>
+                    <button type="submit" class="primary">Add</button>
                 </footer>
             </form>
         </div>
@@ -118,14 +110,14 @@
     <div class="modal" id="modal-edit-document" aria-hidden="true">
         <div class="modal__content" role="dialog" aria-modal="true">
             <header class="modal__header">
-                <h3>編輯文檔</h3>
+                <h3>Edit Document</h3>
                 <button type="button" class="modal__close" data-close="modal-edit-document" aria-label="Close">×</button>
             </header>
             <form id="edit-document-form" class="modal__body">
                 <div id="edit-fields" class="form-grid"></div>
                 <footer class="modal__footer">
-                    <button type="button" class="ghost" data-close="modal-edit-document">取消</button>
-                    <button type="submit" class="primary">更新</button>
+                    <button type="button" class="ghost" data-close="modal-edit-document">Cancel</button>
+                    <button type="submit" class="primary">Update</button>
                 </footer>
             </form>
         </div>
@@ -134,13 +126,13 @@
     <div class="modal" id="modal-create-collection" aria-hidden="true">
         <div class="modal__content modal__content--wide" role="dialog" aria-modal="true">
             <header class="modal__header">
-                <h3>新增 Collection</h3>
+                <h3>Create Collection</h3>
                 <button type="button" class="modal__close" data-close="modal-create-collection" aria-label="Close">×</button>
             </header>
             <form id="create-collection-form" class="modal__body">
                 <div class="form-grid">
                     <label class="form-field">
-                        <span>Collection 名稱</span>
+                        <span>Collection Name</span>
                         <input type="text" id="new-collection-name" required>
                     </label>
                     <label class="form-field">
@@ -149,19 +141,19 @@
                     </label>
                     <label class="form-field form-field--inline">
                         <input type="checkbox" id="fts-stemming" checked>
-                        <span>啟用 stemming</span>
+                        <span>Enable stemming</span>
                     </label>
                 </div>
                 <div class="table-shell">
                     <header class="table-shell__header">
-                        <h4>字段設定</h4>
-                        <button type="button" id="add-field-row" class="ghost">新增字段</button>
+                        <h4>Field Settings</h4>
+                        <button type="button" id="add-field-row" class="ghost">Add Field</button>
                     </header>
                     <div id="fields-container" class="field-rows"></div>
                 </div>
                 <footer class="modal__footer">
-                    <button type="button" class="ghost" data-close="modal-create-collection">取消</button>
-                    <button type="submit" class="primary">建立</button>
+                    <button type="button" class="ghost" data-close="modal-create-collection">Cancel</button>
+                    <button type="submit" class="primary">Create</button>
                 </footer>
             </form>
         </div>

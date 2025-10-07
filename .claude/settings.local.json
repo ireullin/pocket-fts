@@ -32,7 +32,9 @@
       "Bash(LD_LIBRARY_PATH=./lib ./pocket_fts --startup-only)",
       "Read(///**)",
       "Bash(awk:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(python3:*)",
+      "Bash(xargs kill:*)"
     ],
     "deny": []
   }

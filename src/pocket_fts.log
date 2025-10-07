@@ -1,8 +1,0 @@
-{"time":"2025-10-06T16:10:47.713531205+08:00","level":"INFO","msg":"FTS library loaded successfully"}
-{"time":"2025-10-06T16:10:47.741837805+08:00","level":"INFO","msg":"Database initialized successfully."}
-{"time":"2025-10-06T16:10:47.766135906+08:00","level":"INFO","msg":"FTS engine initialized successfully."}
-{"time":"2025-10-06T16:10:47.766391406+08:00","level":"INFO","msg":"FTS logging setup completed."}
-{"time":"2025-10-06T16:10:47.766620606+08:00","level":"INFO","msg":"FTS core version","version":"v0.9"}
-{"time":"2025-10-06T16:10:47.766818106+08:00","level":"INFO","msg":"Query executor initialized successfully."}
-{"time":"2025-10-06T16:10:47.767749406+08:00","level":"INFO","msg":"Server listening","address":"http://localhost:5122"}
-{"time":"2025-10-06T16:10:47.768084106+08:00","level":"INFO","msg":"Database file","path":"db.sqlite"}
