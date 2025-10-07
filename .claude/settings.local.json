@@ -34,7 +34,9 @@
       "Bash(awk:*)",
       "Bash(cat:*)",
       "Bash(python3:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(LD_LIBRARY_PATH=../lib mise exec -- go build -o ../pocket_fts)",
+      "Bash(LD_LIBRARY_PATH=../lib ../pocket_fts --startup-only)"
     ],
     "deny": []
   }

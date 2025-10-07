@@ -13,7 +13,7 @@ import (
 	"os"
 )
 
-//go:embed static
+//go:embed embedded/*.html embedded/*.css embedded/*.js
 var staticFS embed.FS
 
 var db *sql.DB
@@ -71,31 +71,31 @@ func main() {
 	}
 	defer fts.Close()
 	logger.Info("FTS engine initialized successfully.")
-	
+
 	// 設定 FTS C library 的 log callback
 	SetupFTSLogging()
 	logger.Info("FTS logging setup completed.")
-	
+
 	// 記錄 FTS 版本
 	ftsVersion := GetFTSVersion()
 	logger.Info("FTS core version", "version", ftsVersion)
-	
+
 	// 初始化查詢執行器
 	queryExecutor = NewQueryExecutor(db, fts)
 	logger.Info("Query executor initialized successfully.")
 
 	// 提供靜態檔案服務（從 embedded FS，添加防快取標頭）
-	staticFiles, err := fs.Sub(staticFS, "static")
+	staticFiles, err := fs.Sub(staticFS, "embedded")
 	if err != nil {
-		logger.Error("Failed to load static files", "error", err)
+		logger.Error("Failed to load ui page", "error", err)
 		os.Exit(1)
 	}
-	http.Handle("/static/", addNoCacheHeaders(http.StripPrefix("/static/", http.FileServer(http.FS(staticFiles)))))
-	
+	http.Handle("/controller/", addNoCacheHeaders(http.StripPrefix("/controller/", http.FileServer(http.FS(staticFiles)))))
+
 	// 根路徑重導向到管理介面
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
-			http.Redirect(w, r, "/static/", http.StatusFound)
+			http.Redirect(w, r, "/controller/", http.StatusFound)
 			return
 		}
 		fmt.Fprintf(w, "Pocket FTS is running.")
