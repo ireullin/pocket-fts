@@ -39,6 +39,7 @@
         refs.contentTableContainer = document.getElementById('content-table-container');
         refs.pagination = document.getElementById('pagination');
         refs.queryPreview = document.getElementById('query-json-preview');
+        refs.copyQueryJson = document.getElementById('copy-query-json');
         refs.modalAddDocument = document.getElementById('modal-add-document');
         refs.modalEditDocument = document.getElementById('modal-edit-document');
         refs.modalCreateCollection = document.getElementById('modal-create-collection');
@@ -59,6 +60,7 @@
         refs.addCondition.addEventListener('click', () => addCondition());
         refs.executeQuery.addEventListener('click', executeQuery);
         refs.clearQuery.addEventListener('click', clearQuery);
+        refs.copyQueryJson.addEventListener('click', copyQueryToClipboard);
         refs.queryBuilder.addEventListener('change', updateQueryPreview);
         refs.queryBuilder.addEventListener('input', updateQueryPreview);
         refs.queryBuilder.addEventListener('click', handleConditionAction);
@@ -532,6 +534,29 @@
             renderEmptyContent('Please select a collection');
         }
         showToast('Query cleared');
+    }
+
+    async function copyQueryToClipboard() {
+        const jsonText = refs.queryPreview.textContent;
+        try {
+            await navigator.clipboard.writeText(jsonText);
+            showToast('Query JSON copied to clipboard');
+        } catch (error) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = jsonText;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Query JSON copied to clipboard');
+            } catch (err) {
+                showToast('Failed to copy to clipboard', true);
+            }
+            document.body.removeChild(textArea);
+        }
     }
 
     function formatCell(value) {

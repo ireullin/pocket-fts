@@ -32,7 +32,44 @@ func addNoCacheHeaders(handler http.Handler) http.Handler {
 	})
 }
 
+func printHelp() {
+	fmt.Println("Pocket FTS - Full-Text Search Engine")
+	fmt.Println()
+	fmt.Println("Usage:")
+	fmt.Println("  pocket_fts [options]")
+	fmt.Println()
+	fmt.Println("Options:")
+	fmt.Println("  -p int              Port to listen on (default: 5122)")
+	fmt.Println("  -f string           Database file path (default: \"db.sqlite\")")
+	fmt.Println("  -host string        Host address to bind (default: \"localhost\")")
+	fmt.Println("  -h, --help          Show this help message")
+	fmt.Println()
+	fmt.Println("Examples:")
+	fmt.Println("  pocket_fts")
+	fmt.Println("  pocket_fts -p 8080 -f /data/my.db")
+	fmt.Println("  pocket_fts -p 8080 -f /data/my.db -host 0.0.0.0")
+	fmt.Println()
+	fmt.Println("Visit http://localhost:5122 after starting the server.")
+}
+
 func main() {
+	// Define flags
+	port := flag.Int("p", 5122, "Port to listen on")
+	dbFile := flag.String("f", "db.sqlite", "Database file path")
+	host := flag.String("host", "localhost", "Host address to bind")
+	showHelp := flag.Bool("h", false, "Show help message")
+	startupOnly := flag.Bool("startup-only", false, "") // Hidden flag
+
+	// Custom usage message
+	flag.Usage = printHelp
+	flag.Parse()
+
+	// Handle help flag
+	if *showHelp {
+		printHelp()
+		return
+	}
+
 	logFile, err := os.OpenFile("pocket_fts.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatalf("failed to open log file: %v", err)
@@ -42,11 +79,6 @@ func main() {
 	// 使用 MultiWriter 同時寫到檔案和 console
 	multiWriter := io.MultiWriter(os.Stdout, logFile)
 	logger = slog.New(slog.NewJSONHandler(multiWriter, nil))
-
-	port := flag.Int("p", 5122, "Port to listen on")
-	dbFile := flag.String("f", "db.sqlite", "Database file path")
-	startupOnly := flag.Bool("startup-only", false, "Run startup logic only and then exit.")
-	flag.Parse()
 
 	// Load FTS dynamic library (extracts to same directory as database)
 	if err := LoadFTSLibrary(*dbFile); err != nil {
@@ -109,8 +141,8 @@ func main() {
 	http.HandleFunc("/search", handleSearch)
 	http.HandleFunc("/query", handleQuery)
 
-	addr := fmt.Sprintf(":%d", *port)
-	logger.Info("Server listening", "address", fmt.Sprintf("http://localhost%s", addr))
+	addr := fmt.Sprintf("%s:%d", *host, *port)
+	logger.Info("Server listening", "address", fmt.Sprintf("http://%s", addr))
 	logger.Info("Database file", "path", *dbFile)
 
 	if *startupOnly {
