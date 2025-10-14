@@ -415,7 +415,6 @@ func handleCollectionList(w http.ResponseWriter, r *http.Request) {
 		if err := json.Unmarshal([]byte(schemaStr), &schema); err == nil {
 			collection["primary_key"] = schema.PrimaryKey
 			collection["field_count"] = len(schema.Fields)
-			collection["has_fts"] = schema.FTS.Stemming
 
 			// 統計文檔數量（安全檢查 collection 名稱）
 			if isValidIdentifier(name) {
