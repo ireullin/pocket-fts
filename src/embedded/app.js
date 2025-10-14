@@ -121,6 +121,13 @@
                 </li>
             `;
         }).join('');
+
+        if (!state.currentCollection) {
+            const first = list[0]?.name;
+            if (first) {
+                selectCollection(first);
+            }
+        }
     }
 
     function handleCollectionClick(event) {
@@ -245,7 +252,7 @@
                         ${displayColumns.map(col => `
                             <td>
                                 <div class="cell-content" title="Click to expand" data-action="toggle-cell">
-                                    ${formatCell(record[col])}
+                                    ${formatCell(record[col], col)}
                                 </div>
                             </td>
                         `).join('')}
@@ -642,13 +649,46 @@
         }
     }
 
-    function formatCell(value) {
+    function formatCell(value, columnKey) {
         if (value === null || value === undefined) return '<span style="color:#888">null</span>';
-        const str = String(value);
-        if (str.length > 80) {
-            return `${str.slice(0, 80)}…`;
+
+        const isScoreColumn = columnKey === '_score';
+        let displayValue = value;
+        let fullValue = value;
+
+        if (isScoreColumn) {
+            const numeric = Number(value);
+            if (!Number.isNaN(numeric)) {
+                displayValue = numeric.toFixed(3);
+                fullValue = numeric.toString();
+            } else {
+                displayValue = String(value);
+                fullValue = displayValue;
+            }
+        } else if (typeof value === 'string') {
+            fullValue = value;
+            if (value.length > 80) {
+                displayValue = `${value.slice(0, 80)}…`;
+            } else {
+                displayValue = value;
+            }
+        } else {
+            const strValue = String(value);
+            fullValue = strValue;
+            if (strValue.length > 80) {
+                displayValue = `${strValue.slice(0, 80)}…`;
+            } else {
+                displayValue = strValue;
+            }
         }
-        return escapeHtml(str);
+
+        const safeDisplay = escapeHtml(String(displayValue));
+        const safeFull = escapeHtml(String(fullValue));
+        if (safeDisplay === safeFull) {
+            return safeDisplay;
+        }
+
+        return `<span title="${safeFull}">${safeDisplay}</span>`;
     }
 
     function inferColumns(records) {
