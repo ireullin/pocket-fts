@@ -419,22 +419,24 @@
         const limit = Number(refs.resultLimit.value) || 20;
         const offset = Number(refs.resultOffset.value) || 0;
         const conditions = Array.from(refs.queryBuilder.querySelectorAll('.query-condition'));
-        const queryParts = [];
+        const searchConditions = [];
+        const structuredParts = [];
 
-        conditions.forEach(condition => {
-            const type = condition.querySelector('[data-role="condition-type"]').value;
+        conditions.forEach((condition, index) => {
+            const type = condition.querySelector('[data-role="condition-type"]')?.value;
             if (type === 'search') {
-                const term = condition.querySelector('[data-role="search-term"]').value.trim();
-                const operator = condition.querySelector('[data-role="search-operator"]').value || 'AND';
-                const field = condition.querySelector('[data-role="search-fields"]').value;
+                const fieldValue = condition.querySelector('[data-role="search-fields"]')?.value?.trim() || '';
+                const field = fieldValue.toUpperCase() === 'ALL' ? '' : fieldValue;
+                const termInput = condition.querySelector('[data-role="search-term"]');
+                const operatorSelect = condition.querySelector('[data-role="search-operator"]');
+                const term = termInput ? termInput.value.trim() : '';
                 if (!term) return;
-                const searchObj = { term, operator };
-                if (field) searchObj.fields = [field];
-                queryParts.push({ search: searchObj });
-            } else {
-                const field = condition.querySelector('[data-role="sql-field"]').value;
-                const operator = condition.querySelector('[data-role="sql-operator"]').value || '=';
-                const value = condition.querySelector('[data-role="sql-value"]').value.trim();
+                const operator = normalizeBooleanOperator(operatorSelect ? operatorSelect.value : 'AND');
+                searchConditions.push({ index, field, term, operator });
+            } else if (type === 'sql') {
+                const field = condition.querySelector('[data-role="sql-field"]')?.value;
+                const operator = condition.querySelector('[data-role="sql-operator"]')?.value || '=';
+                const value = condition.querySelector('[data-role="sql-value"]')?.value.trim() || '';
                 if (!field || !value) return;
                 const operatorMap = {
                     '=': '$eq',
@@ -452,18 +454,30 @@
                 } else {
                     where[field] = { [mapped]: value };
                 }
-                queryParts.push({ sql: { where } });
+                structuredParts.push({ index, payload: { sql: { where } } });
             }
         });
 
+        const searchPart = buildSearchQueryPart(searchConditions);
+        if (searchPart) {
+            structuredParts.push({
+                index: searchPart.index,
+                payload: { search: { term: searchPart.term } },
+            });
+        }
+
+        const orderedParts = structuredParts
+            .sort((a, b) => a.index - b.index)
+            .map(part => part.payload);
+
         let query = {};
-        if (queryParts.length === 0) {
+        if (orderedParts.length === 0) {
             // When no conditions, use SQL query to get all data
             query = { sql: { where: {} } };
-        } else if (queryParts.length === 1) {
-            query = queryParts[0];
+        } else if (orderedParts.length === 1) {
+            query = orderedParts[0];
         } else {
-            query = { '$and': queryParts };
+            query = { '$and': orderedParts };
         }
 
         const request = {
@@ -477,6 +491,58 @@
         };
 
         refs.queryPreview.textContent = JSON.stringify(request, null, 2);
+    }
+
+    function normalizeBooleanOperator(value) {
+        return (value && value.toUpperCase() === 'OR') ? 'OR' : 'AND';
+    }
+
+    function buildSearchQueryPart(conditions) {
+        if (!Array.isArray(conditions) || !conditions.length) return null;
+
+        const parts = [];
+        let connectorForNext = null;
+        let firstIndex = null;
+
+        conditions.forEach(condition => {
+            let termText = condition.term.trim();
+            if (!termText) return;
+
+            let isNegated = false;
+            if (/^NOT\s+/i.test(termText)) {
+                isNegated = true;
+                termText = termText.replace(/^NOT\s+/i, '').trim();
+            }
+
+            if (!termText) return;
+
+            let formatted = condition.field ? `${condition.field}:${termText}` : termText;
+            if (isNegated) {
+                formatted = `NOT ${formatted}`;
+            }
+
+            if (firstIndex === null) {
+                firstIndex = condition.index;
+            }
+
+            if (!parts.length) {
+                parts.push(formatted);
+            } else {
+                const connector = connectorForNext || 'AND';
+                parts.push(`${connector} ${formatted}`);
+            }
+
+            connectorForNext = condition.operator || 'AND';
+        });
+
+        if (!parts.length) {
+            return null;
+        }
+
+        return {
+            index: firstIndex ?? 0,
+            term: parts.join(' '),
+        };
     }
 
     async function executeQuery() {
