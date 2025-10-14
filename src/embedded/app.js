@@ -312,6 +312,7 @@
         if (removeBtn) {
             const condition = removeBtn.closest('.query-condition');
             condition?.remove();
+            updateSearchOperatorVisibility();
             updateQueryPreview();
             return;
         }
@@ -320,6 +321,7 @@
         if (typeSelect) {
             const condition = typeSelect.closest('.query-condition');
             await renderConditionFields(condition, typeSelect.value);
+            updateSearchOperatorVisibility();
             updateQueryPreview();
         }
     }
@@ -340,6 +342,7 @@
         `;
         refs.queryBuilder.appendChild(element);
         await renderConditionFields(element, type);
+        updateSearchOperatorVisibility();
         updateQueryPreview();
     }
 
@@ -349,14 +352,16 @@
 
         if (type === 'search') {
             fieldsContainer.innerHTML = `
-                <select data-role="search-fields"></select>
-                <input type="text" placeholder="Keyword" data-role="search-term">
                 <select data-role="search-operator">
                     <option value="AND">AND</option>
                     <option value="OR">OR</option>
+                    <option value="NOT">NOT</option>
                 </select>
+                <select data-role="search-fields"></select>
+                <input type="text" placeholder="Keyword" data-role="search-term">
             `;
             await populateSearchFields(fieldsContainer.querySelector('[data-role="search-fields"]'));
+            updateSearchOperatorVisibility();
         } else {
             fieldsContainer.innerHTML = `
                 <select data-role="sql-field"></select>
@@ -385,6 +390,24 @@
         const fields = await fetchSchemaFields();
         selectElement.innerHTML = '<option value="">Select field</option>' +
             fields.map(field => `<option value="${field.name}">${field.name} (${field.type})</option>`).join('');
+    }
+
+    function updateSearchOperatorVisibility() {
+        if (!refs.queryBuilder) return;
+        const searchConditions = Array.from(refs.queryBuilder.querySelectorAll('.query-condition'))
+            .filter(condition => condition.querySelector('[data-role="condition-type"]')?.value === 'search');
+
+        searchConditions.forEach((condition, index) => {
+            const operatorSelect = condition.querySelector('[data-role="search-operator"]');
+            if (!operatorSelect) return;
+
+            if (index === 0) {
+                operatorSelect.style.display = 'none';
+                operatorSelect.value = 'AND';
+            } else {
+                operatorSelect.style.display = '';
+            }
+        });
     }
 
     async function fetchSchemaFields(filterType) {
@@ -494,14 +517,16 @@
     }
 
     function normalizeBooleanOperator(value) {
-        return (value && value.toUpperCase() === 'OR') ? 'OR' : 'AND';
+        const upper = value ? value.toUpperCase() : '';
+        if (upper === 'OR') return 'OR';
+        if (upper === 'NOT') return 'NOT';
+        return 'AND';
     }
 
     function buildSearchQueryPart(conditions) {
         if (!Array.isArray(conditions) || !conditions.length) return null;
 
         const parts = [];
-        let connectorForNext = null;
         let firstIndex = null;
 
         conditions.forEach(condition => {
@@ -525,14 +550,24 @@
                 firstIndex = condition.index;
             }
 
+            const connector = condition.operator || 'AND';
             if (!parts.length) {
                 parts.push(formatted);
-            } else {
-                const connector = connectorForNext || 'AND';
-                parts.push(`${connector} ${formatted}`);
+                return;
             }
 
-            connectorForNext = condition.operator || 'AND';
+            if (connector === 'NOT') {
+                const withoutLeadingNot = formatted.startsWith('NOT ')
+                    ? formatted.slice(4).trim()
+                    : formatted;
+                if (!withoutLeadingNot) {
+                    return;
+                }
+                parts.push(`NOT ${withoutLeadingNot}`);
+                return;
+            }
+
+            parts.push(`${connector} ${formatted}`);
         });
 
         if (!parts.length) {
@@ -593,6 +628,7 @@
         state.conditionCounter = 0;
         refs.resultLimit.value = 20;
         refs.resultOffset.value = 0;
+        updateSearchOperatorVisibility();
         updateQueryPreview();
         if (state.currentCollection) {
             loadCollectionContent(state.currentCollection, 1);
