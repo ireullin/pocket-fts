@@ -455,7 +455,7 @@
         const offset = Number(refs.resultOffset.value) || 0;
         const conditions = Array.from(refs.queryBuilder.querySelectorAll('.query-condition'));
         const searchConditions = [];
-        const structuredParts = [];
+        const sqlTuples = [];
 
         conditions.forEach((condition, index) => {
             const type = condition.querySelector('[data-role="condition-type"]')?.value;
@@ -471,59 +471,34 @@
             } else if (type === 'sql') {
                 const field = condition.querySelector('[data-role="sql-field"]')?.value;
                 const operator = condition.querySelector('[data-role="sql-operator"]')?.value || '=';
-                const value = condition.querySelector('[data-role="sql-value"]')?.value.trim() || '';
-                if (!field || !value) return;
-                const operatorMap = {
-                    '=': '$eq',
-                    '!=': '$ne',
-                    '>': '$gt',
-                    '>=': '$gte',
-                    '<': '$lt',
-                    '<=': '$lte',
-                    'LIKE': '$like',
-                };
-                const mapped = operatorMap[operator] || '$eq';
-                const where = {};
-                if (mapped === '$like') {
-                    where[field] = { '$like': `%${value}%` };
-                } else {
-                    where[field] = { [mapped]: value };
-                }
-                structuredParts.push({ index, payload: { sql: { where } } });
+                const valueRaw = condition.querySelector('[data-role="sql-value"]')?.value.trim() || '';
+                if (!field || !valueRaw) return;
+                const value = operator === 'LIKE' ? `%${valueRaw}%` : valueRaw;
+                sqlTuples.push([field, operator, value]);
             }
         });
 
         const searchPart = buildSearchQueryPart(searchConditions);
-        if (searchPart) {
-            structuredParts.push({
-                index: searchPart.index,
-                payload: { search: { term: searchPart.term } },
-            });
-        }
-
-        const orderedParts = structuredParts
-            .sort((a, b) => a.index - b.index)
-            .map(part => part.payload);
-
-        let query = {};
-        if (orderedParts.length === 0) {
-            // When no conditions, use SQL query to get all data
-            query = { sql: { where: {} } };
-        } else if (orderedParts.length === 1) {
-            query = orderedParts[0];
-        } else {
-            query = { '$and': orderedParts };
-        }
 
         const request = {
             collection,
-            query,
-            result: {
-                limit,
-                offset,
-                order_by: [{ field: '_score', direction: 'desc' }],
-            },
+            limit,
+            offset,
+            order_by: [{ field: '_score', direction: 'desc' }],
         };
+
+        if (searchPart) {
+            request.search = { term: searchPart.term };
+        }
+
+        if (sqlTuples.length) {
+            request.sql = sqlTuples;
+        }
+
+        // When no filters, fall back to SQL-only full scan
+        if (!searchPart && !sqlTuples.length) {
+            request.sql = [];
+        }
 
         refs.queryPreview.textContent = JSON.stringify(request, null, 2);
     }
@@ -539,7 +514,6 @@
         if (!Array.isArray(conditions) || !conditions.length) return null;
 
         const parts = [];
-        let firstIndex = null;
 
         conditions.forEach(condition => {
             let termText = condition.term.trim();
@@ -556,10 +530,6 @@
             let formatted = condition.field ? `${condition.field}:${termText}` : termText;
             if (isNegated) {
                 formatted = `NOT ${formatted}`;
-            }
-
-            if (firstIndex === null) {
-                firstIndex = condition.index;
             }
 
             const connector = condition.operator || 'AND';
@@ -587,7 +557,6 @@
         }
 
         return {
-            index: firstIndex ?? 0,
             term: parts.join(' '),
         };
     }
