@@ -216,11 +216,23 @@
             return;
         }
 
-        const primaryKey = state.schema?.primary_key || columns[0];
+        const hasScoreColumn = records.some(record => record && Object.prototype.hasOwnProperty.call(record, '_score'));
+        let displayColumns = Array.isArray(columns) ? [...columns] : [];
+        if (!displayColumns.length) {
+            displayColumns = inferColumns(records);
+        }
+        if (hasScoreColumn) {
+            displayColumns = displayColumns.filter(col => col !== '_score');
+            displayColumns.unshift('_score');
+        }
+
+        const primaryKey = state.schema?.primary_key
+            || displayColumns.find(col => col && !col.startsWith('_'))
+            || displayColumns[0];
         const thead = `
             <thead>
                 <tr>
-                    ${columns.map(col => `<th>${col}</th>`).join('')}
+                    ${displayColumns.map(col => `<th>${col === '_score' ? 'score' : col}</th>`).join('')}
                     <th style="width: 80px;">actions</th>
                 </tr>
             </thead>
@@ -230,7 +242,7 @@
             <tbody>
                 ${records.map((record, index) => `
                     <tr data-row="${index}" data-id="${record[primaryKey] ?? ''}">
-                        ${columns.map(col => `
+                        ${displayColumns.map(col => `
                             <td>
                                 <div class="cell-content" title="Click to expand" data-action="toggle-cell">
                                     ${formatCell(record[col])}
