@@ -1,9 +1,3 @@
-*.exe
-*.exe~
-*.dll
-pocket_fts
-*.test
-*.out
 *.sqlite
 *.sqlite3
 *.db
