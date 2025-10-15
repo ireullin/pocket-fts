@@ -182,54 +182,6 @@ Content-Type: application/json
 ```json
 { "status": "success" }
 ```
-
----
-
-## Search
-
-### Full-Text Search
-```
-POST /search
-Content-Type: application/json
-```
-
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `collection` | string | Yes | Collection to search. |
-| `query` | string | Yes | Search expression. Supports boolean keywords (`AND`, `OR`, `NOT`) and `field:value` filters. |
-| `limit` | integer | No | Maximum results (defaults to engine setting). |
-| `offset` | integer | No | Number of matches to skip. |
-| `weights` | object | No | Adjusts search relevance per field (`fieldName`: number). |
-
-**Body**
-```json
-{
-  "collection": "products",
-  "query": "peach AND NOT type:archive",
-  "limit": 20,
-  "offset": 0,
-  "weights": {
-    "title": 5,
-    "content": 1
-  }
-}
-```
-
-**Response 200**
-Returns the raw search results for the target collection. The exact structure matches the search engine output. Example:
-```json
-{
-  "Hits": [
-    { "ID": "item_1", "Score": 0.8123, "Fields": { "title": "White Peach Jam" } }
-  ],
-  "Count": 1,
-  "Limit": 20,
-  "Offset": 0
-}
-```
-
----
-
 ## Advanced Query
 
 ### Combined Search & SQL Filtering
@@ -268,7 +220,7 @@ Content-Type: application/json
 {
   "collection": "products",
   "search": {
-    "term": "peach AND NOT type:archive"
+    "term": "peach"
   },
   "sql": [
     ["price", ">", 1000],
