@@ -14,10 +14,10 @@ import (
 // --- Structs for API Payloads ---
 
 type Field struct {
-	Name    string  `json:"name"`
-	Type    string  `json:"type"`
-	Weight  float64 `json:"weight,omitempty"`
-	Indexed bool    `json:"indexed,omitempty"`
+	Name       string  `json:"name"`
+	Type       string  `json:"type"`
+	Weight     float64 `json:"weight,omitempty"`
+	Indexed    bool    `json:"indexed,omitempty"`
 	PrimaryKey bool    `json:"primary_key,omitempty"` // Added for convenience
 }
 
@@ -57,9 +57,22 @@ type SearchRequest struct {
 // --- Enhanced Query DSL Structures ---
 
 type QueryRequest struct {
-	Collection string      `json:"collection"`
-	Query      QueryNode   `json:"query"`
-	Result     ResultSpec  `json:"result,omitempty"`
+	Collection string     `json:"collection"`
+	Query      QueryNode  `json:"query"`
+	Result     ResultSpec `json:"result,omitempty"`
+}
+
+type FlatQueryRequest struct {
+	Collection string          `json:"collection"`
+	Search     *FlatSearchSpec `json:"search,omitempty"`
+	SQL        [][]interface{} `json:"sql,omitempty"`
+	Limit      int             `json:"limit,omitempty"`
+	Offset     int             `json:"offset,omitempty"`
+	OrderBy    []OrderBySpec   `json:"order_by,omitempty"`
+}
+
+type FlatSearchSpec struct {
+	Term string `json:"term"`
 }
 
 type QueryNode struct {
@@ -67,7 +80,7 @@ type QueryNode struct {
 	And []*QueryNode `json:"$and,omitempty"`
 	Or  []*QueryNode `json:"$or,omitempty"`
 	Not *QueryNode   `json:"$not,omitempty"`
-	
+
 	// Query types
 	SQL    *SQLQuery    `json:"sql,omitempty"`
 	Search *SearchQuery `json:"search,omitempty"`
@@ -85,9 +98,9 @@ type SearchQuery struct {
 }
 
 type ResultSpec struct {
-	Fields  []string    `json:"fields,omitempty"`
-	Limit   int         `json:"limit,omitempty"`
-	Offset  int         `json:"offset,omitempty"`
+	Fields  []string      `json:"fields,omitempty"`
+	Limit   int           `json:"limit,omitempty"`
+	Offset  int           `json:"offset,omitempty"`
 	OrderBy []OrderBySpec `json:"order_by,omitempty"`
 }
 
@@ -96,11 +109,154 @@ type OrderBySpec struct {
 	Direction string `json:"direction"` // "asc" or "desc"
 }
 
+func (f *FlatQueryRequest) hasNewFormatFields() bool {
+	if f == nil {
+		return false
+	}
+	if f.Search != nil {
+		return true
+	}
+	if f.SQL != nil {
+		return true
+	}
+	if f.OrderBy != nil {
+		return true
+	}
+	if f.Limit != 0 || f.Offset != 0 {
+		return true
+	}
+	return false
+}
+
+func (f *FlatQueryRequest) toQueryRequest() (*QueryRequest, error) {
+	if f == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
+
+	if strings.TrimSpace(f.Collection) == "" {
+		return nil, fmt.Errorf("collection is required")
+	}
+
+	var nodes []*QueryNode
+	hasSearch := false
+
+	if f.Search != nil {
+		term := strings.TrimSpace(f.Search.Term)
+		if term != "" {
+			nodes = append(nodes, &QueryNode{
+				Search: &SearchQuery{Term: term},
+			})
+			hasSearch = true
+		}
+	}
+
+	if len(f.SQL) > 0 {
+		var clauses []map[string]interface{}
+
+		for _, condition := range f.SQL {
+			if len(condition) < 3 {
+				return nil, fmt.Errorf("invalid sql condition: expected [field, operator, value]")
+			}
+
+			field, ok := condition[0].(string)
+			if !ok || strings.TrimSpace(field) == "" {
+				return nil, fmt.Errorf("invalid sql condition field")
+			}
+
+			operatorRaw, ok := condition[1].(string)
+			if !ok || strings.TrimSpace(operatorRaw) == "" {
+				return nil, fmt.Errorf("invalid sql condition operator")
+			}
+
+			mappedOp, err := mapSQLOperator(operatorRaw)
+			if err != nil {
+				return nil, err
+			}
+
+			var value interface{}
+			if len(condition) > 2 {
+				value = condition[2]
+			}
+
+			clause := map[string]interface{}{}
+			if mappedOp == "$eq" {
+				clause[field] = value
+			} else {
+				clause[field] = map[string]interface{}{mappedOp: value}
+			}
+
+			clauses = append(clauses, clause)
+		}
+
+		var where map[string]interface{}
+		if len(clauses) == 1 {
+			where = clauses[0]
+		} else {
+			andList := make([]interface{}, 0, len(clauses))
+			for _, clause := range clauses {
+				andList = append(andList, clause)
+			}
+			where = map[string]interface{}{"$and": andList}
+		}
+
+		nodes = append(nodes, &QueryNode{
+			SQL: &SQLQuery{Where: where},
+		})
+	}
+
+	var query QueryNode
+	switch len(nodes) {
+	case 0:
+		query = QueryNode{SQL: &SQLQuery{Where: map[string]interface{}{}}}
+	case 1:
+		query = *nodes[0]
+	default:
+		query = QueryNode{And: nodes}
+	}
+
+	result := ResultSpec{
+		Limit:  f.Limit,
+		Offset: f.Offset,
+	}
+	if len(f.OrderBy) > 0 {
+		result.OrderBy = f.OrderBy
+	} else if hasSearch {
+		result.OrderBy = []OrderBySpec{{Field: "_score", Direction: "desc"}}
+	}
+
+	return &QueryRequest{
+		Collection: f.Collection,
+		Query:      query,
+		Result:     result,
+	}, nil
+}
+
+func mapSQLOperator(op string) (string, error) {
+	switch strings.ToUpper(strings.TrimSpace(op)) {
+	case "=":
+		return "$eq", nil
+	case "!=":
+		return "$ne", nil
+	case ">":
+		return "$gt", nil
+	case ">=":
+		return "$gte", nil
+	case "<":
+		return "$lt", nil
+	case "<=":
+		return "$lte", nil
+	case "LIKE":
+		return "$like", nil
+	default:
+		return "", fmt.Errorf("unsupported sql operator: %s", op)
+	}
+}
+
 // --- HTTP Handlers ---
 
 func handleCollectionCreate(w http.ResponseWriter, r *http.Request) {
 	logger.Info("Collection create request received", "method", r.Method, "remote_addr", r.RemoteAddr)
-	
+
 	if r.Method != http.MethodPost {
 		logger.Warn("Invalid method for collection create", "method", r.Method, "remote_addr", r.RemoteAddr)
 		respondWithError(w, http.StatusMethodNotAllowed, "Only POST method is allowed")
@@ -161,7 +317,7 @@ func handleCollectionCreate(w http.ResponseWriter, r *http.Request) {
 
 func handleCollectionDelete(w http.ResponseWriter, r *http.Request) {
 	logger.Info("Collection delete request received", "method", r.Method, "remote_addr", r.RemoteAddr)
-	
+
 	if r.Method != http.MethodPost {
 		logger.Warn("Invalid method for collection delete", "method", r.Method, "remote_addr", r.RemoteAddr)
 		respondWithError(w, http.StatusMethodNotAllowed, "Only POST method is allowed")
@@ -204,7 +360,7 @@ func handleCollectionDelete(w http.ResponseWriter, r *http.Request) {
 
 func handleCollectionList(w http.ResponseWriter, r *http.Request) {
 	logger.Info("Collection list request received", "method", r.Method, "remote_addr", r.RemoteAddr)
-	
+
 	if r.Method != http.MethodGet {
 		logger.Warn("Invalid method for collection list", "method", r.Method, "remote_addr", r.RemoteAddr)
 		respondWithError(w, http.StatusMethodNotAllowed, "Only GET method is allowed")
@@ -255,12 +411,11 @@ func handleCollectionList(w http.ResponseWriter, r *http.Request) {
 		collection := map[string]interface{}{
 			"name": name,
 		}
-		
+
 		if err := json.Unmarshal([]byte(schemaStr), &schema); err == nil {
 			collection["primary_key"] = schema.PrimaryKey
 			collection["field_count"] = len(schema.Fields)
-			collection["has_fts"] = schema.FTS.Stemming
-			
+
 			// 統計文檔數量（安全檢查 collection 名稱）
 			if isValidIdentifier(name) {
 				countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s", name)
@@ -283,7 +438,7 @@ func handleCollectionList(w http.ResponseWriter, r *http.Request) {
 			collection["has_fts"] = false
 			collection["document_count"] = 0
 		}
-		
+
 		collections = append(collections, collection)
 	}
 
@@ -303,7 +458,7 @@ func handleCollectionList(w http.ResponseWriter, r *http.Request) {
 
 func handleCollectionContent(w http.ResponseWriter, r *http.Request) {
 	logger.Info("Collection content request received", "method", r.Method, "remote_addr", r.RemoteAddr)
-	
+
 	if r.Method != http.MethodGet {
 		logger.Warn("Invalid method for collection content", "method", r.Method, "remote_addr", r.RemoteAddr)
 		respondWithError(w, http.StatusMethodNotAllowed, "Only GET method is allowed")
@@ -402,8 +557,8 @@ func handleCollectionContent(w http.ResponseWriter, r *http.Request) {
 
 	totalPages := (totalCount + limit - 1) / limit
 
-	logger.Info("Collection content retrieved successfully", 
-		"collection", collectionName, 
+	logger.Info("Collection content retrieved successfully",
+		"collection", collectionName,
 		"total_count", totalCount,
 		"page", page,
 		"limit", limit,
@@ -411,10 +566,10 @@ func handleCollectionContent(w http.ResponseWriter, r *http.Request) {
 		"remote_addr", r.RemoteAddr)
 
 	respondWithJSON(w, http.StatusOK, map[string]interface{}{
-		"collection":    collectionName,
-		"schema":        schema,
-		"columns":       columns,
-		"records":       records,
+		"collection": collectionName,
+		"schema":     schema,
+		"columns":    columns,
+		"records":    records,
 		"pagination": map[string]interface{}{
 			"page":        page,
 			"limit":       limit,
@@ -439,7 +594,7 @@ func parsePositiveInt(s string) (int, error) {
 
 func handleDocumentUpsert(w http.ResponseWriter, r *http.Request) {
 	logger.Info("Document upsert request received", "method", r.Method, "remote_addr", r.RemoteAddr)
-	
+
 	if r.Method != http.MethodPost {
 		logger.Warn("Invalid method for document upsert", "method", r.Method, "remote_addr", r.RemoteAddr)
 		respondWithError(w, http.StatusMethodNotAllowed, "Only POST method is allowed")
@@ -491,7 +646,7 @@ func handleDocumentUpsert(w http.ResponseWriter, r *http.Request) {
 
 func handleDocumentDelete(w http.ResponseWriter, r *http.Request) {
 	logger.Info("Document delete request received", "method", r.Method, "remote_addr", r.RemoteAddr)
-	
+
 	if r.Method != http.MethodPost {
 		logger.Warn("Invalid method for document delete", "method", r.Method, "remote_addr", r.RemoteAddr)
 		respondWithError(w, http.StatusMethodNotAllowed, "Only POST method is allowed")
@@ -544,7 +699,7 @@ func handleDocumentDelete(w http.ResponseWriter, r *http.Request) {
 
 func handleSearch(w http.ResponseWriter, r *http.Request) {
 	logger.Info("Search request received", "method", r.Method, "remote_addr", r.RemoteAddr)
-	
+
 	if r.Method != http.MethodPost {
 		logger.Warn("Invalid method for search", "method", r.Method, "remote_addr", r.RemoteAddr)
 		respondWithError(w, http.StatusMethodNotAllowed, "Only POST method is allowed")
@@ -580,7 +735,7 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 
 func handleQuery(w http.ResponseWriter, r *http.Request) {
 	logger.Info("Enhanced query request received", "method", r.Method, "remote_addr", r.RemoteAddr)
-	
+
 	if r.Method != http.MethodPost {
 		logger.Warn("Invalid method for enhanced query", "method", r.Method, "remote_addr", r.RemoteAddr)
 		respondWithError(w, http.StatusMethodNotAllowed, "Only POST method is allowed")
@@ -596,10 +751,21 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var req QueryRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		logger.Error("Failed to unmarshal JSON for query", "error", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid JSON format")
-		return
+	var flatReq FlatQueryRequest
+	if err := json.Unmarshal(body, &flatReq); err == nil && flatReq.hasNewFormatFields() {
+		converted, err := flatReq.toQueryRequest()
+		if err != nil {
+			logger.Warn("Invalid flat query request", "error", err, "remote_addr", r.RemoteAddr)
+			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		req = *converted
+	} else {
+		if err := json.Unmarshal(body, &req); err != nil {
+			logger.Error("Failed to unmarshal JSON for query", "error", err)
+			respondWithError(w, http.StatusBadRequest, "Invalid JSON format")
+			return
+		}
 	}
 
 	if !isValidIdentifier(req.Collection) {
@@ -616,8 +782,8 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info("Enhanced query completed successfully", 
-		"collection", req.Collection, 
+	logger.Info("Enhanced query completed successfully",
+		"collection", req.Collection,
 		"result_count", len(records),
 		"remote_addr", r.RemoteAddr)
 

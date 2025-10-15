@@ -121,6 +121,13 @@
                 </li>
             `;
         }).join('');
+
+        if (!state.currentCollection) {
+            const first = list[0]?.name;
+            if (first) {
+                selectCollection(first);
+            }
+        }
     }
 
     function handleCollectionClick(event) {
@@ -216,11 +223,23 @@
             return;
         }
 
-        const primaryKey = state.schema?.primary_key || columns[0];
+        const hasScoreColumn = records.some(record => record && Object.prototype.hasOwnProperty.call(record, '_score'));
+        let displayColumns = Array.isArray(columns) ? [...columns] : [];
+        if (!displayColumns.length) {
+            displayColumns = inferColumns(records);
+        }
+        if (hasScoreColumn) {
+            displayColumns = displayColumns.filter(col => col !== '_score');
+            displayColumns.unshift('_score');
+        }
+
+        const primaryKey = state.schema?.primary_key
+            || displayColumns.find(col => col && !col.startsWith('_'))
+            || displayColumns[0];
         const thead = `
             <thead>
                 <tr>
-                    ${columns.map(col => `<th>${col}</th>`).join('')}
+                    ${displayColumns.map(col => `<th>${col === '_score' ? 'score' : col}</th>`).join('')}
                     <th style="width: 80px;">actions</th>
                 </tr>
             </thead>
@@ -230,10 +249,10 @@
             <tbody>
                 ${records.map((record, index) => `
                     <tr data-row="${index}" data-id="${record[primaryKey] ?? ''}">
-                        ${columns.map(col => `
+                        ${displayColumns.map(col => `
                             <td>
                                 <div class="cell-content" title="Click to expand" data-action="toggle-cell">
-                                    ${formatCell(record[col])}
+                                    ${formatCell(record[col], col)}
                                 </div>
                             </td>
                         `).join('')}
@@ -312,6 +331,7 @@
         if (removeBtn) {
             const condition = removeBtn.closest('.query-condition');
             condition?.remove();
+            updateSearchOperatorVisibility();
             updateQueryPreview();
             return;
         }
@@ -320,6 +340,7 @@
         if (typeSelect) {
             const condition = typeSelect.closest('.query-condition');
             await renderConditionFields(condition, typeSelect.value);
+            updateSearchOperatorVisibility();
             updateQueryPreview();
         }
     }
@@ -340,6 +361,7 @@
         `;
         refs.queryBuilder.appendChild(element);
         await renderConditionFields(element, type);
+        updateSearchOperatorVisibility();
         updateQueryPreview();
     }
 
@@ -349,14 +371,16 @@
 
         if (type === 'search') {
             fieldsContainer.innerHTML = `
-                <select data-role="search-fields"></select>
-                <input type="text" placeholder="Keyword" data-role="search-term">
                 <select data-role="search-operator">
                     <option value="AND">AND</option>
                     <option value="OR">OR</option>
+                    <option value="NOT">NOT</option>
                 </select>
+                <select data-role="search-fields"></select>
+                <input type="text" placeholder="Keyword" data-role="search-term">
             `;
             await populateSearchFields(fieldsContainer.querySelector('[data-role="search-fields"]'));
+            updateSearchOperatorVisibility();
         } else {
             fieldsContainer.innerHTML = `
                 <select data-role="sql-field"></select>
@@ -385,6 +409,24 @@
         const fields = await fetchSchemaFields();
         selectElement.innerHTML = '<option value="">Select field</option>' +
             fields.map(field => `<option value="${field.name}">${field.name} (${field.type})</option>`).join('');
+    }
+
+    function updateSearchOperatorVisibility() {
+        if (!refs.queryBuilder) return;
+        const searchConditions = Array.from(refs.queryBuilder.querySelectorAll('.query-condition'))
+            .filter(condition => condition.querySelector('[data-role="condition-type"]')?.value === 'search');
+
+        searchConditions.forEach((condition, index) => {
+            const operatorSelect = condition.querySelector('[data-role="search-operator"]');
+            if (!operatorSelect) return;
+
+            if (index === 0) {
+                operatorSelect.style.display = 'none';
+                operatorSelect.value = 'AND';
+            } else {
+                operatorSelect.style.display = '';
+            }
+        });
     }
 
     async function fetchSchemaFields(filterType) {
@@ -419,64 +461,111 @@
         const limit = Number(refs.resultLimit.value) || 20;
         const offset = Number(refs.resultOffset.value) || 0;
         const conditions = Array.from(refs.queryBuilder.querySelectorAll('.query-condition'));
-        const queryParts = [];
+        const searchConditions = [];
+        const sqlTuples = [];
 
-        conditions.forEach(condition => {
-            const type = condition.querySelector('[data-role="condition-type"]').value;
+        conditions.forEach((condition, index) => {
+            const type = condition.querySelector('[data-role="condition-type"]')?.value;
             if (type === 'search') {
-                const term = condition.querySelector('[data-role="search-term"]').value.trim();
-                const operator = condition.querySelector('[data-role="search-operator"]').value || 'AND';
-                const field = condition.querySelector('[data-role="search-fields"]').value;
+                const fieldValue = condition.querySelector('[data-role="search-fields"]')?.value?.trim() || '';
+                const field = fieldValue.toUpperCase() === 'ALL' ? '' : fieldValue;
+                const termInput = condition.querySelector('[data-role="search-term"]');
+                const operatorSelect = condition.querySelector('[data-role="search-operator"]');
+                const term = termInput ? termInput.value.trim() : '';
                 if (!term) return;
-                const searchObj = { term, operator };
-                if (field) searchObj.fields = [field];
-                queryParts.push({ search: searchObj });
-            } else {
-                const field = condition.querySelector('[data-role="sql-field"]').value;
-                const operator = condition.querySelector('[data-role="sql-operator"]').value || '=';
-                const value = condition.querySelector('[data-role="sql-value"]').value.trim();
-                if (!field || !value) return;
-                const operatorMap = {
-                    '=': '$eq',
-                    '!=': '$ne',
-                    '>': '$gt',
-                    '>=': '$gte',
-                    '<': '$lt',
-                    '<=': '$lte',
-                    'LIKE': '$like',
-                };
-                const mapped = operatorMap[operator] || '$eq';
-                const where = {};
-                if (mapped === '$like') {
-                    where[field] = { '$like': `%${value}%` };
-                } else {
-                    where[field] = { [mapped]: value };
-                }
-                queryParts.push({ sql: { where } });
+                const operator = normalizeBooleanOperator(operatorSelect ? operatorSelect.value : 'AND');
+                searchConditions.push({ index, field, term, operator });
+            } else if (type === 'sql') {
+                const field = condition.querySelector('[data-role="sql-field"]')?.value;
+                const operator = condition.querySelector('[data-role="sql-operator"]')?.value || '=';
+                const valueRaw = condition.querySelector('[data-role="sql-value"]')?.value.trim() || '';
+                if (!field || !valueRaw) return;
+                const value = operator === 'LIKE' ? `%${valueRaw}%` : valueRaw;
+                sqlTuples.push([field, operator, value]);
             }
         });
 
-        let query = {};
-        if (queryParts.length === 0) {
-            // When no conditions, use SQL query to get all data
-            query = { sql: { where: {} } };
-        } else if (queryParts.length === 1) {
-            query = queryParts[0];
-        } else {
-            query = { '$and': queryParts };
-        }
+        const searchPart = buildSearchQueryPart(searchConditions);
 
         const request = {
             collection,
-            query,
-            result: {
-                limit,
-                offset,
-                order_by: [{ field: '_score', direction: 'desc' }],
-            },
+            limit,
+            offset,
+            order_by: [{ field: '_score', direction: 'desc' }],
         };
 
+        if (searchPart) {
+            request.search = { term: searchPart.term };
+        }
+
+        if (sqlTuples.length) {
+            request.sql = sqlTuples;
+        }
+
+        // When no filters, fall back to SQL-only full scan
+        if (!searchPart && !sqlTuples.length) {
+            request.sql = [];
+        }
+
         refs.queryPreview.textContent = JSON.stringify(request, null, 2);
+    }
+
+    function normalizeBooleanOperator(value) {
+        const upper = value ? value.toUpperCase() : '';
+        if (upper === 'OR') return 'OR';
+        if (upper === 'NOT') return 'NOT';
+        return 'AND';
+    }
+
+    function buildSearchQueryPart(conditions) {
+        if (!Array.isArray(conditions) || !conditions.length) return null;
+
+        const parts = [];
+
+        conditions.forEach(condition => {
+            let termText = condition.term.trim();
+            if (!termText) return;
+
+            let isNegated = false;
+            if (/^NOT\s+/i.test(termText)) {
+                isNegated = true;
+                termText = termText.replace(/^NOT\s+/i, '').trim();
+            }
+
+            if (!termText) return;
+
+            let formatted = condition.field ? `${condition.field}:${termText}` : termText;
+            if (isNegated) {
+                formatted = `NOT ${formatted}`;
+            }
+
+            const connector = condition.operator || 'AND';
+            if (!parts.length) {
+                parts.push(formatted);
+                return;
+            }
+
+            if (connector === 'NOT') {
+                const withoutLeadingNot = formatted.startsWith('NOT ')
+                    ? formatted.slice(4).trim()
+                    : formatted;
+                if (!withoutLeadingNot) {
+                    return;
+                }
+                parts.push(`NOT ${withoutLeadingNot}`);
+                return;
+            }
+
+            parts.push(`${connector} ${formatted}`);
+        });
+
+        if (!parts.length) {
+            return null;
+        }
+
+        return {
+            term: parts.join(' '),
+        };
     }
 
     async function executeQuery() {
@@ -527,6 +616,7 @@
         state.conditionCounter = 0;
         refs.resultLimit.value = 20;
         refs.resultOffset.value = 0;
+        updateSearchOperatorVisibility();
         updateQueryPreview();
         if (state.currentCollection) {
             loadCollectionContent(state.currentCollection, 1);
@@ -559,13 +649,46 @@
         }
     }
 
-    function formatCell(value) {
+    function formatCell(value, columnKey) {
         if (value === null || value === undefined) return '<span style="color:#888">null</span>';
-        const str = String(value);
-        if (str.length > 80) {
-            return `${str.slice(0, 80)}…`;
+
+        const isScoreColumn = columnKey === '_score';
+        let displayValue = value;
+        let fullValue = value;
+
+        if (isScoreColumn) {
+            const numeric = Number(value);
+            if (!Number.isNaN(numeric)) {
+                displayValue = numeric.toFixed(3);
+                fullValue = numeric.toString();
+            } else {
+                displayValue = String(value);
+                fullValue = displayValue;
+            }
+        } else if (typeof value === 'string') {
+            fullValue = value;
+            if (value.length > 80) {
+                displayValue = `${value.slice(0, 80)}…`;
+            } else {
+                displayValue = value;
+            }
+        } else {
+            const strValue = String(value);
+            fullValue = strValue;
+            if (strValue.length > 80) {
+                displayValue = `${strValue.slice(0, 80)}…`;
+            } else {
+                displayValue = strValue;
+            }
         }
-        return escapeHtml(str);
+
+        const safeDisplay = escapeHtml(String(displayValue));
+        const safeFull = escapeHtml(String(fullValue));
+        if (safeDisplay === safeFull) {
+            return safeDisplay;
+        }
+
+        return `<span title="${safeFull}">${safeDisplay}</span>`;
     }
 
     function inferColumns(records) {

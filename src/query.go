@@ -69,7 +69,7 @@ func (qe *QueryExecutor) executeQueryNodeWithScores(node *QueryNode, collection 
 
 	// 處理查詢類型
 	if node.SQL != nil {
-		primaryKeys, err := qe.executeSQLQuery(node.SQL, collection)
+		primaryKeys, err := qe.executeSQLQuery(node.SQL, collection, nil)
 		return primaryKeys, make(ScoreMap), err // SQL 查詢不產生分數
 	}
 	if node.Search != nil {
@@ -104,7 +104,7 @@ func (qe *QueryExecutor) executeAndQuery(nodes []*QueryNode, collection string) 
 			return nil, err
 		}
 		result = intersectSlices(result, otherResult)
-		
+
 		// 短路：如果結果為空，可以提前返回
 		if len(result) == 0 {
 			return result, nil
@@ -153,7 +153,7 @@ func (qe *QueryExecutor) executeNotQuery(node *QueryNode, collection string) ([]
 }
 
 // executeSQLQuery 執行SQL查詢
-func (qe *QueryExecutor) executeSQLQuery(sqlQuery *SQLQuery, collection string) ([]string, error) {
+func (qe *QueryExecutor) executeSQLQuery(sqlQuery *SQLQuery, collection string, filterKeys []string) ([]string, error) {
 	// 獲取collection schema
 	schema, err := qe.getCollectionSchema(collection)
 	if err != nil {
@@ -164,6 +164,47 @@ func (qe *QueryExecutor) executeSQLQuery(sqlQuery *SQLQuery, collection string) 
 	whereClause, args, err := qe.buildWhereClause(sqlQuery.Where)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build WHERE clause: %w", err)
+	}
+
+	// 如果提供了主鍵過濾列表，將其加入 WHERE 條件
+	if filterKeys != nil {
+		if len(filterKeys) == 0 {
+			return []string{}, nil
+		}
+
+		uniqueKeys := deduplicatePreserveOrder(filterKeys)
+		const chunkSize = 900 // 保留一定餘量，避免觸發 SQLite 999 參數限制
+		var clauses []string
+		filterArgs := make([]interface{}, 0, len(uniqueKeys))
+
+		for i := 0; i < len(uniqueKeys); i += chunkSize {
+			end := i + chunkSize
+			if end > len(uniqueKeys) {
+				end = len(uniqueKeys)
+			}
+			chunk := uniqueKeys[i:end]
+			if len(chunk) == 0 {
+				continue
+			}
+			placeholders := make([]string, len(chunk))
+			for j := range chunk {
+				placeholders[j] = "?"
+				filterArgs = append(filterArgs, chunk[j])
+			}
+			clauses = append(clauses, fmt.Sprintf("%s IN (%s)", schema.PrimaryKey, strings.Join(placeholders, ", ")))
+		}
+
+		if len(clauses) == 0 {
+			return []string{}, nil
+		}
+
+		pkClause := "(" + strings.Join(clauses, " OR ") + ")"
+		if whereClause != "" {
+			whereClause = fmt.Sprintf("(%s) AND %s", whereClause, pkClause)
+		} else {
+			whereClause = pkClause
+		}
+		args = append(args, filterArgs...)
 	}
 
 	// 構建完整的SQL查詢
@@ -277,7 +318,7 @@ func (qe *QueryExecutor) executeSearchQueryWithScores(searchQuery *SearchQuery, 
 
 	primaryKeys := make([]string, len(ftsResults))
 	scoreMap := make(ScoreMap)
-	
+
 	for i, result := range ftsResults {
 		primaryKeys[i] = result.PrimaryKey
 		scoreMap[result.PrimaryKey] = result.Score
@@ -300,18 +341,27 @@ func (qe *QueryExecutor) executeAndQueryWithScores(nodes []*QueryNode, collectio
 
 	// 與其他查詢結果取交集
 	for i := 1; i < len(nodes); i++ {
-		otherResult, otherScores, err := qe.executeQueryNodeWithScores(nodes[i], collection)
-		if err != nil {
-			return nil, nil, err
-		}
-		result = intersectSlices(result, otherResult)
-		// 合併分數 - 對於交集中的項目，保留所有可用的分數
-		for key, score := range otherScores {
-			if _, exists := resultScores[key]; !exists {
-				resultScores[key] = score
+		current := nodes[i]
+		if current.SQL != nil {
+			otherResult, err := qe.executeSQLQuery(current.SQL, collection, result)
+			if err != nil {
+				return nil, nil, err
+			}
+			result = intersectSlices(result, otherResult)
+		} else {
+			otherResult, otherScores, err := qe.executeQueryNodeWithScores(current, collection)
+			if err != nil {
+				return nil, nil, err
+			}
+			result = intersectSlices(result, otherResult)
+			// 合併分數 - 對於交集中的項目，保留所有可用的分數
+			for key, score := range otherScores {
+				if _, exists := resultScores[key]; !exists {
+					resultScores[key] = score
+				}
 			}
 		}
-		
+
 		// 短路：如果結果為空，可以提前返回
 		if len(result) == 0 {
 			return result, make(ScoreMap), nil
@@ -352,7 +402,7 @@ func (qe *QueryExecutor) executeOrQueryWithScores(nodes []*QueryNode, collection
 
 	// 去重並排序
 	uniqueResults := uniqueAndSort(allResults)
-	
+
 	// 過濾分數映射，只保留最終結果中的項目
 	filteredScores := make(ScoreMap)
 	for _, pk := range uniqueResults {
@@ -428,6 +478,19 @@ func differenceSlices(a, b []string) []string {
 		}
 	}
 
+	return result
+}
+
+func deduplicatePreserveOrder(items []string) []string {
+	seen := make(map[string]struct{}, len(items))
+	result := make([]string, 0, len(items))
+	for _, item := range items {
+		if _, exists := seen[item]; exists {
+			continue
+		}
+		seen[item] = struct{}{}
+		result = append(result, item)
+	}
 	return result
 }
 
@@ -715,7 +778,7 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeys(collection, primaryKeyField s
 		args[i] = pk
 	}
 
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s IN (%s)", 
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s IN (%s)",
 		fields, collection, primaryKeyField, strings.Join(placeholders, ", "))
 
 	// 添加ORDER BY
@@ -804,7 +867,7 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primary
 		args[i] = pk
 	}
 
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s IN (%s)", 
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s IN (%s)",
 		fields, collection, primaryKeyField, strings.Join(placeholders, ", "))
 
 	logger.Debug("Fetching records by primary keys with scores", "query", query, "pk_count", len(primaryKeys))
@@ -854,7 +917,7 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primary
 		sort.Slice(records, func(i, j int) bool {
 			scoreI, hasI := records[i]["_score"]
 			scoreJ, hasJ := records[j]["_score"]
-			
+
 			// 有分數的記錄排在前面
 			if hasI && !hasJ {
 				return true
@@ -862,7 +925,7 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primary
 			if !hasI && hasJ {
 				return false
 			}
-			
+
 			// 都有分數時，按分數排序（小分數在前）
 			if hasI && hasJ {
 				if sI, ok := scoreI.(float64); ok {
@@ -871,7 +934,7 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primary
 					}
 				}
 			}
-			
+
 			// 都沒有分數或無法比較時，保持原順序
 			return false
 		})
