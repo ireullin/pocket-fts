@@ -148,6 +148,14 @@ func (f *FTS) DeleteDocument(collectionName, primaryKeyJSON string) error {
 	return nil
 }
 
+// SetCallTimeout adjusts the default call timeout (in milliseconds) that the
+// FTS C library applies to FtsUpsertDocument/FtsDeleteDocument/FtsSearch. It
+// is process-wide (not tied to a specific *FTS handle). Passing <= 0
+// disables the timeout entirely.
+func SetCallTimeout(ms int64) {
+	callFtsSetCallTimeout(C.longlong(ms))
+}
+
 // GetVersion returns the FTS core version string
 func GetFTSVersion() string {
 	versionCStr := callFtsVersion()

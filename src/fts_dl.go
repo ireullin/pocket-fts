@@ -17,6 +17,7 @@ typedef int (*fts_search_t)(unsigned long long, char*, char*, char**, char**);
 typedef void (*fts_free_t)(void*);
 typedef void (*fts_set_log_callback_t)(fts_log_cb_t, void*);
 typedef char* (*fts_version_t)(void);
+typedef void (*fts_set_call_timeout_t)(long long);
 
 static void* g_lib_handle = NULL;
 static fts_engine_new_t g_fts_engine_new = NULL;
@@ -29,6 +30,7 @@ static fts_search_t g_fts_search = NULL;
 static fts_free_t g_fts_free = NULL;
 static fts_set_log_callback_t g_fts_set_log_callback = NULL;
 static fts_version_t g_fts_version = NULL;
+static fts_set_call_timeout_t g_fts_set_call_timeout = NULL;
 
 static int load_fts_library(const char* lib_path, char** err_msg) {
     g_lib_handle = dlopen(lib_path, RTLD_NOW | RTLD_GLOBAL);
@@ -67,6 +69,9 @@ static int load_fts_library(const char* lib_path, char** err_msg) {
 
     g_fts_version = (fts_version_t)dlsym(g_lib_handle, "FtsVersion");
     if (!g_fts_version) { *err_msg = (char*)dlerror(); return -1; }
+
+    g_fts_set_call_timeout = (fts_set_call_timeout_t)dlsym(g_lib_handle, "FtsSetCallTimeout");
+    if (!g_fts_set_call_timeout) { *err_msg = (char*)dlerror(); return -1; }
 
     return 0;
 }
@@ -118,6 +123,10 @@ static void call_fts_set_log_callback(fts_log_cb_t cb, void* user_data) {
 
 static char* call_fts_version() {
     return g_fts_version ? g_fts_version() : NULL;
+}
+
+static void call_fts_set_call_timeout(long long ms) {
+    if (g_fts_set_call_timeout) g_fts_set_call_timeout(ms);
 }
 */
 import "C"
@@ -209,5 +218,9 @@ func callFtsSetLogCallback(cb C.fts_log_cb_t, userData unsafe.Pointer) {
 
 func callFtsVersion() *C.char {
 	return C.call_fts_version()
+}
+
+func callFtsSetCallTimeout(ms C.longlong) {
+	C.call_fts_set_call_timeout(ms)
 }
 
