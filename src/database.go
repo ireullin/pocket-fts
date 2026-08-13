@@ -8,7 +8,14 @@ import (
 
 // initDB initializes the SQLite database and creates the necessary tables.
 func initDB(dbPath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", dbPath)
+	// busy_timeout is passed via the DSN (rather than a one-off PRAGMA Exec)
+	// so that every connection the pool opens - not just the one that
+	// happens to run the first Exec - waits and retries on SQLITE_BUSY
+	// instead of failing immediately. This matters because the same
+	// db.sqlite file is also written to by the ftscore C engine on its own
+	// connection, so lock contention between the two is expected.
+	dsn := fmt.Sprintf("%s?_pragma=busy_timeout(5000)", dbPath)
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
