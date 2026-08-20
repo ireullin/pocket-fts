@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"sort"
+	"math"
 	"strings"
 )
 
@@ -44,23 +44,97 @@ func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface
 			"order_by references %q but the query has no search clause", scoreField)
 	}
 
-	// 執行查詢獲取主鍵列表和分數映射
-	primaryKeys, scoreMap, err := qe.executeQueryNodeWithScores(&req.Query, req.Collection)
+	if records, handled, err := qe.executeRelevanceTopN(req, schema); handled {
+		return records, err
+	}
+
+	// 把整棵查詢樹編譯成一條 SQL 的 WHERE 子句。search 節點在編譯過程中就向
+	// ftscore 取得命中的主鍵，並以單一 JSON 參數帶進 SQL。
+	compiler := newSQLCompiler(qe, req.Collection, schema.PrimaryKey)
+	where, args, err := compiler.compile(&req.Query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
 
-	if len(primaryKeys) == 0 {
-		return []map[string]interface{}{}, nil
-	}
-
-	// 根據主鍵列表從SQL表中獲取完整記錄，並加入分數
-	records, err := qe.fetchRecordsByPrimaryKeysWithScores(req.Collection, schema.PrimaryKey, primaryKeys, scoreMap, &req.Result)
+	records, err := qe.fetchRecords(req.Collection, schema.PrimaryKey, where, args, compiler.scores, &req.Result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch records: %w", err)
 	}
 
 	return records, nil
+}
+
+// executeRelevanceTopN 處理「單一 search 節點、依相關性排序、有 limit」這個
+// 最常見的搜尋情境。這種查詢只需要分數最小的前 offset+limit 筆，所以先用
+// 堆積挑出來，再只取回那幾列，不必把全部命中的列都讀進來。
+//
+// handled 為 false 代表這個查詢不適用，呼叫端要走通用路徑。
+func (qe *QueryExecutor) executeRelevanceTopN(req *QueryRequest, schema *CollectionSchema) ([]map[string]interface{}, bool, error) {
+	if req.Query.Search == nil || req.Result.Limit <= 0 {
+		return nil, false, nil
+	}
+	if !isRelevanceDescOrder(req.Result.OrderBy) {
+		return nil, false, nil
+	}
+
+	offset := req.Result.Offset
+	if offset < 0 {
+		offset = 0
+	}
+
+	// 只需要最相關的前 offset+limit 筆，向 ftscore 就只要這麼多。
+	results, err := qe.executeSearchQuery(req.Query.Search, req.Collection, offset+req.Result.Limit)
+	if err != nil {
+		return nil, true, fmt.Errorf("failed to execute query: %w", err)
+	}
+	if len(results) == 0 {
+		return []map[string]interface{}{}, true, nil
+	}
+
+	ranked := topKRelevant(results, offset+req.Result.Limit)
+	if offset >= len(ranked) {
+		return []map[string]interface{}{}, true, nil
+	}
+	ranked = ranked[offset:]
+	if len(ranked) > req.Result.Limit {
+		ranked = ranked[:req.Result.Limit]
+	}
+
+	ids := make([]string, len(ranked))
+	scores := make(ScoreMap, len(ranked))
+	for i, result := range ranked {
+		ids[i] = result.PrimaryKey
+		scores[result.PrimaryKey] = result.Score
+	}
+
+	where, args, err := buildIDClause(schema.PrimaryKey, ids)
+	if err != nil {
+		return nil, true, err
+	}
+
+	// 分頁已經在挑選階段做完，取列時不再套用 limit 與 offset。
+	spec := ResultSpec{Fields: req.Result.Fields}
+	records, err := qe.fetchRecords(req.Collection, schema.PrimaryKey, where, args, scores, &spec)
+	if err != nil {
+		return nil, true, fmt.Errorf("failed to fetch records: %w", err)
+	}
+
+	sortRecords(records, []OrderBySpec{{Field: scoreField, Direction: "desc"}}, true)
+	return records, true, nil
+}
+
+// isRelevanceDescOrder 回報這個 order_by 是不是「最相關在前」。
+// 未指定 order_by 時，帶 search 的查詢預設就是這個順序。
+func isRelevanceDescOrder(orderBy []OrderBySpec) bool {
+	if len(orderBy) == 0 {
+		return true
+	}
+	if len(orderBy) != 1 || orderBy[0].Field != scoreField {
+		return false
+	}
+	// 只有明確寫 desc 才是「最相關在前」。direction 省略時視同 asc，
+	// 對 _score 而言是「最不相關在前」，那要走通用路徑。
+	return isDescending(orderBy[0].Direction)
 }
 
 // queryHasSearch 回報查詢樹裡是否含有 search 節點。只有這種查詢才會產生
@@ -85,187 +159,6 @@ func queryHasSearch(node *QueryNode) bool {
 	return queryHasSearch(node.Not)
 }
 
-// executeQueryNodeWithScores 遞歸執行查詢節點，返回主鍵和分數映射
-func (qe *QueryExecutor) executeQueryNodeWithScores(node *QueryNode, collection string) ([]string, ScoreMap, error) {
-	// 處理邏輯操作符
-	if node.And != nil {
-		return qe.executeAndQueryWithScores(node.And, collection)
-	}
-	if node.Or != nil {
-		return qe.executeOrQueryWithScores(node.Or, collection)
-	}
-	if node.Not != nil {
-		return qe.executeNotQueryWithScores(node.Not, collection)
-	}
-
-	// 處理查詢類型
-	if node.SQL != nil {
-		primaryKeys, err := qe.executeSQLQuery(node.SQL, collection, nil)
-		return primaryKeys, make(ScoreMap), err // SQL 查詢不產生分數
-	}
-	if node.Search != nil {
-		return qe.executeSearchQueryWithScores(node.Search, collection)
-	}
-
-	return nil, make(ScoreMap), fmt.Errorf("empty query node")
-}
-
-// executeQueryNode 遞歸執行查詢節點 (保留原有方法以維持向後兼容)
-func (qe *QueryExecutor) executeQueryNode(node *QueryNode, collection string) ([]string, error) {
-	primaryKeys, _, err := qe.executeQueryNodeWithScores(node, collection)
-	return primaryKeys, err
-}
-
-// executeAndQuery 執行AND查詢
-func (qe *QueryExecutor) executeAndQuery(nodes []*QueryNode, collection string) ([]string, error) {
-	if len(nodes) == 0 {
-		return []string{}, nil
-	}
-
-	// 執行第一個查詢
-	result, err := qe.executeQueryNode(nodes[0], collection)
-	if err != nil {
-		return nil, err
-	}
-
-	// 與其他查詢結果取交集
-	for i := 1; i < len(nodes); i++ {
-		otherResult, err := qe.executeQueryNode(nodes[i], collection)
-		if err != nil {
-			return nil, err
-		}
-		result = intersectSlices(result, otherResult)
-
-		// 短路：如果結果為空，可以提前返回
-		if len(result) == 0 {
-			return result, nil
-		}
-	}
-
-	return result, nil
-}
-
-// executeOrQuery 執行OR查詢
-func (qe *QueryExecutor) executeOrQuery(nodes []*QueryNode, collection string) ([]string, error) {
-	if len(nodes) == 0 {
-		return []string{}, nil
-	}
-
-	var allResults []string
-
-	for _, node := range nodes {
-		result, err := qe.executeQueryNode(node, collection)
-		if err != nil {
-			return nil, err
-		}
-		allResults = append(allResults, result...)
-	}
-
-	// 去重並排序
-	return uniqueAndSort(allResults), nil
-}
-
-// executeNotQuery 執行NOT查詢
-func (qe *QueryExecutor) executeNotQuery(node *QueryNode, collection string) ([]string, error) {
-	// 先獲取所有記錄的主鍵
-	allKeys, err := qe.getAllPrimaryKeys(collection)
-	if err != nil {
-		return nil, err
-	}
-
-	// 執行被排除的查詢
-	excludeKeys, err := qe.executeQueryNode(node, collection)
-	if err != nil {
-		return nil, err
-	}
-
-	// 返回差集
-	return differenceSlices(allKeys, excludeKeys), nil
-}
-
-// executeSQLQuery 執行SQL查詢
-func (qe *QueryExecutor) executeSQLQuery(sqlQuery *SQLQuery, collection string, filterKeys []string) ([]string, error) {
-	// 獲取collection schema
-	schema, err := qe.getCollectionSchema(collection)
-	if err != nil {
-		return nil, err
-	}
-
-	// 構建SQL WHERE子句
-	whereClause, args, err := qe.buildWhereClause(sqlQuery.Where)
-	if err != nil {
-		return nil, fmt.Errorf("failed to build WHERE clause: %w", err)
-	}
-
-	// 如果提供了主鍵過濾列表，將其加入 WHERE 條件
-	if filterKeys != nil {
-		if len(filterKeys) == 0 {
-			return []string{}, nil
-		}
-
-		uniqueKeys := deduplicatePreserveOrder(filterKeys)
-		const chunkSize = 900 // 保留一定餘量，避免觸發 SQLite 999 參數限制
-		var clauses []string
-		filterArgs := make([]interface{}, 0, len(uniqueKeys))
-
-		for i := 0; i < len(uniqueKeys); i += chunkSize {
-			end := i + chunkSize
-			if end > len(uniqueKeys) {
-				end = len(uniqueKeys)
-			}
-			chunk := uniqueKeys[i:end]
-			if len(chunk) == 0 {
-				continue
-			}
-			placeholders := make([]string, len(chunk))
-			for j := range chunk {
-				placeholders[j] = "?"
-				filterArgs = append(filterArgs, chunk[j])
-			}
-			clauses = append(clauses, fmt.Sprintf("%s IN (%s)", schema.PrimaryKey, strings.Join(placeholders, ", ")))
-		}
-
-		if len(clauses) == 0 {
-			return []string{}, nil
-		}
-
-		pkClause := "(" + strings.Join(clauses, " OR ") + ")"
-		if whereClause != "" {
-			whereClause = fmt.Sprintf("(%s) AND %s", whereClause, pkClause)
-		} else {
-			whereClause = pkClause
-		}
-		args = append(args, filterArgs...)
-	}
-
-	// 構建完整的SQL查詢
-	query := fmt.Sprintf("SELECT %s FROM %s", schema.PrimaryKey, collection)
-	if whereClause != "" {
-		query += " WHERE " + whereClause
-	}
-
-	logger.Debug("Executing SQL query", "query", query, "args", args)
-
-	// 執行查詢
-	rows, err := qe.db.Query(query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute SQL query: %w", err)
-	}
-	defer rows.Close()
-
-	// 收集主鍵
-	var primaryKeys []string
-	for rows.Next() {
-		var pk string
-		if err := rows.Scan(&pk); err != nil {
-			return nil, fmt.Errorf("failed to scan primary key: %w", err)
-		}
-		primaryKeys = append(primaryKeys, pk)
-	}
-
-	return primaryKeys, nil
-}
-
 // FTSResult 結構體包含主鍵和分數
 type FTSResult struct {
 	PrimaryKey string
@@ -281,11 +174,27 @@ type QueryResult struct {
 // ScoreMap 用於儲存 FTS 分數的映射
 type ScoreMap map[string]float64
 
-// executeSearchQuery 執行全文搜索查詢，返回包含分數的結果
-func (qe *QueryExecutor) executeSearchQuery(searchQuery *SearchQuery, collection string) ([]FTSResult, error) {
+// allHits 是向 ftscore 索取「全部命中」時使用的 limit。
+//
+// ftscore 的 limit 預設是 20（repository.go），而且是它自己套用的，不是
+// pocket-fts 傳的。呼叫端不指定 limit 時，一次搜尋就只會拿到 20 筆候選，
+// 後續的 SQL 篩選與 order_by 也只作用在那 20 筆上，結果會安靜地出錯。
+// 所以每次呼叫都必須明確指定要幾筆。
+const allHits = math.MaxInt32
+
+// executeSearchQuery 執行全文搜索查詢，返回包含分數的結果。
+//
+// limit 指定要向 ftscore 索取幾筆命中。ftscore 以 BM25 分數排序後才套用
+// limit，所以取前 N 筆等於取最相關的 N 筆。要全部命中時傳 allHits。
+func (qe *QueryExecutor) executeSearchQuery(searchQuery *SearchQuery, collection string, limit int) ([]FTSResult, error) {
+	if limit <= 0 {
+		limit = allHits
+	}
+
 	// 構建FTS搜索請求，不設置 ReturnFields 讓它只返回 PK 和 _score
 	ftsRequest := map[string]interface{}{
 		"query": searchQuery.Term,
+		"limit": limit,
 	}
 
 	if len(searchQuery.Fields) > 0 {
@@ -338,191 +247,6 @@ func (qe *QueryExecutor) executeSearchQuery(searchQuery *SearchQuery, collection
 	}
 
 	return results, nil
-}
-
-// executeSearchQueryWithScores 執行全文搜索查詢，返回主鍵列表和分數映射
-func (qe *QueryExecutor) executeSearchQueryWithScores(searchQuery *SearchQuery, collection string) ([]string, ScoreMap, error) {
-	ftsResults, err := qe.executeSearchQuery(searchQuery, collection)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	primaryKeys := make([]string, len(ftsResults))
-	scoreMap := make(ScoreMap)
-
-	for i, result := range ftsResults {
-		primaryKeys[i] = result.PrimaryKey
-		scoreMap[result.PrimaryKey] = result.Score
-	}
-
-	return primaryKeys, scoreMap, nil
-}
-
-// executeAndQueryWithScores 執行AND查詢，保留分數信息
-func (qe *QueryExecutor) executeAndQueryWithScores(nodes []*QueryNode, collection string) ([]string, ScoreMap, error) {
-	if len(nodes) == 0 {
-		return []string{}, make(ScoreMap), nil
-	}
-
-	// 執行第一個查詢
-	result, resultScores, err := qe.executeQueryNodeWithScores(nodes[0], collection)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// 與其他查詢結果取交集
-	for i := 1; i < len(nodes); i++ {
-		current := nodes[i]
-		if current.SQL != nil {
-			otherResult, err := qe.executeSQLQuery(current.SQL, collection, result)
-			if err != nil {
-				return nil, nil, err
-			}
-			result = intersectSlices(result, otherResult)
-		} else {
-			otherResult, otherScores, err := qe.executeQueryNodeWithScores(current, collection)
-			if err != nil {
-				return nil, nil, err
-			}
-			result = intersectSlices(result, otherResult)
-			// 合併分數 - 對於交集中的項目，保留所有可用的分數
-			for key, score := range otherScores {
-				if _, exists := resultScores[key]; !exists {
-					resultScores[key] = score
-				}
-			}
-		}
-
-		// 短路：如果結果為空，可以提前返回
-		if len(result) == 0 {
-			return result, make(ScoreMap), nil
-		}
-	}
-
-	// 過濾分數映射，只保留最終結果中的項目
-	filteredScores := make(ScoreMap)
-	for _, pk := range result {
-		if score, exists := resultScores[pk]; exists {
-			filteredScores[pk] = score
-		}
-	}
-
-	return result, filteredScores, nil
-}
-
-// executeOrQueryWithScores 執行OR查詢，合併分數信息
-func (qe *QueryExecutor) executeOrQueryWithScores(nodes []*QueryNode, collection string) ([]string, ScoreMap, error) {
-	if len(nodes) == 0 {
-		return []string{}, make(ScoreMap), nil
-	}
-
-	var allResults []string
-	allScores := make(ScoreMap)
-
-	for _, node := range nodes {
-		result, scores, err := qe.executeQueryNodeWithScores(node, collection)
-		if err != nil {
-			return nil, nil, err
-		}
-		allResults = append(allResults, result...)
-		// 合併分數
-		for key, score := range scores {
-			allScores[key] = score
-		}
-	}
-
-	// 去重並排序
-	uniqueResults := uniqueAndSort(allResults)
-
-	// 過濾分數映射，只保留最終結果中的項目
-	filteredScores := make(ScoreMap)
-	for _, pk := range uniqueResults {
-		if score, exists := allScores[pk]; exists {
-			filteredScores[pk] = score
-		}
-	}
-
-	return uniqueResults, filteredScores, nil
-}
-
-// executeNotQueryWithScores 執行NOT查詢，不保留被排除項目的分數
-func (qe *QueryExecutor) executeNotQueryWithScores(node *QueryNode, collection string) ([]string, ScoreMap, error) {
-	// 先獲取所有記錄的主鍵
-	allKeys, err := qe.getAllPrimaryKeys(collection)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// 執行被排除的查詢
-	excludeKeys, _, err := qe.executeQueryNodeWithScores(node, collection)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// 返回差集（NOT查詢不產生分數）
-	result := differenceSlices(allKeys, excludeKeys)
-	return result, make(ScoreMap), nil
-}
-
-// Helper functions for set operations
-func intersectSlices(a, b []string) []string {
-	m := make(map[string]bool)
-	for _, item := range a {
-		m[item] = true
-	}
-
-	var result []string
-	for _, item := range b {
-		if m[item] {
-			result = append(result, item)
-		}
-	}
-
-	return result
-}
-
-func uniqueAndSort(slice []string) []string {
-	seen := make(map[string]bool)
-	var result []string
-
-	for _, item := range slice {
-		if !seen[item] {
-			seen[item] = true
-			result = append(result, item)
-		}
-	}
-
-	sort.Strings(result)
-	return result
-}
-
-func differenceSlices(a, b []string) []string {
-	m := make(map[string]bool)
-	for _, item := range b {
-		m[item] = true
-	}
-
-	var result []string
-	for _, item := range a {
-		if !m[item] {
-			result = append(result, item)
-		}
-	}
-
-	return result
-}
-
-func deduplicatePreserveOrder(items []string) []string {
-	seen := make(map[string]struct{}, len(items))
-	result := make([]string, 0, len(items))
-	for _, item := range items {
-		if _, exists := seen[item]; exists {
-			continue
-		}
-		seen[item] = struct{}{}
-		result = append(result, item)
-	}
-	return result
 }
 
 // buildWhereClause 構建SQL WHERE子句
@@ -757,39 +481,9 @@ func (qe *QueryExecutor) getCollectionSchema(collection string) (*CollectionSche
 	return &schema, nil
 }
 
-// getAllPrimaryKeys 獲取collection中所有記錄的主鍵
-func (qe *QueryExecutor) getAllPrimaryKeys(collection string) ([]string, error) {
-	schema, err := qe.getCollectionSchema(collection)
-	if err != nil {
-		return nil, err
-	}
-
-	query := fmt.Sprintf("SELECT %s FROM %s", schema.PrimaryKey, collection)
-	rows, err := qe.db.Query(query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get all primary keys: %w", err)
-	}
-	defer rows.Close()
-
-	var primaryKeys []string
-	for rows.Next() {
-		var pk string
-		if err := rows.Scan(&pk); err != nil {
-			return nil, fmt.Errorf("failed to scan primary key: %w", err)
-		}
-		primaryKeys = append(primaryKeys, pk)
-	}
-
-	return primaryKeys, nil
-}
-
-// fetchRecordsByPrimaryKeysWithScores 根據主鍵列表獲取完整記錄，加入 FTS 分數，
+// fetchRecords 依編譯好的 WHERE 子句取回整列資料，加入 FTS 分數，
 // 並套用 order_by、limit 與 offset。
-func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primaryKeyField string, primaryKeys []string, scoreMap ScoreMap, result *ResultSpec) ([]map[string]interface{}, error) {
-	if len(primaryKeys) == 0 {
-		return []map[string]interface{}{}, nil
-	}
-
+func (qe *QueryExecutor) fetchRecords(collection, primaryKeyField, where string, args []interface{}, scoreMap ScoreMap, result *ResultSpec) ([]map[string]interface{}, error) {
 	// 構建查詢字段
 	fields := "*"
 	if len(result.Fields) > 0 {
@@ -802,27 +496,22 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primary
 		fields = strings.Join(result.Fields, ", ")
 	}
 
-	// 構建WHERE子句
-	placeholders := make([]string, len(primaryKeys))
-	args := make([]interface{}, len(primaryKeys))
-	for i, pk := range primaryKeys {
-		placeholders[i] = "?"
-		args[i] = pk
+	query := fmt.Sprintf("SELECT %s FROM %s", fields, collection)
+	if where != "" {
+		query += " WHERE " + where
 	}
 
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s IN (%s)",
-		fields, collection, primaryKeyField, strings.Join(placeholders, ", "))
-
 	// _score 不是 SQL 表裡的欄位，所以只要排序用到它，整批記錄就得先讀回來
-	// 再於 Go 這側排序。沒有用到 _score 時把 ORDER BY 與 LIMIT/OFFSET 交給
-	// SQLite，直接沿用 SQL 的比較與定序語意，也讓分頁在資料庫端就切好。
-	sortInGo := len(result.OrderBy) == 0 || orderByUsesScore(result.OrderBy)
+	// 再於 Go 這側排序。其餘情況把 ORDER BY 與 LIMIT/OFFSET 交給 SQLite，
+	// 直接沿用 SQL 的比較與定序語意，也讓分頁在資料庫端就切好。
+	sortInGo := orderByUsesScore(result.OrderBy) ||
+		(len(result.OrderBy) == 0 && len(scoreMap) > 0)
 	if !sortInGo {
 		query += buildOrderByClause(result.OrderBy)
 		query += buildLimitClause(result.Limit, result.Offset)
 	}
 
-	logger.Debug("Fetching records by primary keys with scores", "query", query, "pk_count", len(primaryKeys))
+	logger.Debug("Fetching records", "query", query, "arg_count", len(args))
 
 	rows, err := qe.db.Query(query, args...)
 	if err != nil {
