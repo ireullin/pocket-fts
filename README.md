@@ -24,7 +24,7 @@ Pocket FTS 是一款輕量、易部署、對中日韓語言友善的全文檢索
 
 ## 快速開始
 
-1. 下載 `bin/pocket-fts` 可執行檔或自行建置。
+1. 下載 `bin/pocket_fts` 可執行檔或自行建置。
 2. 準備資料庫檔案（預設為 `db.sqlite`，若不存在會自動建立）。
 3. 執行程式：
    ```bash
@@ -77,7 +77,7 @@ curl -X POST http://localhost:5122/query \
 
 ### Docker 部署
 
-1. 下載程式並確保 `bin/pocket-fts` 已存在。
+1. 下載程式並確保 `bin/pocket_fts` 已存在。
 2. 建立映像：
    ```bash
    docker build -t pocket-fts .
@@ -163,7 +163,7 @@ Pocket FTS is a lightweight, easy-to-deploy search and data browser designed wit
 
 ### Quick Start
 
-1. Download `bin/pocket-fts` (prebuilt) or build from source.
+1. Download `bin/pocket_fts` (prebuilt) or build from source.
 2. Prepare the database file (`db.sqlite` by default; created automatically if missing).
 3. Launch:
    ```bash
@@ -216,7 +216,7 @@ curl -X POST http://localhost:5122/query \
 
 ### Docker Usage
 
-1. Ensure the repository is cloned and `bin/pocket-fts` is present.
+1. Ensure the repository is cloned and `bin/pocket_fts` is present.
 2. Build the image:
    ```bash
    docker build -t pocket-fts .
@@ -303,7 +303,7 @@ Pocket FTS は、軽量・簡単デプロイ・CJK（中国語・日本語・韓
 
 ### クイックスタート
 
-1. `bin/pocket-fts` をダウンロードするか、自身でビルドします。
+1. `bin/pocket_fts` をダウンロードするか、自身でビルドします。
 2. データベースファイル（既定は `db.sqlite`。存在しない場合は自動生成）を用意します。
 3. 以下で起動します：
    ```bash
@@ -356,7 +356,7 @@ curl -X POST http://localhost:5122/query \
 
 ### Docker での利用
 
-1. リポジトリを取得し、`bin/pocket-fts` が存在することを確認します。
+1. リポジトリを取得し、`bin/pocket_fts` が存在することを確認します。
 2. イメージをビルドします。
    ```bash
    docker build -t pocket-fts .
@@ -443,7 +443,7 @@ Pocket FTS는 가볍고 배포가 쉬우며, 중국어·일본어·한국어(CJK
 
 ### 빠른 시작
 
-1. `bin/pocket-fts` 실행 파일을 다운로드하거나 직접 빌드합니다.
+1. `bin/pocket_fts` 실행 파일을 다운로드하거나 직접 빌드합니다.
 2. 데이터베이스 파일을 준비합니다(기본값 `db.sqlite`, 없으면 자동 생성).
 3. 다음 명령으로 실행합니다.
    ```bash
@@ -496,7 +496,7 @@ curl -X POST http://localhost:5122/query \
 
 ### Docker 사용 방법
 
-1. 리포지토리를 내려받고 `bin/pocket-fts` 존재 여부를 확인합니다.
+1. 리포지토리를 내려받고 `bin/pocket_fts` 존재 여부를 확인합니다.
 2. 이미지 빌드:
    ```bash
    docker build -t pocket-fts .
