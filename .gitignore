@@ -7,3 +7,6 @@
 *.log
 .DS_Store
 Thumbs.db
+
+# 查詢層修正與壓測的工作紀錄，刻意不進版控
+docs/WORKLOG.md
