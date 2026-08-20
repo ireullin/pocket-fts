@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -777,6 +778,12 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 	// 執行查詢
 	records, err := queryExecutor.ExecuteQuery(&req)
 	if err != nil {
+		var validationErr *ValidationError
+		if errors.As(err, &validationErr) {
+			logger.Warn("Invalid query request", "collection", req.Collection, "error", err, "remote_addr", r.RemoteAddr)
+			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		logger.Error("Failed to execute enhanced query", "collection", req.Collection, "error", err)
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Query execution failed: %v", err))
 		return
@@ -804,7 +811,10 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-var validIdentifierRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+`)
+// 識別字必須整串都是英數與底線。這個 regex 一定要頭尾都錨定：只錨定開頭的話
+// `id; DROP TABLE x--` 這種字串也會通過檢查，而 collection 名稱與欄位名稱
+// 是直接用 Sprintf 串進 SQL 的。
+var validIdentifierRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
 func isValidIdentifier(name string) bool {
 	if name == "" {

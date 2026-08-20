@@ -491,11 +491,14 @@
             collection,
             limit,
             offset,
-            order_by: [{ field: '_score', direction: 'desc' }],
         };
 
+        // _score only exists for queries that carry a search term, so only ask
+        // to sort by it when there is one. Sending it on a SQL-only query is
+        // rejected by /query with a 400.
         if (searchPart) {
             request.search = { term: searchPart.term };
+            request.order_by = [{ field: '_score', direction: 'desc' }];
         }
 
         if (sqlTuples.length) {

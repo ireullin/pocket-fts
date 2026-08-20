@@ -62,9 +62,18 @@ curl -X POST http://localhost:5122/query \
       ["status", "=", "published"]
     ],
     "limit": 20,
-    "offset": 0
+    "offset": 0,
+    "order_by": [
+      { "field": "created_at", "direction": "desc" }
+    ]
   }'
 ```
+
+`order_by` 依序套用多個排序條件。欄位必須是該集合的欄位，或是 `_score`。
+
+- 欄位名稱不存在時，`/query` 回傳 `400`，不會靜默忽略。
+- `_score` 是相關性排名，只有帶 `search` 的查詢才會產生。`desc` 代表最相關在前。
+- 未指定 `order_by` 時，帶 `search` 的查詢預設以 `_score desc` 排序，其餘查詢不排序。
 
 ### Docker 部署
 
@@ -192,9 +201,18 @@ curl -X POST http://localhost:5122/query \
       ["status", "=", "published"]
     ],
     "limit": 20,
-    "offset": 0
+    "offset": 0,
+    "order_by": [
+      { "field": "created_at", "direction": "desc" }
+    ]
   }'
 ```
+
+`order_by` applies each rule in turn. A field must be a column of the collection, or `_score`.
+
+- An unknown field name returns `400` from `/query`. It is never ignored silently.
+- `_score` is a relevance rank. Only a query with a `search` clause produces it. `desc` returns the most relevant rows first.
+- Without `order_by`, a query with `search` defaults to `_score desc`. Other queries are not sorted.
 
 ### Docker Usage
 
@@ -323,9 +341,18 @@ curl -X POST http://localhost:5122/query \
       ["status", "=", "published"]
     ],
     "limit": 20,
-    "offset": 0
+    "offset": 0,
+    "order_by": [
+      { "field": "created_at", "direction": "desc" }
+    ]
   }'
 ```
+
+`order_by` は指定した順に並べ替え条件を適用します。フィールドはコレクションの列、または `_score` である必要があります。
+
+- 存在しないフィールド名を指定すると、`/query` は `400` を返します。無視されることはありません。
+- `_score` は関連度の順位です。`search` 句を含むクエリだけが生成します。`desc` は関連度が最も高い行を先頭に返します。
+- `order_by` を省略した場合、`search` を含むクエリは `_score desc` で並べ替えます。その他のクエリは並べ替えません。
 
 ### Docker での利用
 
@@ -454,9 +481,18 @@ curl -X POST http://localhost:5122/query \
       ["status", "=", "published"]
     ],
     "limit": 20,
-    "offset": 0
+    "offset": 0,
+    "order_by": [
+      { "field": "created_at", "direction": "desc" }
+    ]
   }'
 ```
+
+`order_by`는 지정한 순서대로 정렬 규칙을 적용합니다. 필드는 컬렉션의 열이거나 `_score`여야 합니다.
+
+- 존재하지 않는 필드 이름을 지정하면 `/query`가 `400`을 반환합니다. 조용히 무시하지 않습니다.
+- `_score`는 관련도 순위입니다. `search` 절이 있는 쿼리만 생성합니다. `desc`는 관련도가 가장 높은 행을 먼저 반환합니다.
+- `order_by`를 생략하면 `search`가 있는 쿼리는 `_score desc`로 정렬합니다. 그 외 쿼리는 정렬하지 않습니다.
 
 ### Docker 사용 방법
 

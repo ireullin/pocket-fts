@@ -198,7 +198,7 @@ Content-Type: application/json
 | `sql` | array\<array> | No | List of SQL filters, each entry `[field, operator, value]`. Combined with logical AND. |
 | `limit` | integer | No | Maximum rows returned. |
 | `offset` | integer | No | Rows to skip before returning results. |
-| `order_by` | array\<object> | No | Sorting rules. Defaults to `_score DESC` when a search term is present. |
+| `order_by` | array\<object> | No | Sorting rules, applied in order. Defaults to `_score DESC` when a search term is present, and to no sorting otherwise. |
 
 **SQL tuple**
 
@@ -212,8 +212,21 @@ Content-Type: application/json
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `field` | string | Yes | Column used for sorting. |
-| `direction` | string (`asc`\|`desc`) | Yes | Sort direction. |
+| `field` | string | Yes | Column used for sorting. Must be a column of the collection, or `_score`. |
+| `direction` | string (`asc`\|`desc`) | Yes | Sort direction. Defaults to `asc` when omitted. |
+
+`order_by` is validated against the collection schema. A field that is not a
+column of the collection is rejected with `400`, rather than being ignored.
+
+`_score` is a relevance rank, not an ordinary column:
+
+- `desc` returns the most relevant rows first. `asc` returns the least relevant
+  rows first.
+- The underlying score is a raw ftscore value (negative on ftscore v0.13, where
+  a smaller number means a better match). Do not compare it against a fixed
+  threshold; use it only for ordering.
+- `_score` is only produced by queries that carry a `search` clause. Using it in
+  `order_by` without one is rejected with `400`.
 
 **Request Body (flat format)**
 ```json

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -26,7 +25,23 @@ func NewQueryExecutor(database *sql.DB, ftsEngine *FTS) *QueryExecutor {
 // ExecuteQuery 執行查詢並返回結果，支持 FTS 分數合併
 func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface{}, error) {
 	if !isValidIdentifier(req.Collection) {
-		return nil, fmt.Errorf("invalid collection name: %s", req.Collection)
+		return nil, newValidationError("invalid collection name: %s", req.Collection)
+	}
+
+	// 先取得 schema。order_by 的欄位要對照 schema 驗證，而且必須在執行查詢之前
+	// 就驗證完，這樣欄位名稱寫錯的請求即使查不到任何資料也會回報錯誤。
+	schema, err := qe.getCollectionSchema(req.Collection)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get collection schema: %w", err)
+	}
+
+	usesScore, err := validateOrderBy(req.Result.OrderBy, schema)
+	if err != nil {
+		return nil, err
+	}
+	if usesScore && !queryHasSearch(&req.Query) {
+		return nil, newValidationError(
+			"order_by references %q but the query has no search clause", scoreField)
 	}
 
 	// 執行查詢獲取主鍵列表和分數映射
@@ -39,12 +54,6 @@ func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface
 		return []map[string]interface{}{}, nil
 	}
 
-	// 獲取collection的schema以確定主鍵欄位名稱
-	schema, err := qe.getCollectionSchema(req.Collection)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get collection schema: %w", err)
-	}
-
 	// 根據主鍵列表從SQL表中獲取完整記錄，並加入分數
 	records, err := qe.fetchRecordsByPrimaryKeysWithScores(req.Collection, schema.PrimaryKey, primaryKeys, scoreMap, &req.Result)
 	if err != nil {
@@ -52,6 +61,28 @@ func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface
 	}
 
 	return records, nil
+}
+
+// queryHasSearch 回報查詢樹裡是否含有 search 節點。只有這種查詢才會產生
+// _score，所以 order_by 用到 _score 時要靠它判斷請求是否合法。
+func queryHasSearch(node *QueryNode) bool {
+	if node == nil {
+		return false
+	}
+	if node.Search != nil {
+		return true
+	}
+	for _, child := range node.And {
+		if queryHasSearch(child) {
+			return true
+		}
+	}
+	for _, child := range node.Or {
+		if queryHasSearch(child) {
+			return true
+		}
+	}
+	return queryHasSearch(node.Not)
 }
 
 // executeQueryNodeWithScores 遞歸執行查詢節點，返回主鍵和分數映射
@@ -752,96 +783,8 @@ func (qe *QueryExecutor) getAllPrimaryKeys(collection string) ([]string, error) 
 	return primaryKeys, nil
 }
 
-// fetchRecordsByPrimaryKeys 根據主鍵列表獲取完整記錄
-func (qe *QueryExecutor) fetchRecordsByPrimaryKeys(collection, primaryKeyField string, primaryKeys []string, result *ResultSpec) ([]map[string]interface{}, error) {
-	if len(primaryKeys) == 0 {
-		return []map[string]interface{}{}, nil
-	}
-
-	// 構建查詢字段
-	fields := "*"
-	if len(result.Fields) > 0 {
-		// 驗證字段名稱
-		for _, field := range result.Fields {
-			if !isValidIdentifier(field) && field != "*" {
-				return nil, fmt.Errorf("invalid field name: %s", field)
-			}
-		}
-		fields = strings.Join(result.Fields, ", ")
-	}
-
-	// 構建WHERE子句
-	placeholders := make([]string, len(primaryKeys))
-	args := make([]interface{}, len(primaryKeys))
-	for i, pk := range primaryKeys {
-		placeholders[i] = "?"
-		args[i] = pk
-	}
-
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s IN (%s)",
-		fields, collection, primaryKeyField, strings.Join(placeholders, ", "))
-
-	// 添加ORDER BY
-	if len(result.OrderBy) > 0 {
-		var orderClauses []string
-		for _, order := range result.OrderBy {
-			if !isValidIdentifier(order.Field) {
-				return nil, fmt.Errorf("invalid order field: %s", order.Field)
-			}
-			direction := "ASC"
-			if strings.ToUpper(order.Direction) == "DESC" {
-				direction = "DESC"
-			}
-			orderClauses = append(orderClauses, order.Field+" "+direction)
-		}
-		query += " ORDER BY " + strings.Join(orderClauses, ", ")
-	}
-
-	// 添加LIMIT和OFFSET
-	if result.Limit > 0 {
-		query += " LIMIT " + strconv.Itoa(result.Limit)
-		if result.Offset > 0 {
-			query += " OFFSET " + strconv.Itoa(result.Offset)
-		}
-	}
-
-	logger.Debug("Fetching records by primary keys", "query", query, "pk_count", len(primaryKeys))
-
-	rows, err := qe.db.Query(query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch records: %w", err)
-	}
-	defer rows.Close()
-
-	// 獲取列名
-	columns, err := rows.Columns()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get columns: %w", err)
-	}
-
-	var records []map[string]interface{}
-	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePointers := make([]interface{}, len(columns))
-		for i := range values {
-			valuePointers[i] = &values[i]
-		}
-
-		if err := rows.Scan(valuePointers...); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
-		}
-
-		record := make(map[string]interface{})
-		for i, column := range columns {
-			record[column] = values[i]
-		}
-		records = append(records, record)
-	}
-
-	return records, nil
-}
-
-// fetchRecordsByPrimaryKeysWithScores 根據主鍵列表獲取完整記錄，並加入FTS分數，按分數排序
+// fetchRecordsByPrimaryKeysWithScores 根據主鍵列表獲取完整記錄，加入 FTS 分數，
+// 並套用 order_by、limit 與 offset。
 func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primaryKeyField string, primaryKeys []string, scoreMap ScoreMap, result *ResultSpec) ([]map[string]interface{}, error) {
 	if len(primaryKeys) == 0 {
 		return []map[string]interface{}{}, nil
@@ -853,7 +796,7 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primary
 		// 驗證字段名稱
 		for _, field := range result.Fields {
 			if !isValidIdentifier(field) && field != "*" {
-				return nil, fmt.Errorf("invalid field name: %s", field)
+				return nil, newValidationError("invalid field name: %s", field)
 			}
 		}
 		fields = strings.Join(result.Fields, ", ")
@@ -869,6 +812,15 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primary
 
 	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s IN (%s)",
 		fields, collection, primaryKeyField, strings.Join(placeholders, ", "))
+
+	// _score 不是 SQL 表裡的欄位，所以只要排序用到它，整批記錄就得先讀回來
+	// 再於 Go 這側排序。沒有用到 _score 時把 ORDER BY 與 LIMIT/OFFSET 交給
+	// SQLite，直接沿用 SQL 的比較與定序語意，也讓分頁在資料庫端就切好。
+	sortInGo := len(result.OrderBy) == 0 || orderByUsesScore(result.OrderBy)
+	if !sortInGo {
+		query += buildOrderByClause(result.OrderBy)
+		query += buildLimitClause(result.Limit, result.Offset)
+	}
 
 	logger.Debug("Fetching records by primary keys with scores", "query", query, "pk_count", len(primaryKeys))
 
@@ -884,7 +836,7 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primary
 		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
 
-	var records []map[string]interface{}
+	records := []map[string]interface{}{}
 	for rows.Next() {
 		values := make([]interface{}, len(columns))
 		valuePointers := make([]interface{}, len(columns))
@@ -905,60 +857,19 @@ func (qe *QueryExecutor) fetchRecordsByPrimaryKeysWithScores(collection, primary
 		if pkValue, ok := record[primaryKeyField]; ok {
 			pkStr := fmt.Sprintf("%v", pkValue)
 			if score, hasScore := scoreMap[pkStr]; hasScore {
-				record["_score"] = score
+				record[scoreField] = score
 			}
 		}
 
 		records = append(records, record)
 	}
-
-	// 如果有FTS分數，按分數排序（分數越小越相關）
-	if len(scoreMap) > 0 {
-		sort.Slice(records, func(i, j int) bool {
-			scoreI, hasI := records[i]["_score"]
-			scoreJ, hasJ := records[j]["_score"]
-
-			// 有分數的記錄排在前面
-			if hasI && !hasJ {
-				return true
-			}
-			if !hasI && hasJ {
-				return false
-			}
-
-			// 都有分數時，按分數排序（小分數在前）
-			if hasI && hasJ {
-				if sI, ok := scoreI.(float64); ok {
-					if sJ, ok := scoreJ.(float64); ok {
-						return sI < sJ
-					}
-				}
-			}
-
-			// 都沒有分數或無法比較時，保持原順序
-			return false
-		})
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to read records: %w", err)
 	}
 
-	// 應用 LIMIT 和 OFFSET（在排序之後）
-	if result.Limit > 0 {
-		start := result.Offset
-		if start < 0 {
-			start = 0
-		}
-		end := start + result.Limit
-		if start >= len(records) {
-			return []map[string]interface{}{}, nil
-		}
-		if end > len(records) {
-			end = len(records)
-		}
-		records = records[start:end]
-	} else if result.Offset > 0 {
-		if result.Offset >= len(records) {
-			return []map[string]interface{}{}, nil
-		}
-		records = records[result.Offset:]
+	if sortInGo {
+		sortRecords(records, result.OrderBy, len(scoreMap) > 0)
+		records = applyLimitOffset(records, result.Limit, result.Offset)
 	}
 
 	return records, nil
