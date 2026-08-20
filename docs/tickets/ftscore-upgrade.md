@@ -43,6 +43,18 @@ ftscore 專案本身提供的遷移指南）。
   若實測發現合法操作（大批次寫入／大資料集搜尋）會被 10 秒卡到，再回來決定要不要暴露成
   啟動參數。
 
+> **2026-08-20 後續：這個待決事項已結案。** 壓力測試實測到了當初預期的情境：48 個併發
+> 寫入者時，576 筆有 10 筆被 ftscore 的 10 秒判死，回傳
+> `insert into docs: context deadline exceeded`。同一批測試也顯示 100 萬筆語料上搜尋
+> 常見詞的 p99 是 8.5 秒，距離 10 秒的天花板很近，搜尋很可能已經偶發失敗而沒被發現。
+>
+> 決定：新增 `-write-timeout` 啟動參數（秒，預設 30），`main.go` 在初始化 FTS 引擎之前
+> 呼叫 `SetCallTimeout(writeTimeout)`，讓寫入路徑的兩個階段（FTS 索引與 SQL 表）共用
+> 同一個預算。`SetCallTimeout` 是 process-wide，所以搜尋也套用同一個值。
+>
+> 驗證：同樣的 48 併發情境，預設 30 秒下 576 筆全部成功；設成 1 秒則 358 筆回 `503`，
+> 證明參數確實貫穿到 ftscore 那一側。
+
 ### 2. 修 `initDB()` 的 busy_timeout
 
 - 改用 DSN 帶 `_pragma=busy_timeout(5000)`，讓 `modernc.org/sqlite` 對連線池裡每一條新

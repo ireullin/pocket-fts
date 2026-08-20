@@ -11,12 +11,14 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 )
 
 //go:embed embedded/*.html embedded/*.css embedded/*.js
 var staticFS embed.FS
 
 var db *sql.DB
+var writeDB *sql.DB
 var logger *slog.Logger
 var fts *FTS
 var queryExecutor *QueryExecutor
@@ -42,6 +44,7 @@ func printHelp() {
 	fmt.Println("  -p int              Port to listen on (default: 5122)")
 	fmt.Println("  -f string           Database file path (default: \"db.sqlite\")")
 	fmt.Println("  -host string        Host address to bind (default: \"localhost\")")
+	fmt.Println("  -write-timeout int  Seconds a write (and a search) may take (default: 30)")
 	fmt.Println("  -h, --help          Show this help message")
 	fmt.Println()
 	fmt.Println("Examples:")
@@ -58,6 +61,8 @@ func main() {
 	dbFile := flag.String("f", "db.sqlite", "Database file path")
 	host := flag.String("host", "localhost", "Host address to bind")
 	showHelp := flag.Bool("h", false, "Show help message")
+	writeTimeoutSec := flag.Int("write-timeout", int(DefaultWriteTimeout.Seconds()),
+		"Seconds a write may take, covering both the FTS index and the SQL table; also applied to search")
 	startupOnly := flag.Bool("startup-only", false, "") // Hidden flag
 
 	// Custom usage message
@@ -94,7 +99,25 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
-	logger.Info("Database initialized successfully.")
+
+	// 寫入走另一個只有一條連線的池子，讓同時進來的寫入在 Go 這側排隊，
+	// 而不是在 SQLite 那層搶鎖然後被 busy_timeout 判失敗。
+	writeDB, err = initWriteDB(*dbFile)
+	if err != nil {
+		logger.Error("Failed to initialize write database", "error", err)
+		os.Exit(1)
+	}
+	defer writeDB.Close()
+
+	SetWriteTimeout(time.Duration(*writeTimeoutSec) * time.Second)
+	logger.Info("Database initialized successfully.", "write_timeout", writeTimeout)
+
+	// 讓 ftscore 的呼叫逾時與寫入時限一致。一筆 upsert 要先寫 FTS 索引再寫
+	// SQL 表；ftscore 內建的預設值是 10 秒，若不對齊，-write-timeout 設得再大
+	// 也會被那個看不見的天花板攔下來，參數名不符實。這個設定是 process-wide，
+	// 搜尋也套用同一個值——100 萬筆語料上搜尋常見詞的 p99 已經是 8.5 秒，
+	// 原本的 10 秒本來就太緊。
+	SetCallTimeout(writeTimeout.Milliseconds())
 
 	fts, err = NewFTS(*dbFile, 5000, true)
 	if err != nil {
@@ -102,7 +125,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer fts.Close()
-	logger.Info("FTS engine initialized successfully.")
+	logger.Info("FTS engine initialized successfully.", "call_timeout", writeTimeout)
 
 	// 設定 FTS C library 的 log callback
 	SetupFTSLogging()

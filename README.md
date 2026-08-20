@@ -126,6 +126,7 @@ curl -X POST http://localhost:5122/query \
 | `-p` / `-port` | `5122` | HTTP 監聽埠。 |
 | `-f` | `db.sqlite` | SQLite 資料檔路徑。 |
 | `-host` | `localhost` | 綁定的主機位址。 |
+| `-write-timeout` | `30` | 單筆寫入的時限（秒），涵蓋等待寫入連線與實際寫入。同一個值也套用到全文搜尋。超時回傳 `503`。 |
 
 
 ## 注意事項
@@ -266,6 +267,7 @@ See [API_REFERENCE.md](API_REFERENCE.md) for in-depth usage details.
 | `-p` / `-port` | `5122` | HTTP listen port. |
 | `-f` | `db.sqlite` | SQLite database path. |
 | `-host` | `localhost` | Bind address. |
+| `-write-timeout` | `30` | Seconds a single write may take, covering the wait for the write connection and the write itself. The same value is applied to full-text search. Exceeding it returns `503`. |
 | `-startup-only` | `false` | Health-check mode; exit after initialization. |
 
 ### Notes
@@ -406,6 +408,7 @@ curl -X POST http://localhost:5122/query \
 | `-p` / `-port` | `5122` | HTTP リッスンポート |
 | `-f` | `db.sqlite` | SQLite データファイルのパス |
 | `-host` | `localhost` | バインドするホストアドレス |
+| `-write-timeout` | `30` | 1 件の書き込みに許される秒数。書き込み接続の待機と実際の書き込みの両方を含みます。同じ値が全文検索にも適用されます。超過すると `503` を返します |
 | `-startup-only` | `false` | 起動確認のみ行い即終了 |
 
 ### 注意事項
@@ -545,6 +548,7 @@ curl -X POST http://localhost:5122/query \
 | `-p` / `-port` | `5122` | HTTP 리슨 포트 |
 | `-f` | `db.sqlite` | SQLite 데이터 파일 경로 |
 | `-host` | `localhost` | 바인딩할 호스트 주소 |
+| `-write-timeout` | `30` | 쓰기 한 건에 허용되는 초. 쓰기 연결 대기와 실제 쓰기를 모두 포함합니다. 같은 값이 전문 검색에도 적용됩니다. 초과하면 `503`을 반환합니다 |
 | `-startup-only` | `false` | 기동 테스트용, 곧바로 종료 |
 
 ### 유의 사항

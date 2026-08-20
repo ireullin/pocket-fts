@@ -33,6 +33,13 @@ func setupQueryEngine(t *testing.T) {
 	db = testDB
 	t.Cleanup(func() { testDB.Close() })
 
+	testWriteDB, err := initWriteDB(dbPath)
+	if err != nil {
+		t.Fatalf("initWriteDB failed: %v", err)
+	}
+	writeDB = testWriteDB
+	t.Cleanup(func() { testWriteDB.Close() })
+
 	engine, err := NewFTS(dbPath, 5000, false)
 	if err != nil {
 		t.Fatalf("NewFTS failed: %v", err)

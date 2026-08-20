@@ -159,6 +159,12 @@ Content-Type: application/json
 ```json
 { "status": "success" }
 ```
+**Response 503**
+```json
+{ "error": "Write timed out; the server is saturated with writes" }
+```
+Returned with a `Retry-After` header when the write did not complete within the
+`-write-timeout` budget. See [Write Concurrency](#write-concurrency).
 
 ### Delete Document
 ```
@@ -182,6 +188,13 @@ Content-Type: application/json
 ```json
 { "status": "success" }
 ```
+**Response 503**
+```json
+{ "error": "Write timed out; the server is saturated with writes" }
+```
+Returned with a `Retry-After` header when the write did not complete within the
+`-write-timeout` budget. See [Write Concurrency](#write-concurrency).
+
 ## Advanced Query
 
 ### Combined Search & SQL Filtering
@@ -274,6 +287,32 @@ GET /
 - Any other path returns a plain text message confirming the service is running.
 
 ---
+
+## Write Concurrency
+
+Writes are serialized. A single upsert or delete touches two SQLite databases:
+the row table and the full-text index. SQLite allows one writer at a time, and
+the full-text engine holds its index with a single exclusive connection, so
+concurrent writes queue rather than run in parallel. Adding concurrency raises
+latency without raising throughput.
+
+Concurrent writes wait in a queue instead of competing for the database lock.
+The wait is bounded by `-write-timeout` (default 30 seconds), which covers both
+the queue wait and the write itself. A request that exceeds the budget returns
+`503` with a `Retry-After` header. It is safe to retry.
+
+Two consequences for callers:
+
+- **Set a client timeout above `-write-timeout`.** Under load a write can take
+  the full budget. A client that gives up sooner will disconnect on requests the
+  server would have completed.
+- **Check the response status on bulk ingestion.** A `503` means the document was
+  not written. Scripts that ignore status codes will silently lose records.
+
+Measured single-writer throughput depends almost entirely on storage, because
+each write is bound by `fsync`: roughly 3,000 writes/second on a RAM disk,
+85/second on an NVMe SSD, and 10/second on a 7200rpm hard disk. Those figures do
+not improve with more concurrent writers.
 
 ## Notes
 

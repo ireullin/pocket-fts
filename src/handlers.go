@@ -306,7 +306,7 @@ func handleCollectionCreate(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Invalid schema for SQL table creation: %v", err))
 		return
 	}
-	if _, err := db.Exec(createTableSQL); err != nil {
+	if _, err := execWrite(createTableSQL); err != nil {
 		logger.Error("Failed to create regular SQL table", "collection", schema.Name, "error", err)
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to create table '%s': %v", schema.Name, err))
 		return
@@ -351,7 +351,7 @@ func handleCollectionDelete(w http.ResponseWriter, r *http.Request) {
 
 	// 3. Drop the regular SQL table
 	dropTableSQL := fmt.Sprintf("DROP TABLE IF EXISTS %s", req.Name) // Safe due to isValidIdentifier check
-	if _, err := db.Exec(dropTableSQL); err != nil {
+	if _, err := execWrite(dropTableSQL); err != nil {
 		logger.Error("Inconsistency: failed to drop regular SQL table", "collection", req.Name, "error", err)
 	}
 
@@ -622,6 +622,12 @@ func handleDocumentUpsert(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Upsert to FTS index
 	if err := fts.UpsertDocument(req.Collection, string(docBytes)); err != nil {
+		if isTimeoutError(err) {
+			logger.Warn("Upsert to FTS timed out", "collection", req.Collection,
+				"timeout", writeTimeout, "remote_addr", r.RemoteAddr)
+			respondWithBusy(w, "Write timed out; the server is saturated with writes")
+			return
+		}
 		logger.Error("Failed to upsert document to FTS", "collection", req.Collection, "error", err)
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to upsert document: %v", err))
 		return
@@ -635,7 +641,13 @@ func handleDocumentUpsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := db.Exec(upsertSQL, values...); err != nil {
+	if _, err := execWrite(upsertSQL, values...); err != nil {
+		if isTimeoutError(err) {
+			logger.Warn("Upsert timed out waiting for the write connection",
+				"collection", req.Collection, "timeout", writeTimeout, "remote_addr", r.RemoteAddr)
+			respondWithBusy(w, "Write timed out; the server is saturated with writes")
+			return
+		}
 		logger.Error("Failed to upsert document to SQL table", "collection", req.Collection, "error", err)
 		respondWithError(w, http.StatusInternalServerError, "Failed to save document to SQL table")
 		return
@@ -681,6 +693,12 @@ func handleDocumentDelete(w http.ResponseWriter, r *http.Request) {
 	// 1. Delete from FTS index
 	primaryKeyJSON := fmt.Sprintf("{\"%s\":\"%s\"}", schema.PrimaryKey, req.ID)
 	if err := fts.DeleteDocument(req.Collection, primaryKeyJSON); err != nil {
+		if isTimeoutError(err) {
+			logger.Warn("Delete from FTS timed out", "collection", req.Collection,
+				"id", req.ID, "timeout", writeTimeout, "remote_addr", r.RemoteAddr)
+			respondWithBusy(w, "Write timed out; the server is saturated with writes")
+			return
+		}
 		logger.Error("Failed to delete document from FTS", "collection", req.Collection, "id", req.ID, "error", err)
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to delete document from FTS: %v", err))
 		return
@@ -688,7 +706,13 @@ func handleDocumentDelete(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Delete from regular SQL table
 	deleteSQL := fmt.Sprintf("DELETE FROM %s WHERE %s = ?", req.Collection, schema.PrimaryKey) // Safe due to checks
-	if _, err := db.Exec(deleteSQL, req.ID); err != nil {
+	if _, err := execWrite(deleteSQL, req.ID); err != nil {
+		if isTimeoutError(err) {
+			logger.Warn("Delete timed out waiting for the write connection",
+				"collection", req.Collection, "timeout", writeTimeout, "remote_addr", r.RemoteAddr)
+			respondWithBusy(w, "Write timed out; the server is saturated with writes")
+			return
+		}
 		logger.Error("Failed to delete document from SQL table", "collection", req.Collection, "id", req.ID, "error", err)
 		respondWithError(w, http.StatusInternalServerError, "Failed to delete document from SQL table")
 		return
@@ -799,6 +823,24 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 }
 
 // --- Helper Functions ---
+
+// isTimeoutError 判斷錯誤是不是逾時。
+//
+// SQL 側走 execWrite，回傳的是 ErrWriteTimeout。FTS 側的錯誤來自 ftscore 這個
+// C 動態庫，跨越 cgo 邊界之後只剩下字串，沒有型別可以比對，只能認它的內容。
+func isTimeoutError(err error) bool {
+	if errors.Is(err, ErrWriteTimeout) {
+		return true
+	}
+	return err != nil && strings.Contains(err.Error(), "context deadline exceeded")
+}
+
+// respondWithBusy 回報服務當下的寫入量超過吞吐能力。用 503 而不是 500，
+// 是要讓呼叫端分得出「稍後重試會成功」與「這個請求本身有問題」。
+func respondWithBusy(w http.ResponseWriter, message string) {
+	w.Header().Set("Retry-After", "1")
+	respondWithError(w, http.StatusServiceUnavailable, message)
+}
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
 	respondWithJSON(w, code, map[string]string{"error": message})
