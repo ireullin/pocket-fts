@@ -15,7 +15,7 @@
 ## 現況違反原則 1 的地方
 
 `handlers.go` 裡有 5 個呼叫 `fts.*` 的地方，全部無條件執行，不管 schema 有沒有任何欄位
-設 `indexed: true`：
+設 `searchable: true`：
 
 | 函式 | 位置 | 呼叫 |
 | --- | --- | --- |
@@ -33,15 +33,16 @@ pocket-fts 當一般 SQLite API 用，也被迫掛一個文字欄位餵給 ftsco
 ## 判斷機制
 
 一個 collection 要不要接 ftscore，依現有 schema 自動推斷：掃 `schema.Fields`，只要有任何
-一個欄位 `indexed: true`，這個 collection 就是 FTS 啟用；一個都沒有，就完全跳過 ftscore。
-不新增 schema 欄位，`indexed` 的既有語意不變。
+一個欄位 `searchable: true`，這個 collection 就是 FTS 啟用；一個都沒有，就完全跳過 ftscore。
+不新增 schema 欄位，`searchable`（原名 `indexed`，見
+[searchable-rename.md](./searchable-rename.md)）的既有語意不變。
 
 新增共用 helper：
 
 ```go
 func schemaHasFTS(schema CollectionSchema) bool {
 	for _, field := range schema.Fields {
-		if field.Indexed {
+		if field.Searchable {
 			return true
 		}
 	}
@@ -91,7 +92,7 @@ collection 本身不存在——但 collection 其實存在，只是沒有 FTS �
 
 ## 不適用：既有 collection 在 ftscore 端留下的死表
 
-修復前建立的 collection，若 schema 剛好零個 `indexed` 欄位，之前會在 ftscore 那邊建出一張
+修復前建立的 collection，若 schema 剛好零個 `searchable` 欄位，之前會在 ftscore 那邊建出一張
 對應的 FTS5 表；修完之後寫入不再同步到那張表，理論上會變成死資料。**這個情境在部署模型下
 不會發生**：每次部署都是重建，不是針對既有 `.indices` 檔案做原地升級，所以不存在「修復前
 建立、修復後繼續沿用」這種殘留死表的既有資料。不需要清理工具。
@@ -101,10 +102,10 @@ collection 本身不存在——但 collection 其實存在，只是沒有 FTS �
 整合測試，接真實 embedded 的 ftscore 二進位檔（不引入 mock/interface，維持現有
 `query_integration_test.go` 的整合測試風格）：
 
-- 建立一個零 `indexed` 欄位的 collection，寫入文件後直接向 ftscore 查同名 collection，
+- 建立一個零 `searchable` 欄位的 collection，寫入文件後直接向 ftscore 查同名 collection，
   驗證回傳「not found」等錯誤，證明從未在 ftscore 建立過。
-- 建立一個有 `indexed` 欄位的 collection，驗證行為跟修復前一致（FTS 照常運作），確保這次
+- 建立一個有 `searchable` 欄位的 collection，驗證行為跟修復前一致（FTS 照常運作），確保這次
   改動沒有動到既有的 FTS 啟用路徑。
-- 對零 `indexed` 欄位的 collection 送出帶 search 節點的 `/query` 請求，驗證回 400 而不是
+- 對零 `searchable` 欄位的 collection 送出帶 search 節點的 `/query` 請求，驗證回 400 而不是
   500 或 ftscore 的原始錯誤字串。
 - `/collections/list` 回應驗證 `has_fts` 欄位在兩種 collection 上都正確。

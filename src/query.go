@@ -198,7 +198,7 @@ func (qe *QueryExecutor) executeSearchQuery(searchQuery *SearchQuery, collection
 	}
 	if !schemaHasFTS(*schema) {
 		return nil, newValidationError(
-			"collection %q has no indexed fields; full-text search is not available", collection)
+			"collection %q has no searchable fields; full-text search is not available", collection)
 	}
 
 	if limit <= 0 {

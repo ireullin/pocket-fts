@@ -96,8 +96,8 @@ func seedIntegrationCorpus(t *testing.T) {
 		"fts":         map[string]interface{}{"stemming": false},
 		"fields": []map[string]interface{}{
 			{"name": "id", "type": "text"},
-			{"name": "title", "type": "text", "indexed": true},
-			{"name": "body", "type": "text", "indexed": true},
+			{"name": "title", "type": "text", "searchable": true},
+			{"name": "body", "type": "text", "searchable": true},
 			{"name": "status", "type": "text"},
 			{"name": "created_at", "type": "integer"},
 		},

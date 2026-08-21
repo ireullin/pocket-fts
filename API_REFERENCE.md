@@ -29,7 +29,7 @@ GET /collections/list
   "count": 1
 }
 ```
-`has_fts` is `true` when at least one field in the schema is `indexed`. A
+`has_fts` is `true` when at least one field in the schema is `searchable`. A
 collection with `has_fts: false` never touches the full-text engine — see
 [Full-Text Search Is Opt-In](#full-text-search-is-opt-in).
 
@@ -45,6 +45,7 @@ Content-Type: application/json
 | `primary_key` | string | Yes | Field that uniquely identifies each document. |
 | `fts` | object | No | Search configuration. |
 | `fields` | array\<object> | Yes | Schema definition for all fields stored in the collection. |
+| `indexes` | array\<array\<string>> | No | SQL indexes to build on the row table. Each entry is a list of field names — one field is a single-column index, several is a composite index over exactly those columns in that order. |
 
 **fts object**
 
@@ -58,13 +59,23 @@ Content-Type: application/json
 | --- | --- | --- | --- |
 | `name` | string | Yes | Field name. Must match identifier rules. |
 | `type` | string (`text`\|`integer`\|`real`) | Yes | Storage type used in the SQL table. |
-| `indexed` | boolean | No | Whether the field is indexed for text search. Defaults to `false`. |
+| `searchable` | boolean | No | Whether the field is indexed for full-text search. Defaults to `false`. |
 | `weight` | number | No | Optional weighting factor for search ranking. |
 | `primary_key` | boolean | No | Convenience flag; set to `true` for the primary key field. |
 
-Full-text search is opt-in per collection: if no field has `indexed: true`,
+> **Breaking change:** this field was named `indexed`. Payloads still using
+> `"indexed": true` are silently ignored — the field is treated as not
+> searchable. Update callers to `"searchable": true`.
+
+Full-text search is opt-in per collection: if no field has `searchable: true`,
 the collection is created as a plain SQL table only and never touches the
 full-text engine. See [Full-Text Search Is Opt-In](#full-text-search-is-opt-in).
+
+`indexes` is independent of `searchable` — a field ends up in a SQL index
+purely because it's listed here, whether or not it's also searchable. This
+matters because `search` clauses only speed up full-text queries; a `sql`
+filter or `order_by` against a non-indexed column is a full table scan
+regardless of whether that column happens to be searchable.
 
 **Body**
 ```json
@@ -73,17 +84,38 @@ full-text engine. See [Full-Text Search Is Opt-In](#full-text-search-is-opt-in).
   "primary_key": "id",
   "fts": { "stemming": true },
   "fields": [
-    { "name": "id", "type": "text", "indexed": true, "primary_key": true },
-    { "name": "title", "type": "text", "indexed": true, "weight": 2.0 },
-    { "name": "content", "type": "text", "indexed": true },
+    { "name": "id", "type": "text", "searchable": true, "primary_key": true },
+    { "name": "title", "type": "text", "searchable": true, "weight": 2.0 },
+    { "name": "content", "type": "text", "searchable": true },
+    { "name": "status", "type": "text" },
     { "name": "created_at", "type": "integer" }
+  ],
+  "indexes": [
+    ["status"],
+    ["status", "created_at"]
   ]
 }
 ```
+This builds a single-column index on `status` and a composite index on
+`(status, created_at)` — the composite index is what makes
+`sql: [["status", "=", "published"]], order_by: [{"field": "created_at"}]`
+fast; a single-column index on `status` alone would narrow the rows but
+still need to sort them afterward.
+
 **Response 201**
 ```json
 { "status": "success", "collection": "products" }
 ```
+**Response 400**
+```json
+{ "error": "Invalid indexes: index references unknown field: no_such_field" }
+```
+Returned when an `indexes` entry names a field that isn't in `fields`, or is
+an empty list. Nothing is created — no FTS collection, no metadata, no table.
+
+`indexes` only applies at creation time. There is no endpoint to add an
+index to an existing collection; changing it means deleting and recreating
+the collection, the same as any other schema change.
 
 ### Delete Collection
 ```
@@ -287,9 +319,9 @@ column of the collection is rejected with `400`, rather than being ignored.
 
 **Response 400**
 ```json
-{ "error": "collection \"logs\" has no indexed fields; full-text search is not available" }
+{ "error": "collection \"logs\" has no searchable fields; full-text search is not available" }
 ```
-Returned when `search` is provided but the collection has no `indexed` field
+Returned when `search` is provided but the collection has no `searchable` field
 (`has_fts: false` in [List Collections](#list-collections)). SQL-only queries
 (no `search` clause) work on every collection regardless of `has_fts`.
 
@@ -309,10 +341,10 @@ GET /
 The full-text engine only stores what a collection asks it to index. A
 collection's schema determines whether it participates:
 
-- **At least one field has `indexed: true`.** The collection is created in
+- **At least one field has `searchable: true`.** The collection is created in
   the full-text engine, and every upsert/delete is mirrored there.
   `/query` requests with a `search` clause and `/search` both work.
-- **No field has `indexed: true`.** The collection exists only as a plain
+- **No field has `searchable: true`.** The collection exists only as a plain
   SQL table. `/collections/create`, `/documents/upsert`, and
   `/documents/delete` never call the full-text engine. `search` clauses
   against it are rejected with `400` instead of reaching the engine.

@@ -18,7 +18,7 @@ type Field struct {
 	Name       string  `json:"name"`
 	Type       string  `json:"type"`
 	Weight     float64 `json:"weight,omitempty"`
-	Indexed    bool    `json:"indexed,omitempty"`
+	Searchable bool    `json:"searchable,omitempty"`
 	PrimaryKey bool    `json:"primary_key,omitempty"` // Added for convenience
 }
 
@@ -27,10 +27,11 @@ type FTSConfig struct {
 }
 
 type CollectionSchema struct {
-	Name       string    `json:"name"`
-	PrimaryKey string    `json:"primary_key"`
-	FTS        FTSConfig `json:"fts"`
-	Fields     []Field   `json:"fields"`
+	Name       string     `json:"name"`
+	PrimaryKey string     `json:"primary_key"`
+	FTS        FTSConfig  `json:"fts"`
+	Fields     []Field    `json:"fields"`
+	Indexes    [][]string `json:"indexes,omitempty"`
 }
 
 type CollectionDeleteRequest struct {
@@ -285,11 +286,27 @@ func handleCollectionCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate (and pre-build) the secondary-index statements before doing
+	// anything else, so a bad "indexes" entry fails the whole request with
+	// 400 and creates nothing — no FTS collection, no metadata, no table.
+	createIndexSQL, err := generateIndexSQL(schema)
+	if err != nil {
+		logger.Warn("Invalid indexes in collection schema", "collection", schema.Name, "error", err)
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Invalid indexes: %v", err))
+		return
+	}
+
 	// 1. Create FTS collection — only if this schema actually has a field to index.
 	// ftscore only provides full-text indexing; a collection with no indexed
 	// fields is a plain SQL table and never touches it.
 	if schemaHasFTS(schema) {
-		if err := fts.CreateCollection(string(body)); err != nil {
+		ftsPayload, err := schemaForFTS(schema)
+		if err != nil {
+			logger.Error("Failed to build FTS schema payload", "collection", schema.Name, "error", err)
+			respondWithError(w, http.StatusInternalServerError, "Failed to build FTS schema payload")
+			return
+		}
+		if err := fts.CreateCollection(string(ftsPayload)); err != nil {
 			logger.Error("Failed to create FTS collection", "collection", schema.Name, "error", err)
 			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to create FTS collection: %v", err))
 			return
@@ -314,6 +331,17 @@ func handleCollectionCreate(w http.ResponseWriter, r *http.Request) {
 		logger.Error("Failed to create regular SQL table", "collection", schema.Name, "error", err)
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to create table '%s': %v", schema.Name, err))
 		return
+	}
+
+	// 4. Build any secondary indexes declared in schema.Indexes. Independent
+	// of FTS — a field ends up here purely because it was listed, regardless
+	// of whether it's also searchable.
+	for _, stmt := range createIndexSQL {
+		if _, err := execWrite(stmt); err != nil {
+			logger.Error("Failed to create index", "collection", schema.Name, "statement", stmt, "error", err)
+			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to create index: %v", err))
+			return
+		}
 	}
 
 	logger.Info("Successfully created collection, FTS index, and SQL table", "collection", schema.Name)
@@ -791,7 +819,7 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	if !schemaHasFTS(schema) {
 		respondWithError(w, http.StatusBadRequest,
-			fmt.Sprintf("Collection '%s' has no indexed fields; full-text search is not available", req.Collection))
+			fmt.Sprintf("Collection '%s' has no searchable fields; full-text search is not available", req.Collection))
 		return
 	}
 
@@ -917,15 +945,52 @@ func isValidIdentifier(name string) bool {
 }
 
 // schemaHasFTS 判斷這個 collection 是否有任何欄位要被全文搜尋。ftscore 只
-// 提供全文索引功能，一個 collection 一個 indexed 欄位都沒有時，不該碰
+// 提供全文索引功能，一個 collection 一個 searchable 欄位都沒有時，不該碰
 // ftscore——建立、寫入、刪除都只作用在 db.sqlite。
 func schemaHasFTS(schema CollectionSchema) bool {
 	for _, field := range schema.Fields {
-		if field.Indexed {
+		if field.Searchable {
 			return true
 		}
 	}
 	return false
+}
+
+// ftsField and ftsSchema mirror Field/CollectionSchema but with the JSON key
+// ftscore's own schema parser expects ("indexed") instead of pocket-fts's
+// public API key ("searchable"). They exist only to build the payload sent
+// to fts.CreateCollection.
+type ftsField struct {
+	Name       string  `json:"name"`
+	Type       string  `json:"type"`
+	Weight     float64 `json:"weight,omitempty"`
+	Indexed    bool    `json:"indexed,omitempty"`
+	PrimaryKey bool    `json:"primary_key,omitempty"`
+}
+
+type ftsSchema struct {
+	Name       string     `json:"name"`
+	PrimaryKey string     `json:"primary_key"`
+	FTS        FTSConfig  `json:"fts"`
+	Fields     []ftsField `json:"fields"`
+}
+
+// schemaForFTS builds the JSON payload to send to fts.CreateCollection.
+// pocket-fts's public schema key is "searchable"; ftscore's own parser
+// expects "indexed". The raw request body can no longer be forwarded
+// verbatim — this translates the key so ftscore keeps working unchanged.
+func schemaForFTS(schema CollectionSchema) ([]byte, error) {
+	out := ftsSchema{Name: schema.Name, PrimaryKey: schema.PrimaryKey, FTS: schema.FTS}
+	for _, field := range schema.Fields {
+		out.Fields = append(out.Fields, ftsField{
+			Name:       field.Name,
+			Type:       field.Type,
+			Weight:     field.Weight,
+			Indexed:    field.Searchable,
+			PrimaryKey: field.PrimaryKey,
+		})
+	}
+	return json.Marshal(out)
 }
 
 func mapJsonTypeToSql(jsonType string) (string, error) {
@@ -964,6 +1029,51 @@ func generateCreateTableSQL(schema CollectionSchema) (string, error) {
 
 	// Safe to use Sprintf here because schema.Name is validated with isValidIdentifier
 	return fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", schema.Name, strings.Join(columns, ", ")), nil
+}
+
+// generateIndexSQL turns schema.Indexes into one CREATE INDEX statement per
+// entry — one field is a single-column index, several fields is a composite
+// index over exactly those columns in the declared order. Column order
+// matters for SQLite's query planner on a composite index, so the order in
+// the schema is preserved as-is; it is the caller's responsibility to
+// declare it correctly.
+//
+// This is independent of searchable (the full-text flag): a field ends up
+// in a SQL index purely because it's listed here, regardless of whether
+// it's also indexed by ftscore.
+func generateIndexSQL(schema CollectionSchema) ([]string, error) {
+	known := make(map[string]bool, len(schema.Fields))
+	for _, field := range schema.Fields {
+		known[field.Name] = true
+	}
+
+	if !isValidIdentifier(schema.Name) {
+		return nil, fmt.Errorf("invalid collection name: %s", schema.Name)
+	}
+
+	var statements []string
+	for _, fields := range schema.Indexes {
+		if len(fields) == 0 {
+			return nil, fmt.Errorf("index entry must contain at least one field")
+		}
+		for _, name := range fields {
+			if !known[name] {
+				return nil, fmt.Errorf("index references unknown field: %s", name)
+			}
+			// isValidIdentifier is checked here, not inferred from
+			// generateCreateTableSQL having run first — this function must
+			// be safe to call standalone, independent of call order.
+			if !isValidIdentifier(name) {
+				return nil, fmt.Errorf("invalid field name: %s", name)
+			}
+		}
+		indexName := fmt.Sprintf("idx_%s_%s", schema.Name, strings.Join(fields, "_"))
+		// Safe to use Sprintf: schema.Name and every field name in `fields`
+		// were just validated above, in this function.
+		statements = append(statements, fmt.Sprintf(
+			"CREATE INDEX IF NOT EXISTS %s ON %s (%s)", indexName, schema.Name, strings.Join(fields, ", ")))
+	}
+	return statements, nil
 }
 
 func generateUpsertSQL(collectionName string, document map[string]interface{}) (string, []interface{}, error) {

@@ -18,7 +18,7 @@ func callGetHandler(t *testing.T, handler http.HandlerFunc) (int, []byte) {
 }
 
 // TestNonFTSCollectionNeverTouchesFtscore verifies that creating a
-// collection with zero `indexed` fields, and writing a document to it,
+// collection with zero `searchable` fields, and writing a document to it,
 // never registers anything with ftscore. Before the ftscore-scope-
 // separation fix, CreateCollection/UpsertDocument were called
 // unconditionally, so ftscore would know about "plain" and fts.Search would
@@ -32,7 +32,7 @@ func TestNonFTSCollectionNeverTouchesFtscore(t *testing.T) {
 		"primary_key": "id",
 		"fields": []map[string]interface{}{
 			{"name": "id", "type": "text"},
-			{"name": "label", "type": "text"}, // non-indexed text field; satisfies ftscore's own schema rule if it were called
+			{"name": "label", "type": "text"}, // non-searchable text field; satisfies ftscore's own schema rule if it were called
 			{"name": "amount", "type": "real"},
 		},
 	})
@@ -58,7 +58,7 @@ func TestNonFTSCollectionNeverTouchesFtscore(t *testing.T) {
 }
 
 // TestFTSCollectionStillReachesFtscore is a regression guard: a collection
-// with at least one indexed field must still behave exactly as before —
+// with at least one searchable field must still behave exactly as before —
 // ftscore knows about it and can search it.
 func TestFTSCollectionStillReachesFtscore(t *testing.T) {
 	setupQueryEngine(t)
@@ -68,7 +68,7 @@ func TestFTSCollectionStillReachesFtscore(t *testing.T) {
 		"primary_key": "id",
 		"fields": []map[string]interface{}{
 			{"name": "id", "type": "text"},
-			{"name": "title", "type": "text", "indexed": true},
+			{"name": "title", "type": "text", "searchable": true},
 		},
 	})
 	if code < 200 || code > 299 {
@@ -87,13 +87,28 @@ func TestFTSCollectionStillReachesFtscore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected fts.Search to succeed for an FTS-enabled collection, got error: %v", err)
 	}
-	if resultJSON == "" {
-		t.Fatalf("expected a non-empty search result")
+
+	// ftscore always returns a well-formed (non-empty) envelope, even for
+	// zero hits, so checking the raw JSON isn't empty proves nothing about
+	// whether the document was actually indexed. Parse it and check the hit
+	// itself — this is what actually proves the searchable->indexed
+	// translation reached ftscore correctly, not just that the call didn't
+	// error.
+	var parsed struct {
+		Hits []struct {
+			ID string `json:"ID"`
+		} `json:"Hits"`
+	}
+	if err := json.Unmarshal([]byte(resultJSON), &parsed); err != nil {
+		t.Fatalf("failed to parse search result: %v (%s)", err, resultJSON)
+	}
+	if len(parsed.Hits) != 1 || parsed.Hits[0].ID != "s1" {
+		t.Fatalf("expected exactly one hit with ID \"s1\", got: %s", resultJSON)
 	}
 }
 
 // TestQuerySearchOnNonFTSCollectionReturns400 verifies that /query with a
-// search clause against a collection that has no indexed fields fails fast
+// search clause against a collection that has no searchable fields fails fast
 // with a clear 400, instead of reaching ftscore and surfacing its opaque
 // "collection not found" error.
 func TestQuerySearchOnNonFTSCollectionReturns400(t *testing.T) {
@@ -143,7 +158,7 @@ func TestCollectionListReportsHasFTS(t *testing.T) {
 			name: "list_searchable",
 			fields: []map[string]interface{}{
 				{"name": "id", "type": "text"},
-				{"name": "title", "type": "text", "indexed": true},
+				{"name": "title", "type": "text", "searchable": true},
 			},
 			hasFTS: true,
 		},
