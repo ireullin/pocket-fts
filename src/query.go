@@ -186,7 +186,21 @@ const allHits = math.MaxInt32
 //
 // limit 指定要向 ftscore 索取幾筆命中。ftscore 以 BM25 分數排序後才套用
 // limit，所以取前 N 筆等於取最相關的 N 筆。要全部命中時傳 allHits。
+//
+// 這是所有 search 節點（一般路徑與 relevance 快速路徑）執行的統一入口，
+// 進來就先確認這個 collection 真的有 indexed 欄位——沒有的話代表它從未在
+// ftscore 建立過，直接回 ValidationError（400），不去 ftscore 撞一個從未
+// 存在過的 collection、換回它那邊語意不清的「not found」。
 func (qe *QueryExecutor) executeSearchQuery(searchQuery *SearchQuery, collection string, limit int) ([]FTSResult, error) {
+	schema, err := qe.getCollectionSchema(collection)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get collection schema: %w", err)
+	}
+	if !schemaHasFTS(*schema) {
+		return nil, newValidationError(
+			"collection %q has no indexed fields; full-text search is not available", collection)
+	}
+
 	if limit <= 0 {
 		limit = allHits
 	}

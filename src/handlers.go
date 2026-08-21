@@ -285,11 +285,15 @@ func handleCollectionCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Create FTS collection
-	if err := fts.CreateCollection(string(body)); err != nil {
-		logger.Error("Failed to create FTS collection", "collection", schema.Name, "error", err)
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to create FTS collection: %v", err))
-		return
+	// 1. Create FTS collection — only if this schema actually has a field to index.
+	// ftscore only provides full-text indexing; a collection with no indexed
+	// fields is a plain SQL table and never touches it.
+	if schemaHasFTS(schema) {
+		if err := fts.CreateCollection(string(body)); err != nil {
+			logger.Error("Failed to create FTS collection", "collection", schema.Name, "error", err)
+			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to create FTS collection: %v", err))
+			return
+		}
 	}
 
 	// 2. Save schema to our metadata table
@@ -337,19 +341,34 @@ func handleCollectionDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Delete from our metadata
+	// 1. Look up the schema before deleting the metadata row — need it to
+	// know whether this collection ever had an indexed field, and it won't
+	// be readable anymore once step 2 removes it. If it can't be read or
+	// parsed, fail safe to the pre-existing behavior (still try the FTS
+	// delete) rather than silently skip it.
+	hasFTS := true
+	if schemaString, err := getCollectionSchema(req.Name); err == nil {
+		var schema CollectionSchema
+		if err := json.Unmarshal([]byte(schemaString), &schema); err == nil {
+			hasFTS = schemaHasFTS(schema)
+		}
+	}
+
+	// 2. Delete from our metadata
 	if err := deleteCollectionSchema(req.Name); err != nil {
 		logger.Error("Failed to delete collection schema from DB", "collection", req.Name, "error", err)
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to delete collection schema: %v", err))
 		return
 	}
 
-	// 2. Delete from the FTS engine
-	if err := fts.DeleteCollection(req.Name); err != nil {
-		logger.Error("Inconsistency: failed to delete from FTS engine", "collection", req.Name, "error", err)
+	// 3. Delete from the FTS engine — only if it was ever created there.
+	if hasFTS {
+		if err := fts.DeleteCollection(req.Name); err != nil {
+			logger.Error("Inconsistency: failed to delete from FTS engine", "collection", req.Name, "error", err)
+		}
 	}
 
-	// 3. Drop the regular SQL table
+	// 4. Drop the regular SQL table
 	dropTableSQL := fmt.Sprintf("DROP TABLE IF EXISTS %s", req.Name) // Safe due to isValidIdentifier check
 	if _, err := execWrite(dropTableSQL); err != nil {
 		logger.Error("Inconsistency: failed to drop regular SQL table", "collection", req.Name, "error", err)
@@ -416,6 +435,7 @@ func handleCollectionList(w http.ResponseWriter, r *http.Request) {
 		if err := json.Unmarshal([]byte(schemaStr), &schema); err == nil {
 			collection["primary_key"] = schema.PrimaryKey
 			collection["field_count"] = len(schema.Fields)
+			collection["has_fts"] = schemaHasFTS(schema)
 
 			// 統計文檔數量（安全檢查 collection 名稱）
 			if isValidIdentifier(name) {
@@ -620,17 +640,30 @@ func handleDocumentUpsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Upsert to FTS index
-	if err := fts.UpsertDocument(req.Collection, string(docBytes)); err != nil {
-		if isTimeoutError(err) {
-			logger.Warn("Upsert to FTS timed out", "collection", req.Collection,
-				"timeout", writeTimeout, "remote_addr", r.RemoteAddr)
-			respondWithBusy(w, "Write timed out; the server is saturated with writes")
+	schemaString, err := getCollectionSchema(req.Collection)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, fmt.Sprintf("Collection '%s' not found", req.Collection))
+		return
+	}
+	var schema CollectionSchema
+	if err := json.Unmarshal([]byte(schemaString), &schema); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to parse stored collection schema")
+		return
+	}
+
+	// 1. Upsert to FTS index — only if this collection has an indexed field.
+	if schemaHasFTS(schema) {
+		if err := fts.UpsertDocument(req.Collection, string(docBytes)); err != nil {
+			if isTimeoutError(err) {
+				logger.Warn("Upsert to FTS timed out", "collection", req.Collection,
+					"timeout", writeTimeout, "remote_addr", r.RemoteAddr)
+				respondWithBusy(w, "Write timed out; the server is saturated with writes")
+				return
+			}
+			logger.Error("Failed to upsert document to FTS", "collection", req.Collection, "error", err)
+			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to upsert document: %v", err))
 			return
 		}
-		logger.Error("Failed to upsert document to FTS", "collection", req.Collection, "error", err)
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to upsert document: %v", err))
-		return
 	}
 
 	// 2. Upsert to regular SQL table
@@ -690,18 +723,20 @@ func handleDocumentDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Delete from FTS index
-	primaryKeyJSON := fmt.Sprintf("{\"%s\":\"%s\"}", schema.PrimaryKey, req.ID)
-	if err := fts.DeleteDocument(req.Collection, primaryKeyJSON); err != nil {
-		if isTimeoutError(err) {
-			logger.Warn("Delete from FTS timed out", "collection", req.Collection,
-				"id", req.ID, "timeout", writeTimeout, "remote_addr", r.RemoteAddr)
-			respondWithBusy(w, "Write timed out; the server is saturated with writes")
+	// 1. Delete from FTS index — only if this collection has an indexed field.
+	if schemaHasFTS(schema) {
+		primaryKeyJSON := fmt.Sprintf("{\"%s\":\"%s\"}", schema.PrimaryKey, req.ID)
+		if err := fts.DeleteDocument(req.Collection, primaryKeyJSON); err != nil {
+			if isTimeoutError(err) {
+				logger.Warn("Delete from FTS timed out", "collection", req.Collection,
+					"id", req.ID, "timeout", writeTimeout, "remote_addr", r.RemoteAddr)
+				respondWithBusy(w, "Write timed out; the server is saturated with writes")
+				return
+			}
+			logger.Error("Failed to delete document from FTS", "collection", req.Collection, "id", req.ID, "error", err)
+			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to delete document from FTS: %v", err))
 			return
 		}
-		logger.Error("Failed to delete document from FTS", "collection", req.Collection, "id", req.ID, "error", err)
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to delete document from FTS: %v", err))
-		return
 	}
 
 	// 2. Delete from regular SQL table
@@ -741,6 +776,22 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	var req SearchRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid JSON format for search request")
+		return
+	}
+
+	schemaString, err := getCollectionSchema(req.Collection)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, fmt.Sprintf("Collection '%s' not found", req.Collection))
+		return
+	}
+	var schema CollectionSchema
+	if err := json.Unmarshal([]byte(schemaString), &schema); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to parse stored collection schema")
+		return
+	}
+	if !schemaHasFTS(schema) {
+		respondWithError(w, http.StatusBadRequest,
+			fmt.Sprintf("Collection '%s' has no indexed fields; full-text search is not available", req.Collection))
 		return
 	}
 
@@ -863,6 +914,18 @@ func isValidIdentifier(name string) bool {
 		return false
 	}
 	return validIdentifierRegex.MatchString(name)
+}
+
+// schemaHasFTS 判斷這個 collection 是否有任何欄位要被全文搜尋。ftscore 只
+// 提供全文索引功能，一個 collection 一個 indexed 欄位都沒有時，不該碰
+// ftscore——建立、寫入、刪除都只作用在 db.sqlite。
+func schemaHasFTS(schema CollectionSchema) bool {
+	for _, field := range schema.Fields {
+		if field.Indexed {
+			return true
+		}
+	}
+	return false
 }
 
 func mapJsonTypeToSql(jsonType string) (string, error) {

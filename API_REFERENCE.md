@@ -22,12 +22,16 @@ GET /collections/list
       "name": "products",
       "primary_key": "id",
       "field_count": 4,
+      "has_fts": true,
       "document_count": 123
     }
   ],
   "count": 1
 }
 ```
+`has_fts` is `true` when at least one field in the schema is `indexed`. A
+collection with `has_fts: false` never touches the full-text engine — see
+[Full-Text Search Is Opt-In](#full-text-search-is-opt-in).
 
 ### Create Collection
 ```
@@ -57,6 +61,10 @@ Content-Type: application/json
 | `indexed` | boolean | No | Whether the field is indexed for text search. Defaults to `false`. |
 | `weight` | number | No | Optional weighting factor for search ranking. |
 | `primary_key` | boolean | No | Convenience flag; set to `true` for the primary key field. |
+
+Full-text search is opt-in per collection: if no field has `indexed: true`,
+the collection is created as a plain SQL table only and never touches the
+full-text engine. See [Full-Text Search Is Opt-In](#full-text-search-is-opt-in).
 
 **Body**
 ```json
@@ -277,6 +285,14 @@ column of the collection is rejected with `400`, rather than being ignored.
 ]
 ```
 
+**Response 400**
+```json
+{ "error": "collection \"logs\" has no indexed fields; full-text search is not available" }
+```
+Returned when `search` is provided but the collection has no `indexed` field
+(`has_fts: false` in [List Collections](#list-collections)). SQL-only queries
+(no `search` clause) work on every collection regardless of `has_fts`.
+
 ---
 
 ## Root Endpoint
@@ -287,6 +303,23 @@ GET /
 - Any other path returns a plain text message confirming the service is running.
 
 ---
+
+## Full-Text Search Is Opt-In
+
+The full-text engine only stores what a collection asks it to index. A
+collection's schema determines whether it participates:
+
+- **At least one field has `indexed: true`.** The collection is created in
+  the full-text engine, and every upsert/delete is mirrored there.
+  `/query` requests with a `search` clause and `/search` both work.
+- **No field has `indexed: true`.** The collection exists only as a plain
+  SQL table. `/collections/create`, `/documents/upsert`, and
+  `/documents/delete` never call the full-text engine. `search` clauses
+  against it are rejected with `400` instead of reaching the engine.
+
+This is fixed at creation time — there is no endpoint to change a
+collection's fields afterward, so a collection's `has_fts` value never
+changes over its lifetime.
 
 ## Write Concurrency
 
@@ -313,6 +346,14 @@ Measured single-writer throughput depends almost entirely on storage, because
 each write is bound by `fsync`: roughly 3,000 writes/second on a RAM disk,
 85/second on an NVMe SSD, and 10/second on a 7200rpm hard disk. Those figures do
 not improve with more concurrent writers.
+
+> These specific numbers predate `db.sqlite` moving to WAL mode (see
+> `docs/tickets/db-sqlite-wal.md`), which removes the per-commit `fsync` on
+> that side of the write and measurably raises HDD throughput. The full-text
+> engine's own connection is unaffected and still bounds the write as a
+> whole, so the figures above have not been re-measured with the same
+> sustained-throughput methodology and may now understate HDD/NVMe
+> throughput. Treat them as directionally correct, not current.
 
 ## Notes
 
