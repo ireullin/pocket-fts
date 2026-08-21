@@ -40,9 +40,9 @@ Pocket FTS 是一款輕量、易部署、對中日韓語言友善的全文檢索
        "primary_key": "id",
        "fts": { "stemming": true },
        "fields": [
-         { "name": "id", "type": "text", "indexed": true},
-         { "name": "title", "type": "text", "indexed": true, "weight": 2.0 },
-         { "name": "content", "type": "text", "indexed": true },
+         { "name": "id", "type": "text", "searchable": true},
+         { "name": "title", "type": "text", "searchable": true, "weight": 2.0 },
+         { "name": "content", "type": "text", "searchable": true },
        { "name": "price", "type": "real" }
      ]
    }'
@@ -183,9 +183,9 @@ Pocket FTS is a lightweight, easy-to-deploy search and data browser designed wit
        "primary_key": "id",
        "fts": { "stemming": true },
        "fields": [
-         { "name": "id", "type": "text", "indexed": true},
-         { "name": "title", "type": "text", "indexed": true, "weight": 2.0 },
-         { "name": "content", "type": "text", "indexed": true },
+         { "name": "id", "type": "text", "searchable": true},
+         { "name": "title", "type": "text", "searchable": true, "weight": 2.0 },
+         { "name": "content", "type": "text", "searchable": true },
          { "name": "price", "type": "real" }
        ]
      }'
@@ -330,9 +330,9 @@ Pocket FTS は、軽量・簡単デプロイ・CJK（中国語・日本語・韓
        "primary_key": "id",
        "fts": { "stemming": true },
        "fields": [
-         { "name": "id", "type": "text", "indexed": true},
-         { "name": "title", "type": "text", "indexed": true, "weight": 2.0 },
-         { "name": "content", "type": "text", "indexed": true },
+         { "name": "id", "type": "text", "searchable": true},
+         { "name": "title", "type": "text", "searchable": true, "weight": 2.0 },
+         { "name": "content", "type": "text", "searchable": true },
          { "name": "price", "type": "real" }
        ]
      }'
@@ -476,9 +476,9 @@ Pocket FTS는 가볍고 배포가 쉬우며, 중국어·일본어·한국어(CJK
        "primary_key": "id",
        "fts": { "stemming": true },
        "fields": [
-         { "name": "id", "type": "text", "indexed": true},
-         { "name": "title", "type": "text", "indexed": true, "weight": 2.0 },
-         { "name": "content", "type": "text", "indexed": true },
+         { "name": "id", "type": "text", "searchable": true},
+         { "name": "title", "type": "text", "searchable": true, "weight": 2.0 },
+         { "name": "content", "type": "text", "searchable": true },
          { "name": "price", "type": "real" }
        ]
      }'
