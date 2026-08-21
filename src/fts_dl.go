@@ -223,4 +223,3 @@ func callFtsVersion() *C.char {
 func callFtsSetCallTimeout(ms C.longlong) {
 	C.call_fts_set_call_timeout(ms)
 }
-

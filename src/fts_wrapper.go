@@ -177,9 +177,9 @@ func logCallback(level C.int, message *C.char, userData unsafe.Pointer) {
 	if logger == nil {
 		return
 	}
-	
+
 	msg := C.GoString(message)
-	
+
 	switch int(level) {
 	case 0: // Debug
 		logger.Debug("FTS: " + msg)
