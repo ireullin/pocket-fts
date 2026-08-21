@@ -82,12 +82,15 @@ curl -X POST http://localhost:5122/query \
    ```bash
    docker build -t pocket-fts .
    ```
-3. 以指定資料庫啟動容器（將主機上的 `db.sqlite` 掛載進容器）：
+3. 啟動容器（掛載一個資料夾，不要只掛載單一檔案）：
    ```bash
    docker run --rm -p 5122:5122 \
-     -v $(pwd)/db.sqlite:/app/db.sqlite \
-     pocket-fts -f /app/db.sqlite -p 5122 -host 0.0.0.0
+     -v $(pwd)/data:/app/data \
+     pocket-fts -f /app/data/db.sqlite -p 5122 -host 0.0.0.0
    ```
+   > ⚠️ `db.sqlite` 使用 WAL 模式，會在同目錄產生 `db.sqlite-wal`／`db.sqlite-shm`
+   > 兩個附帶檔案。若只掛載 `db.sqlite` 單一檔案，這兩個檔案只會留在容器內部，容器
+   > 一旦移除或重啟，還沒 checkpoint 回主檔案的資料就會遺失——務必掛載整個資料夾。
 4. 開啟 `http://localhost:5122/controller/` 使用後台。
 
 ## 編譯方式
@@ -222,12 +225,18 @@ curl -X POST http://localhost:5122/query \
    ```bash
    docker build -t pocket-fts .
    ```
-3. Run the container (mount your database file):
+3. Run the container (mount a directory, not a single file):
    ```bash
    docker run --rm -p 5122:5122 \
-     -v $(pwd)/db.sqlite:/app/db.sqlite \
-     pocket-fts -f /app/db.sqlite -p 5122 -host 0.0.0.0
+     -v $(pwd)/data:/app/data \
+     pocket-fts -f /app/data/db.sqlite -p 5122 -host 0.0.0.0
    ```
+   > ⚠️ `db.sqlite` runs in WAL mode, which creates two sidecar files
+   > (`db.sqlite-wal`, `db.sqlite-shm`) in the same directory. If you only mount
+   > the single `db.sqlite` file, those sidecars stay inside the container's
+   > writable layer and any data not yet checkpointed back to the main file is
+   > lost when the container is removed or restarted — always mount the whole
+   > directory.
 4. Access the admin console at `http://localhost:5122/controller/`.
 
 ### Build from Source
@@ -363,12 +372,17 @@ curl -X POST http://localhost:5122/query \
    ```bash
    docker build -t pocket-fts .
    ```
-3. 必要なデータベースをマウントしてコンテナを起動します。
+3. フォルダ単位でマウントしてコンテナを起動します（単一ファイルのマウントは不可）。
    ```bash
    docker run --rm -p 5122:5122 \
-     -v $(pwd)/db.sqlite:/app/db.sqlite \
-     pocket-fts -f /app/db.sqlite -p 5122 -host 0.0.0.0
+     -v $(pwd)/data:/app/data \
+     pocket-fts -f /app/data/db.sqlite -p 5122 -host 0.0.0.0
    ```
+   > ⚠️ `db.sqlite` は WAL モードで動作し、同じディレクトリに `db.sqlite-wal`／
+   > `db.sqlite-shm` という 2 つの付随ファイルを作成します。`db.sqlite` 単体だけを
+   > マウントすると、これらのファイルはコンテナ内部にしか残らず、コンテナを削除・
+   > 再起動するとまだ主ファイルに checkpoint されていないデータが失われます。必ず
+   > フォルダ全体をマウントしてください。
 4. `http://localhost:5122/controller/` で管理 UI を開きます。
 
 ### ビルド手順
@@ -504,12 +518,17 @@ curl -X POST http://localhost:5122/query \
    ```bash
    docker build -t pocket-fts .
    ```
-3. 데이터베이스 파일을 마운트하여 컨테이너 실행:
+3. 폴더 단위로 마운트하여 컨테이너 실행 (단일 파일 마운트는 불가):
    ```bash
    docker run --rm -p 5122:5122 \
-     -v $(pwd)/db.sqlite:/app/db.sqlite \
-     pocket-fts -f /app/db.sqlite -p 5122 -host 0.0.0.0
+     -v $(pwd)/data:/app/data \
+     pocket-fts -f /app/data/db.sqlite -p 5122 -host 0.0.0.0
    ```
+   > ⚠️ `db.sqlite`는 WAL 모드로 동작하며 같은 디렉터리에 `db.sqlite-wal`,
+   > `db.sqlite-shm` 두 개의 부속 파일을 생성합니다. `db.sqlite` 파일 하나만
+   > 마운트하면 이 파일들은 컨테이너 내부에만 남아 있다가, 컨테이너를 삭제하거나
+   > 재시작하면 아직 메인 파일로 checkpoint되지 않은 데이터가 사라집니다. 반드시
+   > 폴더 전체를 마운트하세요.
 4. `http://localhost:5122/controller/` 에 접속해 관리 콘솔을 사용합니다.
 
 ### 빌드 방법

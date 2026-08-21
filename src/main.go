@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"flag"
@@ -11,6 +12,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -173,9 +176,34 @@ func main() {
 		return
 	}
 
-	err = http.ListenAndServe(addr, nil)
-	if err != nil {
-		logger.Error("Failed to start server", "error", err)
-		os.Exit(1)
+	server := &http.Server{Addr: addr}
+	serverErrCh := make(chan error, 1)
+	go func() {
+		serverErrCh <- server.ListenAndServe()
+	}()
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGTERM)
+
+	select {
+	case err := <-serverErrCh:
+		if err != nil && err != http.ErrServerClosed {
+			logger.Error("Failed to start server", "error", err)
+			os.Exit(1)
+		}
+	case <-sigCh:
+		// 正常關閉：先停止接受新請求、等進行中的請求做完，時限跟寫入排隊的
+		// 時限一致；再把 WAL 清空、主檔案寫到最新，讓下次啟動時 WAL 檔案是
+		// 乾淨的。平常運作靠 SQLite 內建的自動 checkpoint，這裡只在正常關閉
+		// 時額外做一次。
+		logger.Info("Received SIGTERM, shutting down gracefully")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), writeTimeout)
+		defer cancel()
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			logger.Error("Error during server shutdown", "error", err)
+		}
+		if err := checkpointWAL(db); err != nil {
+			logger.Error("Failed to checkpoint WAL on shutdown", "error", err)
+		}
 	}
 }

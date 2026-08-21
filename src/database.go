@@ -44,10 +44,50 @@ func execWrite(query string, args ...interface{}) (sql.Result, error) {
 	return result, err
 }
 
-// dsn 組出連線字串。busy_timeout 用 DSN 傳（而不是單次 PRAGMA Exec），
-// 讓連線池開的每一條連線都套用得到。
+// dsn 組出連線字串。這些 pragma 用 DSN 傳（而不是單次 PRAGMA Exec），讓連線池
+// 開的每一條連線都套用得到，不會只套用到剛好執行那次 Exec 的連線。
+//
+//   - busy_timeout(5000)：鎖爭用時等待重試，而不是立即回 SQLITE_BUSY。
+//   - journal_mode(WAL)：讀取不被進行中的寫入卡住，寫入也不必每次 commit 都
+//     fsync。journal_mode 是資料庫檔案層級的屬性，理論上只要第一條連線設定過
+//     就會持續生效，但每條連線都帶一樣沒有壞處，且更自我說明。
+//   - synchronous(NORMAL)：SQLite 官方文件對 WAL 模式的建議值，commit 不
+//     fsync、只在 checkpoint 時 fsync；換來的風險是作業系統／硬體斷電時最後
+//     幾筆已 commit 的交易可能遺失（應用程式自己 crash 不會，只有斷電/系統
+//     崩潰才會）。
 func dsn(dbPath string) string {
-	return fmt.Sprintf("%s?_pragma=busy_timeout(5000)", dbPath)
+	return fmt.Sprintf("%s?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)", dbPath)
+}
+
+// verifyJournalModeWAL 確認資料庫真的跑在 WAL 模式。SQLite 在某些情況下
+// （檔案系統不支援、目錄不可寫）會靜默回退到非 WAL 模式，PRAGMA
+// journal_mode=WAL 本身不會報錯，只會回傳實際生效的模式名稱。啟動時檢查這個
+// 回傳值，不是 wal 就視為啟動失敗，避免服務安靜地用非預期的耐久性模式跑下去。
+func verifyJournalModeWAL(db *sql.DB) error {
+	var mode string
+	if err := db.QueryRow("PRAGMA journal_mode").Scan(&mode); err != nil {
+		return fmt.Errorf("failed to read journal_mode: %w", err)
+	}
+	if mode != "wal" {
+		return fmt.Errorf("database did not enable WAL mode (journal_mode is %q); "+
+			"check that the database directory is writable and on a filesystem that supports WAL", mode)
+	}
+	return nil
+}
+
+// checkpointWAL 把 WAL 檔案的內容寫回主資料庫檔案並清空 WAL 檔案
+// （PRAGMA wal_checkpoint(TRUNCATE)）。平常運作靠 SQLite 內建的自動
+// checkpoint；這個函式是給正常關閉（SIGTERM）時額外呼叫一次，讓下次啟動時
+// WAL 檔案是乾淨的。
+func checkpointWAL(db *sql.DB) error {
+	var busy, log, checkpointed int
+	if err := db.QueryRow("PRAGMA wal_checkpoint(TRUNCATE)").Scan(&busy, &log, &checkpointed); err != nil {
+		return fmt.Errorf("failed to checkpoint WAL: %w", err)
+	}
+	if busy != 0 {
+		return fmt.Errorf("WAL checkpoint could not fully complete: another connection is writing")
+	}
+	return nil
 }
 
 // initWriteDB 開啟專供寫入使用的連線池。
@@ -78,12 +118,10 @@ func initWriteDB(dbPath string) (*sql.DB, error) {
 // 這個池子只給讀取使用，不限制連線數。讀取可以真正併發，是唯一會隨核心數
 // 成長的路徑；若把它一併限制成一條連線，範圍查詢的吞吐量會掉到三分之一。
 func initDB(dbPath string) (*sql.DB, error) {
-	// busy_timeout is passed via the DSN (rather than a one-off PRAGMA Exec)
-	// so that every connection the pool opens - not just the one that
-	// happens to run the first Exec - waits and retries on SQLITE_BUSY
-	// instead of failing immediately. This matters because the same
-	// db.sqlite file is also written to by the ftscore C engine on its own
-	// connection, so lock contention between the two is expected.
+	// See dsn() for what each pragma does and why it's passed via the DSN
+	// instead of a one-off PRAGMA Exec. The same db.sqlite file is also
+	// written to by the ftscore C engine on its own connection, so lock
+	// contention between the two is expected regardless of journal mode.
 	db, err := sql.Open("sqlite", dsn(dbPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
@@ -91,6 +129,11 @@ func initDB(dbPath string) (*sql.DB, error) {
 
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	if err := verifyJournalModeWAL(db); err != nil {
+		db.Close()
+		return nil, err
 	}
 
 	// Create collections table to store schema information
