@@ -28,8 +28,9 @@ func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface
 		return nil, newValidationError("invalid collection name: %s", req.Collection)
 	}
 
-	// 先取得 schema。order_by 的欄位要對照 schema 驗證，而且必須在執行查詢之前
-	// 就驗證完，這樣欄位名稱寫錯的請求即使查不到任何資料也會回報錯誤。
+	// 先取得 schema。order_by 與 result.fields 的欄位都要對照 schema 驗證，而且
+	// 必須在執行查詢之前就驗證完，這樣欄位名稱寫錯的請求即使查不到任何資料也會
+	// 回報錯誤。
 	schema, err := qe.getCollectionSchema(req.Collection)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get collection schema: %w", err)
@@ -42,6 +43,12 @@ func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface
 	if usesScore && !queryHasSearch(&req.Query) {
 		return nil, newValidationError(
 			"order_by references %q but the query has no search clause", scoreField)
+	}
+
+	// 這裡驗證，兩條取回記錄的路徑就都涵蓋到：相關性快速路徑與通用路徑都會把
+	// result.fields 直接串進 SELECT。
+	if err := validateResultFields(req.Result.Fields, schema); err != nil {
+		return nil, err
 	}
 
 	if records, handled, err := qe.executeRelevanceTopN(req, schema); handled {

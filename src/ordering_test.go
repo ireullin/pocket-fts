@@ -60,6 +60,63 @@ func TestValidateOrderByRejectsBadDirection(t *testing.T) {
 	}
 }
 
+// result.fields 過去只檢查識別字格式，不對照 schema。指定不存在的欄位會被
+// 串進 SELECT，由 SQLite 回報錯誤，呼叫端拿到 HTTP 500 而不是 400。
+// 以下測試把 validateResultFields 的行為釘住。
+
+func TestValidateResultFieldsRejectsUnknownField(t *testing.T) {
+	err := validateResultFields([]string{"title", "no_such_column"}, testSchema())
+	if err == nil {
+		t.Fatal("expected an error for an unknown result field, got nil")
+	}
+	var validationErr *ValidationError
+	if !errors.As(err, &validationErr) {
+		t.Fatalf("expected a *ValidationError, got %T: %v", err, err)
+	}
+}
+
+func TestValidateResultFieldsAcceptsKnownFields(t *testing.T) {
+	if err := validateResultFields([]string{"id", "title", "created_at"}, testSchema()); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateResultFieldsAcceptsStar(t *testing.T) {
+	if err := validateResultFields([]string{"*"}, testSchema()); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateResultFieldsAcceptsEmptyList(t *testing.T) {
+	if err := validateResultFields(nil, testSchema()); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateResultFieldsRejectsInvalidIdentifier(t *testing.T) {
+	err := validateResultFields([]string{"title; DROP TABLE documents"}, testSchema())
+	if err == nil {
+		t.Fatal("expected an error for a malformed identifier, got nil")
+	}
+	var validationErr *ValidationError
+	if !errors.As(err, &validationErr) {
+		t.Fatalf("expected a *ValidationError, got %T: %v", err, err)
+	}
+}
+
+// _score 不是 SQL 欄位，寫進 SELECT 會讓 SQLite 報錯。只要選取的欄位包含主鍵，
+// 相關性分數本來就會自動附上，所以這裡回報錯誤而不是靜默接受。
+func TestValidateResultFieldsRejectsScore(t *testing.T) {
+	err := validateResultFields([]string{"id", scoreField}, testSchema())
+	if err == nil {
+		t.Fatal("expected an error for _score in result.fields, got nil")
+	}
+	var validationErr *ValidationError
+	if !errors.As(err, &validationErr) {
+		t.Fatalf("expected a *ValidationError, got %T: %v", err, err)
+	}
+}
+
 func TestBuildOrderByClause(t *testing.T) {
 	cases := []struct {
 		name    string

@@ -64,6 +64,43 @@ func validateOrderBy(orderBy []OrderBySpec, schema *CollectionSchema) (bool, err
 	return usesScore, nil
 }
 
+// validateResultFields 檢查 result.fields 的每個欄位都存在於 collection schema 中。
+// 這份清單會被直接串進 SELECT，所以欄位名稱寫錯時必須在送出 SQL 之前回報。
+// 交給 SQLite 抱怨的話，呼叫端拿到的是 HTTP 500 與一段 SQL 錯誤訊息，看不出
+// 是自己把欄位名稱寫錯了。
+func validateResultFields(fields []string, schema *CollectionSchema) error {
+	if len(fields) == 0 {
+		return nil
+	}
+
+	known := make(map[string]struct{}, len(schema.Fields)+1)
+	known[schema.PrimaryKey] = struct{}{}
+	for _, field := range schema.Fields {
+		known[field.Name] = struct{}{}
+	}
+
+	for _, field := range fields {
+		if field == "*" {
+			continue
+		}
+		// _score 是相關性排名，不是 SQL 表裡的欄位。選取的欄位包含主鍵時它會
+		// 自動附上，所以這裡明講，而不是讓 SQLite 回報「沒有這個欄位」。
+		if field == scoreField {
+			return newValidationError(
+				"%q cannot be selected in result.fields; it is added automatically when the primary key is selected and the query has a search clause",
+				scoreField)
+		}
+		if !isValidIdentifier(field) {
+			return newValidationError("invalid result field: %q", field)
+		}
+		if _, ok := known[field]; !ok {
+			return newValidationError("unknown result field %q in collection %q", field, schema.Name)
+		}
+	}
+
+	return nil
+}
+
 // orderByUsesScore 回報 order_by 是否引用 _score。
 func orderByUsesScore(orderBy []OrderBySpec) bool {
 	for _, order := range orderBy {
