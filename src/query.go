@@ -36,18 +36,20 @@ func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface
 		return nil, fmt.Errorf("failed to get collection schema: %w", err)
 	}
 
+	hasSearch := queryHasSearch(&req.Query)
+
 	usesScore, err := validateOrderBy(req.Result.OrderBy, schema)
 	if err != nil {
 		return nil, err
 	}
-	if usesScore && !queryHasSearch(&req.Query) {
+	if usesScore && !hasSearch {
 		return nil, newValidationError(
 			"order_by references %q but the query has no search clause", scoreField)
 	}
 
 	// 這裡驗證，兩條取回記錄的路徑就都涵蓋到：相關性快速路徑與通用路徑都會把
 	// result.fields 直接串進 SELECT。
-	if err := validateResultFields(req.Result.Fields, schema); err != nil {
+	if err := validateResultFields(req.Result.Fields, schema, hasSearch); err != nil {
 		return nil, err
 	}
 
@@ -504,17 +506,15 @@ func (qe *QueryExecutor) getCollectionSchema(collection string) (*CollectionSche
 
 // fetchRecords 依編譯好的 WHERE 子句取回整列資料，加入 FTS 分數，
 // 並套用 order_by、limit 與 offset。
+//
+// 呼叫端必須先用 validateResultFields 把 result.fields 對照 schema 驗證過，
+// 這裡才可以直接把欄位名稱串進 SELECT。
 func (qe *QueryExecutor) fetchRecords(collection, primaryKeyField, where string, args []interface{}, scoreMap ScoreMap, result *ResultSpec) ([]map[string]interface{}, error) {
-	// 構建查詢字段
+	// 構建查詢字段。_score 不是 SQL 表裡的欄位，這裡把它拿掉；分數在下面依主鍵
+	// 補上。validateResultFields 已經確保選了 _score 就一定也選了主鍵。
 	fields := "*"
-	if len(result.Fields) > 0 {
-		// 驗證字段名稱
-		for _, field := range result.Fields {
-			if !isValidIdentifier(field) && field != "*" {
-				return nil, newValidationError("invalid field name: %s", field)
-			}
-		}
-		fields = strings.Join(result.Fields, ", ")
+	if selected := selectableFields(result.Fields); len(selected) > 0 {
+		fields = strings.Join(selected, ", ")
 	}
 
 	query := fmt.Sprintf("SELECT %s FROM %s", fields, collection)

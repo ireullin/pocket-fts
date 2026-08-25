@@ -25,15 +25,47 @@ func TestQueryRejectsUnknownResultField(t *testing.T) {
 	}
 }
 
-// TestQueryRejectsScoreInResultFields 確認 _score 不能被選取。它不是 SQL 表裡
-// 的欄位；選取的欄位包含主鍵時，相關性分數本來就會自動附上。
-func TestQueryRejectsScoreInResultFields(t *testing.T) {
+// TestQueryAcceptsScoreInResultFields 確認 _score 可以被選取，規則比照 order_by：
+// 帶 search 子句才產生分數。
+func TestQueryAcceptsScoreInResultFields(t *testing.T) {
 	setupQueryEngine(t)
 	seedIntegrationCorpus(t)
 
 	code, body := callHandler(t, handleQuery, map[string]interface{}{
 		"collection": "docs",
-		"query":      map[string]interface{}{"search": map[string]interface{}{"term": halfTerm}},
+		"query":      map[string]interface{}{"search": map[string]interface{}{"term": tenthTerm}},
+		"result":     map[string]interface{}{"fields": []string{"id", "_score"}, "limit": 3},
+	})
+	if code != http.StatusOK {
+		t.Fatalf("got HTTP %d (%s), want 200", code, body)
+	}
+
+	var records []map[string]interface{}
+	if err := json.Unmarshal(body, &records); err != nil {
+		t.Fatalf("failed to parse response: %v (%s)", err, body)
+	}
+	if len(records) == 0 {
+		t.Fatal("expected at least one record")
+	}
+	for _, record := range records {
+		if _, ok := record["id"]; !ok {
+			t.Fatalf("expected id in %v", record)
+		}
+		if _, ok := record["_score"]; !ok {
+			t.Fatalf("expected _score in %v", record)
+		}
+	}
+}
+
+// TestQueryRejectsScoreWithoutSearch 確認沒有 search 子句時選 _score 會回 400，
+// 與 order_by 引用 _score 卻沒有 search 子句的處理一致。
+func TestQueryRejectsScoreWithoutSearch(t *testing.T) {
+	setupQueryEngine(t)
+	seedIntegrationCorpus(t)
+
+	code, body := callHandler(t, handleQuery, map[string]interface{}{
+		"collection": "docs",
+		"query":      map[string]interface{}{"sql": map[string]interface{}{"where": map[string]interface{}{"status": "done"}}},
 		"result":     map[string]interface{}{"fields": []string{"id", "_score"}, "limit": 3},
 	})
 	if code != http.StatusBadRequest {
@@ -71,5 +103,21 @@ func TestQueryReturnsOnlySelectedResultFields(t *testing.T) {
 				t.Fatalf("expected %q in %v", want, record)
 			}
 		}
+	}
+}
+
+// TestQueryAcceptsDifferentlyCasedResultFields 確認只是大小寫不同的欄位名稱
+// 仍然回 200。SQLite 的欄位名稱不分大小寫，這個請求在加入驗證之前就能用。
+func TestQueryAcceptsDifferentlyCasedResultFields(t *testing.T) {
+	setupQueryEngine(t)
+	seedIntegrationCorpus(t)
+
+	code, body := callHandler(t, handleQuery, map[string]interface{}{
+		"collection": "docs",
+		"query":      map[string]interface{}{"sql": map[string]interface{}{"where": map[string]interface{}{"status": "done"}}},
+		"result":     map[string]interface{}{"fields": []string{"ID", "Status"}, "limit": 1},
+	})
+	if code != http.StatusOK {
+		t.Fatalf("got HTTP %d (%s), want 200", code, body)
 	}
 }

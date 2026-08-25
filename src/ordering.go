@@ -27,15 +27,23 @@ func newValidationError(format string, args ...interface{}) error {
 	return &ValidationError{Message: fmt.Sprintf(format, args...)}
 }
 
+// knownFieldNames 回傳這個 collection 的欄位名稱集合，含主鍵。
+// SQLite 的欄位名稱不分大小寫，`SELECT ID` 取得的是宣告為 `id` 的那一欄，
+// 所以鍵一律轉小寫，查表前也要轉。否則只是大小寫不同的請求會被擋掉。
+func knownFieldNames(schema *CollectionSchema) map[string]struct{} {
+	known := make(map[string]struct{}, len(schema.Fields)+1)
+	known[strings.ToLower(schema.PrimaryKey)] = struct{}{}
+	for _, field := range schema.Fields {
+		known[strings.ToLower(field.Name)] = struct{}{}
+	}
+	return known
+}
+
 // validateOrderBy 檢查 order_by 的每個欄位都存在於 collection schema 中。
 // 欄位名稱寫錯時回傳 ValidationError；靜默忽略會讓呼叫端看不出自己弄錯。
 // 回傳值 usesScore 指出排序是否用到 _score。
 func validateOrderBy(orderBy []OrderBySpec, schema *CollectionSchema) (bool, error) {
-	known := make(map[string]struct{}, len(schema.Fields)+1)
-	known[schema.PrimaryKey] = struct{}{}
-	for _, field := range schema.Fields {
-		known[field.Name] = struct{}{}
-	}
+	known := knownFieldNames(schema)
 
 	usesScore := false
 	for _, order := range orderBy {
@@ -55,7 +63,7 @@ func validateOrderBy(orderBy []OrderBySpec, schema *CollectionSchema) (bool, err
 		if !isValidIdentifier(order.Field) {
 			return false, newValidationError("invalid order_by field: %q", order.Field)
 		}
-		if _, ok := known[order.Field]; !ok {
+		if _, ok := known[strings.ToLower(order.Field)]; !ok {
 			return false, newValidationError(
 				"unknown order_by field %q in collection %q", order.Field, schema.Name)
 		}
@@ -68,37 +76,58 @@ func validateOrderBy(orderBy []OrderBySpec, schema *CollectionSchema) (bool, err
 // 這份清單會被直接串進 SELECT，所以欄位名稱寫錯時必須在送出 SQL 之前回報。
 // 交給 SQLite 抱怨的話，呼叫端拿到的是 HTTP 500 與一段 SQL 錯誤訊息，看不出
 // 是自己把欄位名稱寫錯了。
-func validateResultFields(fields []string, schema *CollectionSchema) error {
-	if len(fields) == 0 {
-		return nil
-	}
+//
+// _score 的規則比照 order_by：只有帶 search 子句的查詢才產生分數。它不是 SQL
+// 表裡的欄位，取回記錄時會依主鍵補上，所以選它就必須一起選主鍵。
+func validateResultFields(fields []string, schema *CollectionSchema, hasSearch bool) error {
+	known := knownFieldNames(schema)
 
-	known := make(map[string]struct{}, len(schema.Fields)+1)
-	known[schema.PrimaryKey] = struct{}{}
-	for _, field := range schema.Fields {
-		known[field.Name] = struct{}{}
-	}
-
+	selectsScore := false
+	selectsPrimaryKey := false
 	for _, field := range fields {
 		if field == "*" {
+			selectsPrimaryKey = true
 			continue
 		}
-		// _score 是相關性排名，不是 SQL 表裡的欄位。選取的欄位包含主鍵時它會
-		// 自動附上，所以這裡明講，而不是讓 SQLite 回報「沒有這個欄位」。
 		if field == scoreField {
-			return newValidationError(
-				"%q cannot be selected in result.fields; it is added automatically when the primary key is selected and the query has a search clause",
-				scoreField)
+			if !hasSearch {
+				return newValidationError(
+					"result.fields references %q but the query has no search clause", scoreField)
+			}
+			selectsScore = true
+			continue
 		}
 		if !isValidIdentifier(field) {
 			return newValidationError("invalid result field: %q", field)
 		}
-		if _, ok := known[field]; !ok {
+		if _, ok := known[strings.ToLower(field)]; !ok {
 			return newValidationError("unknown result field %q in collection %q", field, schema.Name)
+		}
+		if strings.EqualFold(field, schema.PrimaryKey) {
+			selectsPrimaryKey = true
 		}
 	}
 
+	if selectsScore && !selectsPrimaryKey {
+		return newValidationError(
+			"result.fields references %q but does not select the primary key %q",
+			scoreField, schema.PrimaryKey)
+	}
+
 	return nil
+}
+
+// selectableFields 從 result.fields 濾掉 _score，回傳真正能寫進 SELECT 的欄位。
+// _score 是相關性排名，不是 SQL 表裡的欄位；取回記錄之後才依主鍵補上。
+func selectableFields(fields []string) []string {
+	selectable := make([]string, 0, len(fields))
+	for _, field := range fields {
+		if field == scoreField {
+			continue
+		}
+		selectable = append(selectable, field)
+	}
+	return selectable
 }
 
 // orderByUsesScore 回報 order_by 是否引用 _score。

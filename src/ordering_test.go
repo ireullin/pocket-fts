@@ -60,14 +60,11 @@ func TestValidateOrderByRejectsBadDirection(t *testing.T) {
 	}
 }
 
-// result.fields 過去只檢查識別字格式，不對照 schema。指定不存在的欄位會被
-// 串進 SELECT，由 SQLite 回報錯誤，呼叫端拿到 HTTP 500 而不是 400。
-// 以下測試把 validateResultFields 的行為釘住。
-
-func TestValidateResultFieldsRejectsUnknownField(t *testing.T) {
-	err := validateResultFields([]string{"title", "no_such_column"}, testSchema())
+// requireValidationError 斷言錯誤存在且屬於 ValidationError，handler 才會回 400。
+func requireValidationError(t *testing.T, err error) {
+	t.Helper()
 	if err == nil {
-		t.Fatal("expected an error for an unknown result field, got nil")
+		t.Fatal("expected an error, got nil")
 	}
 	var validationErr *ValidationError
 	if !errors.As(err, &validationErr) {
@@ -75,45 +72,83 @@ func TestValidateResultFieldsRejectsUnknownField(t *testing.T) {
 	}
 }
 
+// TestValidateResultFieldsRejectsUnknownField 確認寫錯的欄位名稱會回報錯誤。
+// result.fields 過去只檢查識別字格式，不對照 schema，於是被串進 SELECT，
+// 由 SQLite 回報錯誤，呼叫端拿到 HTTP 500 而不是 400。
+func TestValidateResultFieldsRejectsUnknownField(t *testing.T) {
+	requireValidationError(t, validateResultFields([]string{"title", "no_such_column"}, testSchema(), false))
+}
+
 func TestValidateResultFieldsAcceptsKnownFields(t *testing.T) {
-	if err := validateResultFields([]string{"id", "title", "created_at"}, testSchema()); err != nil {
+	if err := validateResultFields([]string{"id", "title", "created_at"}, testSchema(), false); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// SQLite 的欄位名稱不分大小寫，SELECT ID 取得的是宣告為 id 的那一欄。
+// 驗證若用精確比對，只是大小寫不同的請求會從 200 變成 400。
+func TestValidateResultFieldsIsCaseInsensitive(t *testing.T) {
+	if err := validateResultFields([]string{"ID", "Title"}, testSchema(), false); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateOrderByIsCaseInsensitive(t *testing.T) {
+	if _, err := validateOrderBy([]OrderBySpec{{Field: "Created_At", Direction: "desc"}}, testSchema()); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestValidateResultFieldsAcceptsStar(t *testing.T) {
-	if err := validateResultFields([]string{"*"}, testSchema()); err != nil {
+	if err := validateResultFields([]string{"*"}, testSchema(), false); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestValidateResultFieldsAcceptsEmptyList(t *testing.T) {
-	if err := validateResultFields(nil, testSchema()); err != nil {
+	if err := validateResultFields(nil, testSchema(), false); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestValidateResultFieldsRejectsInvalidIdentifier(t *testing.T) {
-	err := validateResultFields([]string{"title; DROP TABLE documents"}, testSchema())
-	if err == nil {
-		t.Fatal("expected an error for a malformed identifier, got nil")
-	}
-	var validationErr *ValidationError
-	if !errors.As(err, &validationErr) {
-		t.Fatalf("expected a *ValidationError, got %T: %v", err, err)
+	requireValidationError(t, validateResultFields([]string{"title; DROP TABLE documents"}, testSchema(), false))
+}
+
+// _score 的規則比照 order_by：只有帶 search 子句的查詢才產生分數。
+func TestValidateResultFieldsAcceptsScoreWithSearch(t *testing.T) {
+	if err := validateResultFields([]string{"id", scoreField}, testSchema(), true); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-// _score 不是 SQL 欄位，寫進 SELECT 會讓 SQLite 報錯。只要選取的欄位包含主鍵，
-// 相關性分數本來就會自動附上，所以這裡回報錯誤而不是靜默接受。
-func TestValidateResultFieldsRejectsScore(t *testing.T) {
-	err := validateResultFields([]string{"id", scoreField}, testSchema())
-	if err == nil {
-		t.Fatal("expected an error for _score in result.fields, got nil")
+func TestValidateResultFieldsRejectsScoreWithoutSearch(t *testing.T) {
+	requireValidationError(t, validateResultFields([]string{"id", scoreField}, testSchema(), false))
+}
+
+// 分數是取回記錄之後依主鍵補上的。少了主鍵就補不上，靜默回一份沒有分數的結果
+// 會讓呼叫端看不出自己漏了什麼。
+func TestValidateResultFieldsRejectsScoreWithoutPrimaryKey(t *testing.T) {
+	requireValidationError(t, validateResultFields([]string{"title", scoreField}, testSchema(), true))
+}
+
+func TestValidateResultFieldsAcceptsScoreWithStar(t *testing.T) {
+	if err := validateResultFields([]string{"*", scoreField}, testSchema(), true); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-	var validationErr *ValidationError
-	if !errors.As(err, &validationErr) {
-		t.Fatalf("expected a *ValidationError, got %T: %v", err, err)
+}
+
+// TestSelectableFieldsDropsScore 確認 _score 不會被寫進 SELECT。
+func TestSelectableFieldsDropsScore(t *testing.T) {
+	got := selectableFields([]string{"id", scoreField, "title"})
+	want := []string{"id", "title"}
+	if len(got) != len(want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got %v, want %v", got, want)
+		}
 	}
 }
 
