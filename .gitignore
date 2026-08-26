@@ -10,3 +10,8 @@ Thumbs.db
 
 # 查詢層修正與壓測的工作紀錄，刻意不進版控
 docs/WORKLOG.md
+
+# 交接文件與除錯用的暫存檔，刻意不進版控。
+# 也讓 bin/pocket_fts 建置時工作目錄是乾淨的：Go 會把 git 狀態編進執行檔，
+# 未追蹤的檔案一樣算「已修改」，會讓 vcs.modified 變成 true。
+.scratch/
