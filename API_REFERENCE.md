@@ -327,6 +327,110 @@ Returned when `search` is provided but the collection has no `searchable` field
 
 ---
 
+### Nested Format
+
+`POST /query` also accepts a nested body that separates *what to match* from
+*what to return*. Use it when the flat format cannot express the query: nested
+boolean logic, per-field search weights, or a restricted set of returned
+columns.
+
+```
+POST /query
+Content-Type: application/json
+```
+
+```json
+{
+  "collection": "products",
+  "query": {
+    "$and": [
+      { "search": { "term": "peach", "fields": ["title", "body"], "operator": "AND" } },
+      { "sql": { "where": { "price": { "$gte": 1000 }, "status": "published" } } }
+    ]
+  },
+  "result": {
+    "fields": ["id", "title", "price"],
+    "limit": 20,
+    "offset": 0,
+    "order_by": [{ "field": "_score", "direction": "desc" }]
+  }
+}
+```
+
+**Which format the server uses.** The server picks the flat format when the
+body carries any of `search`, `sql`, `order_by`, `limit`, or `offset` at the top
+level; otherwise it reads the body as the nested format. The two are not
+mixable: a body that sets a top-level `limit` *and* a `query` object is read as
+flat, and the `query` and `result` objects are silently ignored. Put `limit`
+inside `result` when you use the nested format.
+
+**`query`** is a tree. Every node is exactly one of:
+
+| Key | Type | Meaning |
+| --- | --- | --- |
+| `$and` | array\<node> | All child nodes must match. |
+| `$or` | array\<node> | At least one child node must match. |
+| `$not` | node | The child node must not match. Rows where the child cannot be evaluated (a NULL field, say) are kept. |
+| `sql` | object | SQL filter, see `sql.where` below. |
+| `search` | object | Full-text search clause. |
+
+**`sql.where`** maps a field name to either a literal (shorthand for equality)
+or an object of operators. Multiple entries are combined with AND.
+
+| Operator | Meaning |
+| --- | --- |
+| `$eq`, `$ne` | Equal, not equal. |
+| `$gt`, `$gte`, `$lt`, `$lte` | Numeric and lexical comparison. |
+| `$in`, `$nin` | Value is (not) in the supplied array. |
+| `$like` | `LIKE` with the pattern you supply, wildcards included. |
+| `$contains` | `LIKE` with the value wrapped in `%…%` for you. |
+| `$null` | `true` means `IS NULL`, `false` means `IS NOT NULL`. |
+| `$not_null` | The inverse of `$null`. |
+
+**`search`**
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `term` | string | Yes | Search expression. |
+| `fields` | array\<string> | No | Restrict the search to these fields. Defaults to every `searchable` field. |
+| `weights` | object | No | Per-field relevance weights, e.g. `{"title": 2.0}`. |
+| `operator` | string | No | `"AND"` or `"OR"`, applied between the terms of `term`. |
+
+**`result`**
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `fields` | array\<string> | No | Columns to return. Defaults to every column. |
+| `limit` | integer | No | Maximum rows returned. |
+| `offset` | integer | No | Rows to skip. |
+| `order_by` | array\<object> | No | Same rules as the flat format, including `_score`. |
+
+`result.fields` is validated against the collection schema before the query
+runs. A name that is not a column of the collection is rejected with `400`,
+rather than reaching SQLite and surfacing as a `500`. Field names are matched
+without regard to case, the same way SQLite matches column names.
+
+`_score` may appear in `result.fields`, under the same rule that governs it in
+`order_by`: only queries that carry a `search` clause produce a score. It is not
+a column of the table — it is attached to each row by primary key after the rows
+come back — so selecting it also requires selecting the primary key.
+
+**Response 200** — identical to the flat format: a JSON array of records,
+carrying only the columns named in `result.fields` when that is set.
+
+**Response 400**
+```json
+{ "error": "unknown result field \"titel\" in collection \"products\"" }
+```
+```json
+{ "error": "result.fields references \"_score\" but the query has no search clause" }
+```
+```json
+{ "error": "result.fields references \"_score\" but does not select the primary key \"id\"" }
+```
+
+---
+
 ## Root Endpoint
 ```
 GET /
