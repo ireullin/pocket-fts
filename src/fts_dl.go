@@ -8,6 +8,7 @@ package main
 typedef void (*fts_log_cb_t)(int level, const char* message, void* user_data);
 
 typedef unsigned long long (*fts_engine_new_t)(char*, long long, int, char**);
+typedef unsigned long long (*fts_engine_new_with_options_t)(char*, long long, int, char*, char**);
 typedef int (*fts_engine_close_t)(unsigned long long, char**);
 typedef int (*fts_create_collection_t)(unsigned long long, char*, char**);
 typedef int (*fts_upsert_document_t)(unsigned long long, char*, char*, char**);
@@ -21,6 +22,7 @@ typedef void (*fts_set_call_timeout_t)(long long);
 
 static void* g_lib_handle = NULL;
 static fts_engine_new_t g_fts_engine_new = NULL;
+static fts_engine_new_with_options_t g_fts_engine_new_with_options = NULL;
 static fts_engine_close_t g_fts_engine_close = NULL;
 static fts_create_collection_t g_fts_create_collection = NULL;
 static fts_upsert_document_t g_fts_upsert_document = NULL;
@@ -42,6 +44,9 @@ static int load_fts_library(const char* lib_path, char** err_msg) {
     dlerror();
     g_fts_engine_new = (fts_engine_new_t)dlsym(g_lib_handle, "FtsEngineNew");
     if (!g_fts_engine_new) { *err_msg = (char*)dlerror(); return -1; }
+
+    g_fts_engine_new_with_options = (fts_engine_new_with_options_t)dlsym(g_lib_handle, "FtsEngineNewWithOptions");
+    if (!g_fts_engine_new_with_options) { *err_msg = (char*)dlerror(); return -1; }
 
     g_fts_engine_close = (fts_engine_close_t)dlsym(g_lib_handle, "FtsEngineClose");
     if (!g_fts_engine_close) { *err_msg = (char*)dlerror(); return -1; }
@@ -87,6 +92,10 @@ static int unload_fts_library() {
 
 static unsigned long long call_fts_engine_new(char* db_path, long long timeout, int stemming, char** err_out) {
     return g_fts_engine_new ? g_fts_engine_new(db_path, timeout, stemming, err_out) : 0;
+}
+
+static unsigned long long call_fts_engine_new_with_options(char* db_path, long long timeout, int stemming, char* options_json, char** err_out) {
+    return g_fts_engine_new_with_options ? g_fts_engine_new_with_options(db_path, timeout, stemming, options_json, err_out) : 0;
 }
 
 static int call_fts_engine_close(unsigned long long handle, char** err_out) {
@@ -182,6 +191,10 @@ func UnloadFTSLibrary() error {
 
 func callFtsEngineNew(dbPath *C.char, busyTimeoutMs C.longlong, stemming C.int, errOut **C.char) C.ulonglong {
 	return C.call_fts_engine_new(dbPath, busyTimeoutMs, stemming, errOut)
+}
+
+func callFtsEngineNewWithOptions(dbPath *C.char, busyTimeoutMs C.longlong, stemming C.int, optionsJSON *C.char, errOut **C.char) C.ulonglong {
+	return C.call_fts_engine_new_with_options(dbPath, busyTimeoutMs, stemming, optionsJSON, errOut)
 }
 
 func callFtsEngineClose(handle C.ulonglong, errOut **C.char) C.int {

@@ -10,7 +10,9 @@ extern void logCallback(int level, char* message, void* user_data);
 */
 import "C"
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"unsafe"
 )
 
@@ -29,10 +31,27 @@ func cToGoError(errOut *C.char) error {
 	return err
 }
 
-// NewFTS creates a new FTS engine.
+// FTSOptions carries the optional ftscore engine settings.
+type FTSOptions struct {
+	WAL bool `json:"wal"`
+}
+
+// NewFTS creates a new FTS engine with the default options.
 func NewFTS(dbPath string, busyTimeoutMs int64, stemming bool) (*FTS, error) {
+	return NewFTSWithOptions(dbPath, busyTimeoutMs, stemming, FTSOptions{})
+}
+
+// NewFTSWithOptions creates a new FTS engine with the supplied options.
+func NewFTSWithOptions(dbPath string, busyTimeoutMs int64, stemming bool, opts FTSOptions) (*FTS, error) {
 	cDbPath := C.CString(dbPath)
 	defer C.free(unsafe.Pointer(cDbPath))
+
+	optionsJSON, err := json.Marshal(opts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal ftscore options: %w", err)
+	}
+	cOptions := C.CString(string(optionsJSON))
+	defer C.free(unsafe.Pointer(cOptions))
 
 	var cStemming C.int
 	if stemming {
@@ -42,7 +61,7 @@ func NewFTS(dbPath string, busyTimeoutMs int64, stemming bool) (*FTS, error) {
 	}
 
 	var errOut *C.char
-	handle := callFtsEngineNew(cDbPath, C.longlong(busyTimeoutMs), cStemming, &errOut)
+	handle := callFtsEngineNewWithOptions(cDbPath, C.longlong(busyTimeoutMs), cStemming, cOptions, &errOut)
 
 	if handle == 0 {
 		return nil, cToGoError(errOut)

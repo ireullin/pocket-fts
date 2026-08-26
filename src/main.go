@@ -67,6 +67,7 @@ func main() {
 	writeTimeoutSec := flag.Int("write-timeout", int(DefaultWriteTimeout.Seconds()),
 		"Seconds a write may take, covering both the FTS index and the SQL table; also applied to search")
 	startupOnly := flag.Bool("startup-only", false, "") // Hidden flag
+	ftsWAL := flag.Bool("fts-wal", false, "")           // Hidden flag
 
 	// Custom usage message
 	flag.Usage = printHelp
@@ -122,9 +123,9 @@ func main() {
 	// 原本的 10 秒本來就太緊。
 	SetCallTimeout(writeTimeout.Milliseconds())
 
-	fts, err = NewFTS(*dbFile, 5000, true)
+	fts, err = NewFTSWithOptions(*dbFile, 5000, true, FTSOptions{WAL: *ftsWAL})
 	if err != nil {
-		logger.Error("Failed to initialize FTS engine", "error", err)
+		logger.Error("Failed to initialize FTS engine", "error", err, "fts_wal", *ftsWAL)
 		os.Exit(1)
 	}
 	defer fts.Close()
