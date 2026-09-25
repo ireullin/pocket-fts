@@ -61,7 +61,7 @@ Content-Type: application/json
 | `type` | string (`text`\|`integer`\|`real`) | Yes | Storage type used in the SQL table. |
 | `searchable` | boolean | No | Whether the field is indexed for full-text search. Defaults to `false`. |
 | `weight` | number | No | Optional weighting factor for search ranking. |
-| `primary_key` | boolean | No | Convenience flag; set to `true` for the primary key field. |
+| `primary_key` | boolean | No | Convenience flag; set to `true` for the primary key field. Setting it on any other field is rejected with `400`. |
 
 > **Breaking change:** this field was named `indexed`. Payloads still using
 > `"indexed": true` are silently ignored — the field is treated as not

@@ -53,3 +53,36 @@ func TestSchemaForFTSTranslatesSearchableToIndexed(t *testing.T) {
 		}
 	}
 }
+
+// TestSchemaForFTSDropsFieldPrimaryKeyFlag verifies the per-field
+// "primary_key" flag never reaches ftscore, which rejects it; ftscore takes
+// the primary key from the schema level only.
+func TestSchemaForFTSDropsFieldPrimaryKeyFlag(t *testing.T) {
+	out, err := schemaForFTS(CollectionSchema{
+		Name:       "docs",
+		PrimaryKey: "id",
+		Fields: []Field{
+			{Name: "id", Type: "text", PrimaryKey: true},
+			{Name: "title", Type: "text", Searchable: true},
+		},
+	})
+	if err != nil {
+		t.Fatalf("schemaForFTS failed: %v", err)
+	}
+
+	var parsed struct {
+		PrimaryKey string                   `json:"primary_key"`
+		Fields     []map[string]interface{} `json:"fields"`
+	}
+	if err := json.Unmarshal(out, &parsed); err != nil {
+		t.Fatalf("parse payload: %v", err)
+	}
+	if parsed.PrimaryKey != "id" {
+		t.Fatalf("schema-level primary_key = %q, want \"id\"", parsed.PrimaryKey)
+	}
+	for _, field := range parsed.Fields {
+		if _, ok := field["primary_key"]; ok {
+			t.Fatalf("field %v still carries primary_key: %s", field["name"], out)
+		}
+	}
+}

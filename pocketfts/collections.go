@@ -34,6 +34,11 @@ func (s *Store) createCollection(ctx context.Context, schema CollectionSchema, s
 		return &ValidationError{Message: "Invalid collection name. Must be alphanumeric."}
 	}
 
+	if err := validateFieldPrimaryKeyFlags(schema); err != nil {
+		s.log.Warn("Invalid primary_key flag in collection schema", "collection", schema.Name, "error", err)
+		return newValidationError("Invalid schema: %v", err)
+	}
+
 	// Validate (and pre-build) the secondary-index statements before doing
 	// anything else, so a bad "indexes" entry fails the whole request with
 	// 400 and creates nothing — no FTS collection, no metadata, no table.

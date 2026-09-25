@@ -62,12 +62,14 @@ func schemaHasFTS(schema CollectionSchema) bool {
 // ftscore's own schema parser expects ("indexed") instead of pocket-fts's
 // public API key ("searchable"). They exist only to build the payload sent
 // to fts.CreateCollection.
+//
+// The per-field primary_key flag is left out on purpose: ftscore rejects it
+// and takes the primary key from the schema level only.
 type ftsField struct {
-	Name       string  `json:"name"`
-	Type       string  `json:"type"`
-	Weight     float64 `json:"weight,omitempty"`
-	Indexed    bool    `json:"indexed,omitempty"`
-	PrimaryKey bool    `json:"primary_key,omitempty"`
+	Name    string  `json:"name"`
+	Type    string  `json:"type"`
+	Weight  float64 `json:"weight,omitempty"`
+	Indexed bool    `json:"indexed,omitempty"`
 }
 
 type ftsSchema struct {
@@ -85,14 +87,25 @@ func schemaForFTS(schema CollectionSchema) ([]byte, error) {
 	out := ftsSchema{Name: schema.Name, PrimaryKey: schema.PrimaryKey, FTS: schema.FTS}
 	for _, field := range schema.Fields {
 		out.Fields = append(out.Fields, ftsField{
-			Name:       field.Name,
-			Type:       field.Type,
-			Weight:     field.Weight,
-			Indexed:    field.Searchable,
-			PrimaryKey: field.PrimaryKey,
+			Name:    field.Name,
+			Type:    field.Type,
+			Weight:  field.Weight,
+			Indexed: field.Searchable,
 		})
 	}
 	return json.Marshal(out)
+}
+
+// validateFieldPrimaryKeyFlags checks the per-field primary_key convenience
+// flag: a field may carry it only if it is the schema's primary key.
+func validateFieldPrimaryKeyFlags(schema CollectionSchema) error {
+	for _, field := range schema.Fields {
+		if field.PrimaryKey && !strings.EqualFold(field.Name, schema.PrimaryKey) {
+			return fmt.Errorf("field %q is flagged primary_key but the collection's primary_key is %q",
+				field.Name, schema.PrimaryKey)
+		}
+	}
+	return nil
 }
 
 func mapJsonTypeToSql(jsonType string) (string, error) {
