@@ -14,19 +14,31 @@
 **Blocked by:** None — can start immediately（不依賴
 [01](./searchable-rename.md)，`indexes` 的語意不涉及全文索引欄位叫什麼名字）
 
-**Status:** ready-for-agent
+**Status:** closed（2026-09-25）
 
-- [ ] `CollectionSchema` 新增 `Indexes [][]string`，JSON key `indexes`，
+- [x] `CollectionSchema` 新增 `Indexes [][]string`，JSON key `indexes`，
       `omitempty`。
-- [ ] `generateCreateTableSQL` 依 `schema.Indexes` 額外產生對應的 `CREATE INDEX`
+- [x] `generateCreateTableSQL` 依 `schema.Indexes` 額外產生對應的 `CREATE INDEX`
       陳述式（跟現有的 `CREATE TABLE` 一起執行，或緊接在後面依序執行）。
-- [ ] 驗證：`indexes` 裡任何一項引用到 schema 沒有定義的欄位名稱，
+- [x] 驗證：`indexes` 裡任何一項引用到 schema 沒有定義的欄位名稱，
       `/collections/create` 回 400，不建立任何東西（含已經成功的 FTS collection
       也要 rollback，維持原子性；若做不到完全 rollback，至少要在驗證階段就攔下來，
       不要建到一半才發現）。
-- [ ] 驗證：`indexes` 的每一項至少要有 1 個欄位名稱，空陣列項目回 400。
-- [ ] 建立成功後，查詢 `sqlite_master` 確認索引真的被建出來，欄位順序跟宣告順序一致
+- [x] 驗證：`indexes` 的每一項至少要有 1 個欄位名稱，空陣列項目回 400。
+- [x] 建立成功後，查詢 `sqlite_master` 確認索引真的被建出來，欄位順序跟宣告順序一致
       （複合索引的欄位順序決定查詢計畫，測試要能證明順序沒被打亂）。
-- [ ] 重複宣告已經有索引的欄位（例如同時是 primary key、又被列進 `indexes`）不報錯，
+- [x] 重複宣告已經有索引的欄位（例如同時是 primary key、又被列進 `indexes`）不報錯，
       SQLite 的 `CREATE INDEX IF NOT EXISTS` 或等效邏輯處理掉重複建立的情況。
-- [ ] `API_REFERENCE.md` 的 Create Collection 一節新增 `indexes` 欄位說明與範例。
+- [x] `API_REFERENCE.md` 的 Create Collection 一節新增 `indexes` 欄位說明與範例。
+
+## 關票核對（2026-09-25）
+
+實作於 `02f6ea6`。逐條核對：
+
+1. `CollectionSchema.Indexes [][]string`，tag `indexes,omitempty`——`src/handlers.go:34`。層級：程式碼檢視。
+2. `generateIndexSQL` 每項產生一條 `CREATE INDEX IF NOT EXISTS`——`handlers.go:1044`。層級：`TestGenerateIndexSQLSingleColumn`、`TestGenerateIndexSQLComposite` 通過。
+3. 未知欄位回 400、什麼都不建：`generateIndexSQL` 在建立 FTS 與資料表之前執行（`handlers.go:292`）。`TestCreateCollectionRejectsUnknownIndexField` 驗 400 且沒有存 schema。層級：整合測試。
+4. 空陣列項目回 400：`TestGenerateIndexSQLRejectsEmptyEntry` 通過；真實服務送 `"indexes": [[]]` 回 400，`sqlite_master` 沒有該資料表。層級：e2e。
+5. 索引建出且欄位順序正確：`TestCreateCollectionBuildsDeclaredIndexes` 查 `sqlite_master`，確認 `idx_events_status_created_at` 的 SQL 依序列出 `status`、`created_at`。層級：整合測試。
+6. 重複宣告不報錯：真實服務送 `"indexes": [["id"], ["status"], ["status"]]`（`id` 是主鍵）回 201，`sqlite_master` 有 `sqlite_autoindex_t1_1`、`idx_t1_id`、`idx_t1_status` 各一個。層級：e2e。
+7. `API_REFERENCE.md` Create Collection 一節有 `indexes` 欄位說明。層級：文件檢視。

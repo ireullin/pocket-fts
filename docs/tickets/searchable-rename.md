@@ -13,19 +13,31 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** closed（2026-09-25）
 
-- [ ] `Field` struct 的 JSON tag 從 `indexed` 改成 `searchable`；程式碼裡對應的識別字
+- [x] `Field` struct 的 JSON tag 從 `indexed` 改成 `searchable`；程式碼裡對應的識別字
       （`Indexed` → `Searchable`）一併改名。
-- [ ] `schemaHasFTS` 改看 `field.Searchable`。
-- [ ] `handleCollectionCreate` 不再把 request body 原封不動傳給 `fts.CreateCollection`；
+- [x] `schemaHasFTS` 改看 `field.Searchable`。
+- [x] `handleCollectionCreate` 不再把 request body 原封不動傳給 `fts.CreateCollection`；
       改成用解析後的 schema 組一份 ftscore 專用的 JSON，把每個欄位的 `searchable` 值寫進
       `indexed` 這個 key。
-- [ ] 既有測試（`ftscore_scope_test.go` 等）用到 `"indexed": true` 的地方全部改成
+- [x] 既有測試（`ftscore_scope_test.go` 等）用到 `"indexed": true` 的地方全部改成
       `"searchable": true`，且測試維持全部通過——證明改名後 FTS 行為跟改名前一致。
-- [ ] 新增測試：確認建立 collection 後，ftscore 那邊實際收到的 schema 裡欄位名稱是
+- [x] 新增測試：確認建立 collection 後，ftscore 那邊實際收到的 schema 裡欄位名稱是
       `indexed`（不是 `searchable`），full-text search 能正確搜到內容。
-- [ ] `API_REFERENCE.md` 的 Field object 表格、範例 JSON 全部從 `indexed` 改成
+- [x] `API_REFERENCE.md` 的 Field object 表格、範例 JSON 全部從 `indexed` 改成
       `searchable`，並註明這是 breaking change。
-- [ ] `docs/tickets/ftscore-scope-separation.md` 裡引用 `indexed` 的地方（規則說明、
+- [x] `docs/tickets/ftscore-scope-separation.md` 裡引用 `indexed` 的地方（規則說明、
       `schemaHasFTS` 描述）同步改成 `searchable`，避免文件跟程式碼不一致。
+
+## 關票核對（2026-09-25）
+
+實作於 `02f6ea6`。逐條核對：
+
+1. `Field.Searchable`，JSON tag `searchable`——`src/handlers.go:21`。`Indexed` 只剩 ftscore 專用的 `ftsField`（`handlers.go:967`）。層級：程式碼檢視。
+2. `schemaHasFTS` 看 `field.Searchable`——`handlers.go:952`。層級：程式碼檢視 + `TestNonFTSCollectionNeverTouchesFtscore` 通過。
+3. `handleCollectionCreate` 呼叫 `schemaForFTS` 組 payload，不轉送 request body——`handlers.go:303`。層級：程式碼檢視。
+4. 測試裡已無 `"indexed": true`（grep `src/*_test.go` 只剩 `schemaForFTS` 測試裡刻意解析 ftscore payload 的 struct tag）；`go test ./src/` 全部通過。層級：單元／整合測試。
+5. `TestSchemaForFTSTranslatesSearchableToIndexed` 驗 payload 只有 `indexed`；`TestFTSCollectionStillReachesFtscore` 建 collection 後直接呼叫 `fts.Search` 搜得到。另外用 `bin/pocket_fts` 起真實服務，`"searchable": true` 建 collection、寫 60 筆，`/query` 搜 `apple` 回 30 筆。層級：e2e。
+6. `API_REFERENCE.md` Field object 表格用 `searchable`，附 breaking change 說明。層級：文件檢視。
+7. `ftscore-scope-separation.md` 只剩「原名 `indexed`」的說明文字。層級：文件檢視。
