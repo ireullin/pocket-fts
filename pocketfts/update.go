@@ -40,7 +40,8 @@ func IsConflict(err error) bool {
 	return errors.As(err, &target)
 }
 
-// conditionOperators maps the operators Update accepts to their SQL form.
+// conditionOperators maps mapSQLOperator's result for each operator Update
+// accepts (=, !=, >, >=, <, <=, LIKE) back to its SQL form.
 var conditionOperators = map[string]string{
 	"$eq":   "=",
 	"$ne":   "!=",
@@ -132,15 +133,8 @@ func (s *Store) Update(ctx context.Context, collection string, doc Document, whe
 			if err != nil {
 				return fmt.Errorf("failed to encode document for FTS: %w", err)
 			}
-			if err := s.fts.UpsertDocument(collection, string(docBytes)); err != nil {
-				if isTimeoutError(err) {
-					s.log.Warn("Update of FTS timed out", "collection", collection, "timeout", s.writeTimeout)
-					return fmt.Errorf("%w: %v", ErrWriteTimeout, err)
-				}
-				s.log.Error("Failed to update document in FTS", "collection", collection, "error", err)
-				return fmt.Errorf("Failed to update document: %w", err)
-			}
-			return nil
+			err = s.fts.UpsertDocument(collection, string(docBytes))
+			return s.ftsWriteError(err, "Failed to update document", "collection", collection)
 		}
 	}
 

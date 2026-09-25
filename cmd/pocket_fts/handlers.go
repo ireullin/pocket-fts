@@ -68,11 +68,14 @@ func handleCollectionCreate(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err := store.CreateCollectionJSON(writeContext(), body); err != nil {
-		if pocketfts.IsValidation(err) {
+		switch {
+		case pocketfts.IsValidation(err):
 			respondWithError(w, http.StatusBadRequest, err.Error())
-			return
+		case pocketfts.IsTimeout(err):
+			respondWithBusy(w, "Write timed out; the server is saturated with writes")
+		default:
+			respondWithError(w, http.StatusInternalServerError, err.Error())
 		}
-		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -100,11 +103,14 @@ func handleCollectionDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := store.DeleteCollection(writeContext(), req.Name); err != nil {
-		if pocketfts.IsValidation(err) {
+		switch {
+		case pocketfts.IsValidation(err):
 			respondWithError(w, http.StatusBadRequest, err.Error())
-			return
+		case pocketfts.IsTimeout(err):
+			respondWithBusy(w, "Write timed out; the server is saturated with writes")
+		default:
+			respondWithError(w, http.StatusInternalServerError, err.Error())
 		}
-		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

@@ -84,7 +84,18 @@ func TestFieldPrimaryKeyFlagMismatchIsRejected(t *testing.T) {
 	if tables != 0 {
 		t.Fatal("a table was created for a rejected collection")
 	}
-	if _, err := store.Search(context.Background(), "mismatch", `{"query":"x","limit":1}`); err == nil {
-		t.Fatal("an FTS collection exists for a rejected collection")
+	// ftscore refuses to create a collection that already exists, so a clean
+	// create under the same name proves the rejected request left no FTS
+	// collection behind.
+	code, body = callHandler(t, handleCollectionCreate, map[string]interface{}{
+		"name":        "mismatch",
+		"primary_key": "id",
+		"fields": []map[string]interface{}{
+			{"name": "id", "type": "text"},
+			{"name": "title", "type": "text", "searchable": true},
+		},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("re-creating the rejected collection returned HTTP %d: %s", code, body)
 	}
 }

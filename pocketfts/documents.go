@@ -77,6 +77,21 @@ func (s *Store) sqlWriteError(err error, msg string, attrs ...any) error {
 	return errors.New(msg)
 }
 
+// ftsWriteError turns an error from a full-text write inside writeDocument
+// into the error the caller sees: ErrWriteTimeout when ftscore ran out of
+// time, else the error prefixed with msg. It returns nil for a nil err.
+func (s *Store) ftsWriteError(err error, msg string, attrs ...any) error {
+	if err == nil {
+		return nil
+	}
+	if isTimeoutError(err) {
+		s.log.Warn("FTS write timed out", append(attrs, "timeout", s.writeTimeout)...)
+		return fmt.Errorf("%w: %v", ErrWriteTimeout, err)
+	}
+	s.log.Error(msg, append(attrs, "error", err)...)
+	return fmt.Errorf("%s: %w", msg, err)
+}
+
 // Upsert inserts doc, or replaces the document with the same primary key.
 func (s *Store) Upsert(ctx context.Context, collection string, doc Document) error {
 	if !isValidIdentifier(collection) {
@@ -111,15 +126,8 @@ func (s *Store) Upsert(ctx context.Context, collection string, doc Document) err
 	var ftsStep func() error
 	if schemaHasFTS(schema) {
 		ftsStep = func() error {
-			if err := s.fts.UpsertDocument(collection, string(docBytes)); err != nil {
-				if isTimeoutError(err) {
-					s.log.Warn("Upsert to FTS timed out", "collection", collection, "timeout", s.writeTimeout)
-					return fmt.Errorf("%w: %v", ErrWriteTimeout, err)
-				}
-				s.log.Error("Failed to upsert document to FTS", "collection", collection, "error", err)
-				return fmt.Errorf("Failed to upsert document: %w", err)
-			}
-			return nil
+			err := s.fts.UpsertDocument(collection, string(docBytes))
+			return s.ftsWriteError(err, "Failed to upsert document", "collection", collection)
 		}
 	}
 
@@ -151,16 +159,12 @@ func (s *Store) Delete(ctx context.Context, collection, id string) error {
 	var ftsStep func() error
 	if schemaHasFTS(schema) {
 		ftsStep = func() error {
-			primaryKeyJSON := fmt.Sprintf("{\"%s\":\"%s\"}", schema.PrimaryKey, id)
-			if err := s.fts.DeleteDocument(collection, primaryKeyJSON); err != nil {
-				if isTimeoutError(err) {
-					s.log.Warn("Delete from FTS timed out", "collection", collection, "id", id, "timeout", s.writeTimeout)
-					return fmt.Errorf("%w: %v", ErrWriteTimeout, err)
-				}
-				s.log.Error("Failed to delete document from FTS", "collection", collection, "id", id, "error", err)
-				return fmt.Errorf("Failed to delete document from FTS: %w", err)
+			primaryKeyJSON, err := json.Marshal(map[string]string{schema.PrimaryKey: id})
+			if err != nil {
+				return fmt.Errorf("failed to encode primary key: %w", err)
 			}
-			return nil
+			err = s.fts.DeleteDocument(collection, string(primaryKeyJSON))
+			return s.ftsWriteError(err, "Failed to delete document from FTS", "collection", collection, "id", id)
 		}
 	}
 
