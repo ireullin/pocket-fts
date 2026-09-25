@@ -43,6 +43,12 @@ func (s *Store) createCollection(ctx context.Context, schema CollectionSchema, s
 		return newValidationError("Invalid indexes: %v", err)
 	}
 
+	release, err := s.acquireCollectionWrite(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to create collection: %w", err)
+	}
+	defer release()
+
 	// 1. Create FTS collection — only if this schema actually has a field to index.
 	// ftscore only provides full-text indexing; a collection with no indexed
 	// fields is a plain SQL table and never touches it.
@@ -88,12 +94,27 @@ func (s *Store) createCollection(ctx context.Context, schema CollectionSchema, s
 	return nil
 }
 
+// acquireCollectionWrite takes the store-wide write lock for a collection
+// create or delete, which writes both the full-text engine and the SQL tables.
+// Waiting for the lock counts against the write timeout.
+func (s *Store) acquireCollectionWrite(ctx context.Context) (func(), error) {
+	ctx, cancel := context.WithTimeout(ctx, s.writeTimeout)
+	defer cancel()
+	return s.acquireWrite(ctx)
+}
+
 // DeleteCollection drops a collection's table, schema and full-text index.
 func (s *Store) DeleteCollection(ctx context.Context, name string) error {
 	if !isValidIdentifier(name) {
 		s.log.Warn("Invalid collection name for delete", "collection_name", name)
 		return &ValidationError{Message: "Invalid collection name."}
 	}
+
+	release, err := s.acquireCollectionWrite(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to delete collection: %w", err)
+	}
+	defer release()
 
 	// 1. Look up the schema before deleting the metadata row — need it to
 	// know whether this collection ever had an indexed field, and it won't

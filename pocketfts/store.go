@@ -52,6 +52,13 @@ type Store struct {
 	qe           *QueryExecutor
 	log          *slog.Logger
 	writeTimeout time.Duration
+
+	// writeSem is the store-wide write lock, a one-slot semaphore so that
+	// waiting for it can honor a deadline.
+	writeSem chan struct{}
+	// betweenWrites, when set, runs between a document write's two stores.
+	// Tests use it to force two writers to interleave.
+	betweenWrites func()
 }
 
 // ftsBusyTimeoutMs is the busy timeout handed to the ftscore engine.
@@ -110,6 +117,7 @@ func Open(cfg Config) (*Store, error) {
 		qe:           newQueryExecutor(db, engine, logger),
 		log:          logger,
 		writeTimeout: writeTimeout,
+		writeSem:     make(chan struct{}, 1),
 	}, nil
 }
 
@@ -157,6 +165,20 @@ func (s *Store) execWrite(ctx context.Context, query string, args ...interface{}
 		return nil, fmt.Errorf("%w after %s", ErrWriteTimeout, s.writeTimeout)
 	}
 	return result, err
+}
+
+// acquireWrite takes the store-wide write lock, waiting until ctx is done.
+// The returned func releases it.
+func (s *Store) acquireWrite(ctx context.Context) (func(), error) {
+	select {
+	case s.writeSem <- struct{}{}:
+		return func() { <-s.writeSem }, nil
+	case <-ctx.Done():
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return nil, fmt.Errorf("%w after %s waiting for the write lock", ErrWriteTimeout, s.writeTimeout)
+		}
+		return nil, ctx.Err()
+	}
 }
 
 // loadSchemaJSON retrieves a collection's stored schema JSON.
