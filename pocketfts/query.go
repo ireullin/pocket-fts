@@ -134,14 +134,13 @@ func (qe *QueryExecutor) executeRelevanceTopN(ctx context.Context, req *QueryReq
 		return nil, true, err
 	}
 
-	// 分頁已經在挑選階段做完，取列時不再套用 limit 與 offset。
+	// 分頁已經在挑選階段做完，取列時不再套用 limit 與 offset；
+	// 不指定 order_by，取回時依相關性排序。
 	spec := ResultSpec{Fields: req.Result.Fields}
 	records, err := qe.fetchRecords(ctx, req.Collection, schema.PrimaryKey, where, args, scores, &spec)
 	if err != nil {
 		return nil, true, fmt.Errorf("failed to fetch records: %w", err)
 	}
-
-	sortRecords(records, []OrderBySpec{{Field: scoreField, Direction: "desc"}}, true)
 	return records, true, nil
 }
 
@@ -518,11 +517,18 @@ func (qe *QueryExecutor) getCollectionSchema(ctx context.Context, collection str
 }
 
 // fetchRecords 依編譯好的 WHERE 子句取回整列資料，加入 FTS 分數，
-// 並套用 order_by、limit 與 offset。
+// 並套用 order_by、limit 與 offset。排序與分頁一律交給 SQLite。
+//
+// 排序用到 _score（或帶分數卻沒指定 order_by，預設依相關性）時，分數不是
+// 資料表欄位，所以透過 SQL 函式 pfts_score 從 Go 這側查分數。這樣 SQLite
+// 只把 limit 筆資料列交回 Go，不必把全部命中讀回來在 Go 排序。
 //
 // 呼叫端必須先用 validateResultFields 把 result.fields 對照 schema 驗證過，
-// 這裡才可以直接把欄位名稱串進 SELECT。
+// 也要先用 validateOrderBy 驗證 order_by，這裡才可以直接把欄位名稱串進 SQL。
 func (qe *QueryExecutor) fetchRecords(ctx context.Context, collection, primaryKeyField, where string, args []interface{}, scoreMap ScoreMap, result *ResultSpec) ([]map[string]interface{}, error) {
+	orderByScore := orderByUsesScore(result.OrderBy) ||
+		(len(result.OrderBy) == 0 && len(scoreMap) > 0)
+
 	// 構建查詢字段。_score 不是 SQL 表裡的欄位，這裡把它拿掉；分數在下面依主鍵
 	// 補上。validateResultFields 已經確保選了 _score 就一定也選了主鍵。
 	fields := "*"
@@ -530,24 +536,28 @@ func (qe *QueryExecutor) fetchRecords(ctx context.Context, collection, primaryKe
 		fields = strings.Join(selected, ", ")
 	}
 
+	queryArgs := args
+	if orderByScore {
+		handle, release := registerScores(scoreMap)
+		defer release()
+		fields += fmt.Sprintf(", %s(?, %s) AS %s", scoreFunc, primaryKeyField, scoreColumn)
+		queryArgs = append([]interface{}{handle}, args...)
+	}
+
 	query := fmt.Sprintf("SELECT %s FROM %s", fields, collection)
 	if where != "" {
 		query += " WHERE " + where
 	}
-
-	// _score 不是 SQL 表裡的欄位，所以只要排序用到它，整批記錄就得先讀回來
-	// 再於 Go 這側排序。其餘情況把 ORDER BY 與 LIMIT/OFFSET 交給 SQLite，
-	// 直接沿用 SQL 的比較與定序語意，也讓分頁在資料庫端就切好。
-	sortInGo := orderByUsesScore(result.OrderBy) ||
-		(len(result.OrderBy) == 0 && len(scoreMap) > 0)
-	if !sortInGo {
+	if orderByScore {
+		query += buildScoreOrderByClause(result.OrderBy, primaryKeyField)
+	} else {
 		query += buildOrderByClause(result.OrderBy)
-		query += buildLimitClause(result.Limit, result.Offset)
 	}
+	query += buildLimitClause(result.Limit, result.Offset)
 
-	qe.logger().Debug("Fetching records", "query", query, "arg_count", len(args))
+	qe.logger().Debug("Fetching records", "query", query, "arg_count", len(queryArgs))
 
-	rows, err := qe.db.QueryContext(ctx, query, args...)
+	rows, err := qe.db.QueryContext(ctx, query, queryArgs...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch records: %w", err)
 	}
@@ -573,6 +583,9 @@ func (qe *QueryExecutor) fetchRecords(ctx context.Context, collection, primaryKe
 
 		record := make(map[string]interface{})
 		for i, column := range columns {
+			if column == scoreColumn {
+				continue
+			}
 			record[column] = values[i]
 		}
 
@@ -590,10 +603,10 @@ func (qe *QueryExecutor) fetchRecords(ctx context.Context, collection, primaryKe
 		return nil, fmt.Errorf("failed to read records: %w", err)
 	}
 
-	if sortInGo {
-		sortRecords(records, result.OrderBy, len(scoreMap) > 0)
-		records = applyLimitOffset(records, result.Limit, result.Offset)
-	}
-
 	return records, nil
 }
+
+// scoreColumn is the result column fetchRecords sorts by relevance on. The
+// prefix keeps it from colliding with a collection's own columns; it is
+// dropped before the record is returned.
+const scoreColumn = "__pfts_score"

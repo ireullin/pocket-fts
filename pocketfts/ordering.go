@@ -1,16 +1,14 @@
 package pocketfts
 
 import (
-	"bytes"
 	"fmt"
-	"math"
-	"sort"
 	"strconv"
 	"strings"
 )
 
 // scoreField 是 FTS 相關性分數的虛擬欄位名稱。它不是 SQL 表裡的欄位，
-// 只有帶 search 子句的查詢才會產生它，所以用到它的排序必須在 Go 這側做。
+// 只有帶 search 子句的查詢才會產生它；用到它的排序透過 pfts_score 函式交給
+// SQLite（見 fetchRecords）。
 const scoreField = "_score"
 
 // ValidationError 表示請求本身有問題，例如 order_by 指到不存在的欄位。
@@ -159,6 +157,40 @@ func buildOrderByClause(orderBy []OrderBySpec) string {
 	return " ORDER BY " + strings.Join(clauses, ", ")
 }
 
+// buildScoreOrderByClause 產生 fetchRecords 依分數排序時的 ORDER BY 子句。
+// order_by 為空時預設依相關性（最相關在前）。
+//
+// ftscore 的分數越小越相關，所以 _score desc（相關性由高到低）是分數的升冪。
+// 沒有分數的列（$or 混合查詢才會出現）視為相關性最低：desc 時排在最後，
+// asc 時排在最前。同分的列依主鍵升冪排列，最後以 rowid 保證順序確定；
+// 這跟改用 SQL 排序之前，Go 穩定排序保留下來的取列順序一致。
+func buildScoreOrderByClause(orderBy []OrderBySpec, primaryKey string) string {
+	specs := orderBy
+	if len(specs) == 0 {
+		specs = []OrderBySpec{{Field: scoreField, Direction: "desc"}}
+	}
+
+	clauses := make([]string, 0, len(specs)+2)
+	for _, order := range specs {
+		if order.Field == scoreField {
+			if isDescending(order.Direction) {
+				clauses = append(clauses, "("+scoreColumn+" IS NULL) ASC", scoreColumn+" ASC")
+			} else {
+				clauses = append(clauses, "("+scoreColumn+" IS NULL) DESC", scoreColumn+" DESC")
+			}
+			continue
+		}
+		direction := "ASC"
+		if isDescending(order.Direction) {
+			direction = "DESC"
+		}
+		clauses = append(clauses, order.Field+" "+direction)
+	}
+	clauses = append(clauses, primaryKey+" ASC", "rowid ASC")
+
+	return " ORDER BY " + strings.Join(clauses, ", ")
+}
+
 // buildLimitClause 產生 SQL 的 LIMIT/OFFSET 子句。SQLite 的 OFFSET 必須跟在
 // LIMIT 後面，所以只指定 offset 時用 LIMIT -1 表示不限制筆數。
 func buildLimitClause(limit, offset int) string {
@@ -178,184 +210,6 @@ func buildLimitClause(limit, offset int) string {
 	return clause
 }
 
-// applyLimitOffset 在 Go 這側套用 limit 與 offset。
-func applyLimitOffset(records []map[string]interface{}, limit, offset int) []map[string]interface{} {
-	start := offset
-	if start < 0 {
-		start = 0
-	}
-	if start >= len(records) {
-		return []map[string]interface{}{}
-	}
-
-	records = records[start:]
-	if limit > 0 && limit < len(records) {
-		records = records[:limit]
-	}
-	return records
-}
-
-// sortRecords 依 order_by 對記錄排序。order_by 為空且結果帶 FTS 分數時，
-// 退回預設的相關性排序（最相關在前）。
-func sortRecords(records []map[string]interface{}, orderBy []OrderBySpec, hasScores bool) {
-	specs := orderBy
-	if len(specs) == 0 {
-		if !hasScores {
-			return
-		}
-		specs = []OrderBySpec{{Field: scoreField, Direction: "desc"}}
-	}
-
-	sort.SliceStable(records, func(i, j int) bool {
-		for _, spec := range specs {
-			cmp := compareValues(
-				recordSortValue(records[i], spec.Field),
-				recordSortValue(records[j], spec.Field),
-			)
-			if cmp == 0 {
-				continue
-			}
-			if ascendingByValue(spec) {
-				return cmp < 0
-			}
-			return cmp > 0
-		}
-		return false
-	})
-}
-
-// recordSortValue 取出記錄中用來排序的值。沒有分數的記錄視為相關性最低，
-// 所以 _score 缺席時用 +Inf 代替，讓它排在有分數的記錄之後。
-func recordSortValue(record map[string]interface{}, field string) interface{} {
-	value, ok := record[field]
-	if !ok && field == scoreField {
-		return math.Inf(1)
-	}
-	return value
-}
-
-// ascendingByValue 回報這個排序條件在「數值大小」上是不是升冪。
-//
-// _score 是相關性排名，不是一般數值欄位：ftscore 回傳的分數越小代表越相關，
-// 所以 direction="desc"（相關性由高到低）對應到數值的升冪，反之亦然。
-func ascendingByValue(spec OrderBySpec) bool {
-	descending := isDescending(spec.Direction)
-	if spec.Field == scoreField {
-		return descending
-	}
-	return !descending
-}
-
 func isDescending(direction string) bool {
 	return strings.EqualFold(strings.TrimSpace(direction), "desc")
-}
-
-// SQLite 的跨型別排序順序：NULL < 數值 < 文字 < BLOB。
-const (
-	rankNull = iota
-	rankNumber
-	rankText
-	rankBlob
-)
-
-// compareValues 依 SQLite 的型別排序規則比較兩個欄位值，
-// 回傳 -1、0 或 1。
-func compareValues(a, b interface{}) int {
-	rankA, rankB := valueRank(a), valueRank(b)
-	if rankA != rankB {
-		if rankA < rankB {
-			return -1
-		}
-		return 1
-	}
-
-	switch rankA {
-	case rankNull:
-		return 0
-	case rankNumber:
-		return compareNumbers(a, b)
-	case rankBlob:
-		return bytes.Compare(a.([]byte), b.([]byte))
-	default:
-		return strings.Compare(toText(a), toText(b))
-	}
-}
-
-func valueRank(value interface{}) int {
-	switch value.(type) {
-	case nil:
-		return rankNull
-	case bool, int, int32, int64, float32, float64:
-		return rankNumber
-	case []byte:
-		return rankBlob
-	default:
-		return rankText
-	}
-}
-
-// compareNumbers 比較兩個數值。兩邊都是整數時用 int64 比較，
-// 避免大整數轉成 float64 之後失去精度。
-func compareNumbers(a, b interface{}) int {
-	intA, okA := toInt64(a)
-	intB, okB := toInt64(b)
-	if okA && okB {
-		switch {
-		case intA < intB:
-			return -1
-		case intA > intB:
-			return 1
-		default:
-			return 0
-		}
-	}
-
-	floatA, floatB := toFloat64(a), toFloat64(b)
-	switch {
-	case floatA < floatB:
-		return -1
-	case floatA > floatB:
-		return 1
-	default:
-		return 0
-	}
-}
-
-func toInt64(value interface{}) (int64, bool) {
-	switch v := value.(type) {
-	case int:
-		return int64(v), true
-	case int32:
-		return int64(v), true
-	case int64:
-		return v, true
-	case bool:
-		if v {
-			return 1, true
-		}
-		return 0, true
-	default:
-		return 0, false
-	}
-}
-
-func toFloat64(value interface{}) float64 {
-	switch v := value.(type) {
-	case float32:
-		return float64(v)
-	case float64:
-		return v
-	default:
-		if i, ok := toInt64(value); ok {
-			return float64(i)
-		}
-		return 0
-	}
-}
-
-func toText(value interface{}) string {
-	if s, ok := value.(string); ok {
-		return s
-	}
-	return fmt.Sprintf("%v", value)
 }
