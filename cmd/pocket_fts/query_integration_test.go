@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,7 +12,13 @@ import (
 	"path/filepath"
 	"sort"
 	"testing"
+
+	"github.com/ireullin/pocket-fts/pocketfts"
 )
+
+// db is a separate read-write connection to the test database, for tests
+// that inspect or tweak the tables directly, bypassing the store.
+var db *sql.DB
 
 // setupQueryEngine 起一個完整的查詢堆疊：SQLite、ftscore 引擎與查詢執行器。
 // 測試透過真正的 HTTP handler 發請求，涵蓋從解析到回應的整條路徑。
@@ -21,33 +28,19 @@ func setupQueryEngine(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "test.sqlite")
 	logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
-	if err := LoadFTSLibrary(dbPath); err != nil {
-		t.Fatalf("failed to load ftscore: %v", err)
-	}
-	t.Cleanup(func() { UnloadFTSLibrary() })
-
-	testDB, err := initDB(dbPath)
+	s, err := pocketfts.Open(pocketfts.Config{Path: dbPath, Logger: logger})
 	if err != nil {
-		t.Fatalf("initDB failed: %v", err)
+		t.Fatalf("pocketfts.Open failed: %v", err)
+	}
+	store = s
+	t.Cleanup(func() { s.Close() })
+
+	testDB, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("failed to open test connection: %v", err)
 	}
 	db = testDB
 	t.Cleanup(func() { testDB.Close() })
-
-	testWriteDB, err := initWriteDB(dbPath)
-	if err != nil {
-		t.Fatalf("initWriteDB failed: %v", err)
-	}
-	writeDB = testWriteDB
-	t.Cleanup(func() { testWriteDB.Close() })
-
-	engine, err := NewFTS(dbPath, 5000, false)
-	if err != nil {
-		t.Fatalf("NewFTS failed: %v", err)
-	}
-	fts = engine
-	t.Cleanup(func() { engine.Close() })
-
-	queryExecutor = NewQueryExecutor(db, fts)
 }
 
 func callHandler(t *testing.T, handler http.HandlerFunc, payload interface{}) (int, []byte) {

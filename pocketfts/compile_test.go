@@ -1,13 +1,14 @@
-package main
+package pocketfts
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
 
 func compileTree(t *testing.T, node *QueryNode) (string, []interface{}) {
 	t.Helper()
-	c := newSQLCompiler(&QueryExecutor{}, "docs", "id")
+	c := newSQLCompiler(context.Background(), &QueryExecutor{}, "docs", "id")
 	where, args, err := c.compile(node)
 	if err != nil {
 		t.Fatalf("compile failed: %v", err)
@@ -82,7 +83,7 @@ func TestCompileEmptyGroups(t *testing.T) {
 }
 
 func TestCompileRejectsEmptyNode(t *testing.T) {
-	c := newSQLCompiler(&QueryExecutor{}, "docs", "id")
+	c := newSQLCompiler(context.Background(), &QueryExecutor{}, "docs", "id")
 	if _, _, err := c.compile(&QueryNode{}); err == nil {
 		t.Fatal("expected an error for an empty node")
 	}

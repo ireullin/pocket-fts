@@ -1,4 +1,4 @@
-package main
+package pocketfts
 
 /*
 #cgo LDFLAGS: -ldl
@@ -81,15 +81,6 @@ static int load_fts_library(const char* lib_path, char** err_msg) {
     return 0;
 }
 
-static int unload_fts_library() {
-    if (g_lib_handle) {
-        int ret = dlclose(g_lib_handle);
-        g_lib_handle = NULL;
-        return ret;
-    }
-    return 0;
-}
-
 static unsigned long long call_fts_engine_new(char* db_path, long long timeout, int stemming, char** err_out) {
     return g_fts_engine_new ? g_fts_engine_new(db_path, timeout, stemming, err_out) : 0;
 }
@@ -144,13 +135,31 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"unsafe"
 )
 
 //go:embed embedded/ftscore
 var embeddedLibrary []byte
 
-func LoadFTSLibrary(dbPath string) error {
+// libMu guards the process-wide ftscore library handle. The library is a Go
+// c-shared object: it carries its own Go runtime and cannot be unloaded, so it
+// is loaded once per process and every Store shares it.
+var (
+	libMu     sync.Mutex
+	libLoaded bool
+)
+
+// loadFTSLibrary extracts the embedded ftscore library next to the database
+// (as <db>.indices2) and loads it. Only the first call in a process does any
+// work; later calls, whatever their dbPath, reuse the loaded library.
+func loadFTSLibrary(dbPath string) error {
+	libMu.Lock()
+	defer libMu.Unlock()
+	if libLoaded {
+		return nil
+	}
+
 	// Get absolute path of database
 	absDbPath, err := filepath.Abs(dbPath)
 	if err != nil {
@@ -179,13 +188,7 @@ func LoadFTSLibrary(dbPath string) error {
 		}
 		return fmt.Errorf("failed to load library %s", libPath)
 	}
-	return nil
-}
-
-func UnloadFTSLibrary() error {
-	if ret := C.unload_fts_library(); ret != 0 {
-		return fmt.Errorf("failed to unload library")
-	}
+	libLoaded = true
 	return nil
 }
 

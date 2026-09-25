@@ -1,4 +1,4 @@
-package main
+package pocketfts
 
 import (
 	"encoding/json"

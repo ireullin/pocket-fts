@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"embed"
 	"flag"
 	"fmt"
@@ -15,16 +14,15 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/ireullin/pocket-fts/pocketfts"
 )
 
 //go:embed embedded/*.html embedded/*.css embedded/*.js
 var staticFS embed.FS
 
-var db *sql.DB
-var writeDB *sql.DB
 var logger *slog.Logger
-var fts *FTS
-var queryExecutor *QueryExecutor
+var store *pocketfts.Store
 
 // addNoCacheHeaders 添加防快取標頭的中間件
 func addNoCacheHeaders(handler http.Handler) http.Handler {
@@ -64,7 +62,7 @@ func main() {
 	dbFile := flag.String("f", "db.sqlite", "Database file path")
 	host := flag.String("host", "localhost", "Host address to bind")
 	showHelp := flag.Bool("h", false, "Show help message")
-	writeTimeoutSec := flag.Int("write-timeout", int(DefaultWriteTimeout.Seconds()),
+	writeTimeoutSec := flag.Int("write-timeout", int(pocketfts.DefaultWriteTimeout.Seconds()),
 		"Seconds a write may take, covering both the FTS index and the SQL table; also applied to search")
 	startupOnly := flag.Bool("startup-only", false, "") // Hidden flag
 	ftsWAL := flag.Bool("fts-wal", false, "")           // Hidden flag
@@ -89,59 +87,25 @@ func main() {
 	multiWriter := io.MultiWriter(os.Stdout, logFile)
 	logger = slog.New(slog.NewJSONHandler(multiWriter, nil))
 
-	// Load FTS dynamic library (extracts to same directory as database)
-	if err := LoadFTSLibrary(*dbFile); err != nil {
-		logger.Error("Failed to load FTS library", "error", err)
-		os.Exit(1)
-	}
-	defer UnloadFTSLibrary()
-	logger.Info("FTS library loaded successfully")
-
-	db, err = initDB(*dbFile)
+	store, err = pocketfts.Open(pocketfts.Config{
+		Path:         *dbFile,
+		WriteTimeout: time.Duration(*writeTimeoutSec) * time.Second,
+		Logger:       logger,
+		FTSWAL:       *ftsWAL,
+	})
 	if err != nil {
-		logger.Error("Failed to initialize database", "error", err)
+		logger.Error("Failed to open store", "error", err, "fts_wal", *ftsWAL)
 		os.Exit(1)
 	}
-	defer db.Close()
-
-	// 寫入走另一個只有一條連線的池子，讓同時進來的寫入在 Go 這側排隊，
-	// 而不是在 SQLite 那層搶鎖然後被 busy_timeout 判失敗。
-	writeDB, err = initWriteDB(*dbFile)
-	if err != nil {
-		logger.Error("Failed to initialize write database", "error", err)
-		os.Exit(1)
-	}
-	defer writeDB.Close()
-
-	SetWriteTimeout(time.Duration(*writeTimeoutSec) * time.Second)
-	logger.Info("Database initialized successfully.", "write_timeout", writeTimeout)
-
-	// 讓 ftscore 的呼叫逾時與寫入時限一致。一筆 upsert 要先寫 FTS 索引再寫
-	// SQL 表；ftscore 內建的預設值是 10 秒，若不對齊，-write-timeout 設得再大
-	// 也會被那個看不見的天花板攔下來，參數名不符實。這個設定是 process-wide，
-	// 搜尋也套用同一個值——100 萬筆語料上搜尋常見詞的 p99 已經是 8.5 秒，
-	// 原本的 10 秒本來就太緊。
-	SetCallTimeout(writeTimeout.Milliseconds())
-
-	fts, err = NewFTSWithOptions(*dbFile, 5000, true, FTSOptions{WAL: *ftsWAL})
-	if err != nil {
-		logger.Error("Failed to initialize FTS engine", "error", err, "fts_wal", *ftsWAL)
-		os.Exit(1)
-	}
-	defer fts.Close()
-	logger.Info("FTS engine initialized successfully.", "call_timeout", writeTimeout)
-
-	// 設定 FTS C library 的 log callback
-	SetupFTSLogging()
-	logger.Info("FTS logging setup completed.")
+	defer func() {
+		if err := store.Close(); err != nil {
+			logger.Error("Failed to close store", "error", err)
+		}
+	}()
+	logger.Info("Store opened successfully.", "write_timeout", store.WriteTimeout(), "fts_wal", *ftsWAL)
 
 	// 記錄 FTS 版本
-	ftsVersion := GetFTSVersion()
-	logger.Info("FTS core version", "version", ftsVersion)
-
-	// 初始化查詢執行器
-	queryExecutor = NewQueryExecutor(db, fts)
-	logger.Info("Query executor initialized successfully.")
+	logger.Info("FTS core version", "version", store.FTSVersion())
 
 	// 提供靜態檔案服務（從 embedded FS，添加防快取標頭）
 	staticFiles, err := fs.Sub(staticFS, "embedded")
@@ -194,17 +158,13 @@ func main() {
 		}
 	case <-sigCh:
 		// 正常關閉：先停止接受新請求、等進行中的請求做完，時限跟寫入排隊的
-		// 時限一致；再把 WAL 清空、主檔案寫到最新，讓下次啟動時 WAL 檔案是
-		// 乾淨的。平常運作靠 SQLite 內建的自動 checkpoint，這裡只在正常關閉
-		// 時額外做一次。
+		// 時限一致；接著 defer 的 store.Close 會把 WAL 清空、主檔案寫到最新，
+		// 讓下次啟動時 WAL 檔案是乾淨的。
 		logger.Info("Received SIGTERM, shutting down gracefully")
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), writeTimeout)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), store.WriteTimeout())
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			logger.Error("Error during server shutdown", "error", err)
-		}
-		if err := checkpointWAL(db); err != nil {
-			logger.Error("Failed to checkpoint WAL on shutdown", "error", err)
 		}
 	}
 }

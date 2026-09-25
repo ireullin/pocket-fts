@@ -1,6 +1,7 @@
-package main
+package pocketfts
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -63,18 +64,14 @@ func TestExecWriteTimesOutWhileQueued(t *testing.T) {
 		t.Fatalf("initDB failed: %v", err)
 	}
 	defer readDB.Close()
-	db = readDB
 
 	writer, err := initWriteDB(dbPath)
 	if err != nil {
 		t.Fatalf("initWriteDB failed: %v", err)
 	}
 	defer writer.Close()
-	writeDB = writer
 
-	original := writeTimeout
-	t.Cleanup(func() { writeTimeout = original })
-	SetWriteTimeout(200 * time.Millisecond)
+	s := &Store{db: readDB, writeDB: writer, writeTimeout: 200 * time.Millisecond}
 
 	// 開一個交易佔住那條唯一的寫入連線。
 	tx, err := writer.Begin()
@@ -84,7 +81,7 @@ func TestExecWriteTimesOutWhileQueued(t *testing.T) {
 	defer tx.Rollback()
 
 	start := time.Now()
-	_, err = execWrite("INSERT INTO collections (name, schema_json) VALUES ('queued', '{}')")
+	_, err = s.execWrite(context.Background(), "INSERT INTO collections (name, schema_json) VALUES ('queued', '{}')")
 	elapsed := time.Since(start)
 
 	if err == nil {
@@ -110,16 +107,15 @@ func TestExecWriteSucceedsWhenPoolIsFree(t *testing.T) {
 		t.Fatalf("initDB failed: %v", err)
 	}
 	defer readDB.Close()
-	db = readDB
 
 	writer, err := initWriteDB(dbPath)
 	if err != nil {
 		t.Fatalf("initWriteDB failed: %v", err)
 	}
 	defer writer.Close()
-	writeDB = writer
 
-	if _, err := execWrite("INSERT INTO collections (name, schema_json) VALUES ('ok', '{}')"); err != nil {
+	s := &Store{db: readDB, writeDB: writer, writeTimeout: DefaultWriteTimeout}
+	if _, err := s.execWrite(context.Background(), "INSERT INTO collections (name, schema_json) VALUES ('ok', '{}')"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -132,17 +128,19 @@ func TestExecWriteSucceedsWhenPoolIsFree(t *testing.T) {
 	}
 }
 
-// TestSetWriteTimeoutIgnoresNonPositive 確認非正值不會把時限歸零。
-func TestSetWriteTimeoutIgnoresNonPositive(t *testing.T) {
-	original := writeTimeout
-	t.Cleanup(func() { writeTimeout = original })
-
-	SetWriteTimeout(5 * time.Second)
-	SetWriteTimeout(0)
-	SetWriteTimeout(-1 * time.Second)
-
-	if writeTimeout != 5*time.Second {
-		t.Fatalf("write timeout is %s, want 5s", writeTimeout)
+// TestOpenIgnoresNonPositiveWriteTimeout 確認非正值不會把時限歸零，
+// 而是退回預設值。
+func TestOpenIgnoresNonPositiveWriteTimeout(t *testing.T) {
+	for _, d := range []time.Duration{0, -1 * time.Second} {
+		s, err := Open(Config{Path: filepath.Join(t.TempDir(), "test.sqlite"), WriteTimeout: d})
+		if err != nil {
+			t.Fatalf("Open failed: %v", err)
+		}
+		got := s.WriteTimeout()
+		s.Close()
+		if got != DefaultWriteTimeout {
+			t.Fatalf("WriteTimeout(%s) gave %s, want %s", d, got, DefaultWriteTimeout)
+		}
 	}
 }
 

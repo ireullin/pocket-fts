@@ -1,4 +1,4 @@
-module pocket_fts
+module github.com/ireullin/pocket-fts
 
 go 1.25.0
 

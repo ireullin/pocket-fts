@@ -1,4 +1,4 @@
-package main
+package pocketfts
 
 import (
 	"path/filepath"
@@ -13,14 +13,9 @@ import (
 func TestSetCallTimeoutBindingLoads(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "test.sqlite")
 
-	if err := LoadFTSLibrary(dbPath); err != nil {
+	if err := loadFTSLibrary(dbPath); err != nil {
 		t.Fatalf("failed to load embedded ftscore library: %v", err)
 	}
-	defer func() {
-		if err := UnloadFTSLibrary(); err != nil {
-			t.Errorf("failed to unload ftscore library: %v", err)
-		}
-	}()
 
-	SetCallTimeout(15000)
+	setCallTimeout(15000)
 }

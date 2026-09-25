@@ -1,7 +1,8 @@
-package main
+package pocketfts
 
 import (
 	"container/heap"
+	"context"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -18,6 +19,7 @@ import (
 // 舊做法把每個主鍵綁成一個 SQL 參數，符合筆數超過 SQLITE_MAX_VARIABLE_NUMBER
 // （SQLite 3.32 之後預設 32766）就會失敗。json_each 只用一個參數，沒有這個上限。
 type sqlCompiler struct {
+	ctx        context.Context
 	qe         *QueryExecutor
 	collection string
 	primaryKey string
@@ -25,8 +27,9 @@ type sqlCompiler struct {
 	searches   int
 }
 
-func newSQLCompiler(qe *QueryExecutor, collection, primaryKey string) *sqlCompiler {
+func newSQLCompiler(ctx context.Context, qe *QueryExecutor, collection, primaryKey string) *sqlCompiler {
 	return &sqlCompiler{
+		ctx:        ctx,
 		qe:         qe,
 		collection: collection,
 		primaryKey: primaryKey,
@@ -101,7 +104,7 @@ func (c *sqlCompiler) compileGroup(nodes []*QueryNode, op string) (string, []int
 // 這條路徑要全部命中，不能只取前 N 筆：後面還有 SQL 篩選與依欄位排序，
 // 先截斷會讓結果安靜地少掉大半。
 func (c *sqlCompiler) compileSearch(query *SearchQuery) (string, []interface{}, error) {
-	results, err := c.qe.executeSearchQuery(query, c.collection, allHits)
+	results, err := c.qe.executeSearchQuery(c.ctx, query, c.collection, allHits)
 	if err != nil {
 		return "", nil, err
 	}

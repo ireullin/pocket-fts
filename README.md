@@ -103,7 +103,7 @@ curl -X POST http://localhost:5122/query \
    ```
 3. 在 Linux 環境下執行建置（請於專案根目錄）：
    ```bash
-   go build -o pocket_fts ./src
+   go build -o pocket_fts ./cmd/pocket_fts
    ```
    - 若在其他作業系統上建置供 Linux 使用，可加入 `GOOS=linux GOARCH=amd64` 參數。
 4. 產生的 `pocket_fts` 執行檔即可依照前述步驟啟動。
@@ -249,9 +249,9 @@ curl -X POST http://localhost:5122/query \
    ```
 3. Build the binary on Linux (run from the project root):
    ```bash
-   go build -o pocket_fts ./src
+   go build -o pocket_fts ./cmd/pocket_fts
    ```
-   - To cross-compile on another OS: `GOOS=linux GOARCH=amd64 go build -o pocket_fts ./src`
+   - To cross-compile on another OS: `GOOS=linux GOARCH=amd64 go build -o pocket_fts ./cmd/pocket_fts`
 4. Run the resulting `pocket_fts` binary following the quick-start steps above.
 
 
@@ -395,9 +395,9 @@ curl -X POST http://localhost:5122/query \
    ```
 3. Linux 環境でビルドします（プロジェクトのルートで実行）：
    ```bash
-   go build -o pocket_fts ./src
+   go build -o pocket_fts ./cmd/pocket_fts
    ```
-   - 他 OS から Linux 向けにクロスビルドする場合は `GOOS=linux GOARCH=amd64 go build -o pocket_fts ./src` を利用してください。
+   - 他 OS から Linux 向けにクロスビルドする場合は `GOOS=linux GOARCH=amd64 go build -o pocket_fts ./cmd/pocket_fts` を利用してください。
 4. 生成された `pocket_fts` バイナリを上記の手順で起動します。
 
 
@@ -541,9 +541,9 @@ curl -X POST http://localhost:5122/query \
    ```
 3. Linux 환경에서 빌드합니다(프로젝트 루트에서 실행).
    ```bash
-   go build -o pocket_fts ./src
+   go build -o pocket_fts ./cmd/pocket_fts
    ```
-   - 다른 OS에서 Linux용으로 크로스 빌드하려면 `GOOS=linux GOARCH=amd64 go build -o pocket_fts ./src` 를 사용하세요.
+   - 다른 OS에서 Linux용으로 크로스 빌드하려면 `GOOS=linux GOARCH=amd64 go build -o pocket_fts ./cmd/pocket_fts` 를 사용하세요.
 4. 생성된 `pocket_fts` 바이너리를 앞서 소개한 방법으로 실행합니다.
 
 ### API 개요

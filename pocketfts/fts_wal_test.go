@@ -1,4 +1,4 @@
-package main
+package pocketfts
 
 import (
 	"database/sql"
@@ -27,22 +27,17 @@ func indicesJournalMode(t *testing.T, dbPath string) string {
 	return mode
 }
 
-func openEngine(t *testing.T, opts FTSOptions) string {
+func openEngine(t *testing.T, opts ftsOptions) string {
 	t.Helper()
 	dbPath := filepath.Join(t.TempDir(), "test.sqlite")
 
-	if err := LoadFTSLibrary(dbPath); err != nil {
+	if err := loadFTSLibrary(dbPath); err != nil {
 		t.Fatalf("failed to load embedded ftscore library: %v", err)
 	}
-	defer func() {
-		if err := UnloadFTSLibrary(); err != nil {
-			t.Errorf("failed to unload ftscore library: %v", err)
-		}
-	}()
 
-	engine, err := NewFTSWithOptions(dbPath, 5000, true, opts)
+	engine, err := newFTSEngine(dbPath, 5000, true, opts)
 	if err != nil {
-		t.Fatalf("NewFTSWithOptions(%+v) failed: %v", opts, err)
+		t.Fatalf("newFTSEngine(%+v) failed: %v", opts, err)
 	}
 	if err := engine.Close(); err != nil {
 		t.Fatalf("close engine: %v", err)
@@ -51,21 +46,21 @@ func openEngine(t *testing.T, opts FTSOptions) string {
 }
 
 func TestFTSDefaultsToDeleteJournal(t *testing.T) {
-	dbPath := openEngine(t, FTSOptions{})
+	dbPath := openEngine(t, ftsOptions{})
 	if got := indicesJournalMode(t, dbPath); got != "delete" {
 		t.Fatalf(".indices journal_mode is %q, want \"delete\"", got)
 	}
 }
 
 func TestFTSWALOptionEnablesWAL(t *testing.T) {
-	dbPath := openEngine(t, FTSOptions{WAL: true})
+	dbPath := openEngine(t, ftsOptions{WAL: true})
 	if got := indicesJournalMode(t, dbPath); got != "wal" {
 		t.Fatalf(".indices journal_mode is %q, want \"wal\"", got)
 	}
 }
 
 func TestFTSWALLeavesNoSidecarAfterClose(t *testing.T) {
-	dbPath := openEngine(t, FTSOptions{WAL: true})
+	dbPath := openEngine(t, ftsOptions{WAL: true})
 
 	dir := filepath.Dir(dbPath)
 	matches, err := filepath.Glob(filepath.Join(dir, "*.indices-*"))

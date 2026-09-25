@@ -1,9 +1,12 @@
-package main
+package pocketfts
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
 	"math"
 	"strings"
 )
@@ -11,19 +14,29 @@ import (
 // QueryExecutor 處理複雜查詢的執行
 type QueryExecutor struct {
 	db  *sql.DB
-	fts *FTS
+	fts *ftsEngine
+	log *slog.Logger
 }
 
-// NewQueryExecutor 創建查詢執行器
-func NewQueryExecutor(database *sql.DB, ftsEngine *FTS) *QueryExecutor {
+// newQueryExecutor 創建查詢執行器
+func newQueryExecutor(database *sql.DB, engine *ftsEngine, logger *slog.Logger) *QueryExecutor {
 	return &QueryExecutor{
 		db:  database,
-		fts: ftsEngine,
+		fts: engine,
+		log: logger,
 	}
 }
 
+// logger 回傳可用的 logger；測試直接建構的 QueryExecutor 沒有設定它。
+func (qe *QueryExecutor) logger() *slog.Logger {
+	if qe.log == nil {
+		return slog.New(slog.NewTextHandler(io.Discard, nil))
+	}
+	return qe.log
+}
+
 // ExecuteQuery 執行查詢並返回結果，支持 FTS 分數合併
-func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface{}, error) {
+func (qe *QueryExecutor) ExecuteQuery(ctx context.Context, req *QueryRequest) ([]map[string]interface{}, error) {
 	if !isValidIdentifier(req.Collection) {
 		return nil, newValidationError("invalid collection name: %s", req.Collection)
 	}
@@ -31,7 +44,7 @@ func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface
 	// 先取得 schema。order_by 與 result.fields 的欄位都要對照 schema 驗證，而且
 	// 必須在執行查詢之前就驗證完，這樣欄位名稱寫錯的請求即使查不到任何資料也會
 	// 回報錯誤。
-	schema, err := qe.getCollectionSchema(req.Collection)
+	schema, err := qe.getCollectionSchema(ctx, req.Collection)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get collection schema: %w", err)
 	}
@@ -53,19 +66,19 @@ func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface
 		return nil, err
 	}
 
-	if records, handled, err := qe.executeRelevanceTopN(req, schema); handled {
+	if records, handled, err := qe.executeRelevanceTopN(ctx, req, schema); handled {
 		return records, err
 	}
 
 	// 把整棵查詢樹編譯成一條 SQL 的 WHERE 子句。search 節點在編譯過程中就向
 	// ftscore 取得命中的主鍵，並以單一 JSON 參數帶進 SQL。
-	compiler := newSQLCompiler(qe, req.Collection, schema.PrimaryKey)
+	compiler := newSQLCompiler(ctx, qe, req.Collection, schema.PrimaryKey)
 	where, args, err := compiler.compile(&req.Query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
 
-	records, err := qe.fetchRecords(req.Collection, schema.PrimaryKey, where, args, compiler.scores, &req.Result)
+	records, err := qe.fetchRecords(ctx, req.Collection, schema.PrimaryKey, where, args, compiler.scores, &req.Result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch records: %w", err)
 	}
@@ -78,7 +91,7 @@ func (qe *QueryExecutor) ExecuteQuery(req *QueryRequest) ([]map[string]interface
 // 堆積挑出來，再只取回那幾列，不必把全部命中的列都讀進來。
 //
 // handled 為 false 代表這個查詢不適用，呼叫端要走通用路徑。
-func (qe *QueryExecutor) executeRelevanceTopN(req *QueryRequest, schema *CollectionSchema) ([]map[string]interface{}, bool, error) {
+func (qe *QueryExecutor) executeRelevanceTopN(ctx context.Context, req *QueryRequest, schema *CollectionSchema) ([]map[string]interface{}, bool, error) {
 	if req.Query.Search == nil || req.Result.Limit <= 0 {
 		return nil, false, nil
 	}
@@ -92,7 +105,7 @@ func (qe *QueryExecutor) executeRelevanceTopN(req *QueryRequest, schema *Collect
 	}
 
 	// 只需要最相關的前 offset+limit 筆，向 ftscore 就只要這麼多。
-	results, err := qe.executeSearchQuery(req.Query.Search, req.Collection, offset+req.Result.Limit)
+	results, err := qe.executeSearchQuery(ctx, req.Query.Search, req.Collection, offset+req.Result.Limit)
 	if err != nil {
 		return nil, true, fmt.Errorf("failed to execute query: %w", err)
 	}
@@ -123,7 +136,7 @@ func (qe *QueryExecutor) executeRelevanceTopN(req *QueryRequest, schema *Collect
 
 	// 分頁已經在挑選階段做完，取列時不再套用 limit 與 offset。
 	spec := ResultSpec{Fields: req.Result.Fields}
-	records, err := qe.fetchRecords(req.Collection, schema.PrimaryKey, where, args, scores, &spec)
+	records, err := qe.fetchRecords(ctx, req.Collection, schema.PrimaryKey, where, args, scores, &spec)
 	if err != nil {
 		return nil, true, fmt.Errorf("failed to fetch records: %w", err)
 	}
@@ -200,8 +213,8 @@ const allHits = math.MaxInt32
 // 進來就先確認這個 collection 真的有 indexed 欄位——沒有的話代表它從未在
 // ftscore 建立過，直接回 ValidationError（400），不去 ftscore 撞一個從未
 // 存在過的 collection、換回它那邊語意不清的「not found」。
-func (qe *QueryExecutor) executeSearchQuery(searchQuery *SearchQuery, collection string, limit int) ([]FTSResult, error) {
-	schema, err := qe.getCollectionSchema(collection)
+func (qe *QueryExecutor) executeSearchQuery(ctx context.Context, searchQuery *SearchQuery, collection string, limit int) ([]FTSResult, error) {
+	schema, err := qe.getCollectionSchema(ctx, collection)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get collection schema: %w", err)
 	}
@@ -240,7 +253,7 @@ func (qe *QueryExecutor) executeSearchQuery(searchQuery *SearchQuery, collection
 		return nil, fmt.Errorf("failed to marshal FTS request: %w", err)
 	}
 
-	logger.Debug("Executing FTS search", "collection", collection, "request", string(requestJSON))
+	qe.logger().Debug("Executing FTS search", "collection", collection, "request", string(requestJSON))
 
 	// 執行FTS搜索
 	resultJSON, err := qe.fts.Search(collection, string(requestJSON))
@@ -490,8 +503,8 @@ func (qe *QueryExecutor) buildNotCondition(value interface{}) (string, []interfa
 }
 
 // getCollectionSchema 獲取collection schema
-func (qe *QueryExecutor) getCollectionSchema(collection string) (*CollectionSchema, error) {
-	schemaJSON, err := getCollectionSchema(collection)
+func (qe *QueryExecutor) getCollectionSchema(ctx context.Context, collection string) (*CollectionSchema, error) {
+	schemaJSON, err := loadSchemaJSON(ctx, qe.db, collection)
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +522,7 @@ func (qe *QueryExecutor) getCollectionSchema(collection string) (*CollectionSche
 //
 // 呼叫端必須先用 validateResultFields 把 result.fields 對照 schema 驗證過，
 // 這裡才可以直接把欄位名稱串進 SELECT。
-func (qe *QueryExecutor) fetchRecords(collection, primaryKeyField, where string, args []interface{}, scoreMap ScoreMap, result *ResultSpec) ([]map[string]interface{}, error) {
+func (qe *QueryExecutor) fetchRecords(ctx context.Context, collection, primaryKeyField, where string, args []interface{}, scoreMap ScoreMap, result *ResultSpec) ([]map[string]interface{}, error) {
 	// 構建查詢字段。_score 不是 SQL 表裡的欄位，這裡把它拿掉；分數在下面依主鍵
 	// 補上。validateResultFields 已經確保選了 _score 就一定也選了主鍵。
 	fields := "*"
@@ -532,9 +545,9 @@ func (qe *QueryExecutor) fetchRecords(collection, primaryKeyField, where string,
 		query += buildLimitClause(result.Limit, result.Offset)
 	}
 
-	logger.Debug("Fetching records", "query", query, "arg_count", len(args))
+	qe.logger().Debug("Fetching records", "query", query, "arg_count", len(args))
 
-	rows, err := qe.db.Query(query, args...)
+	rows, err := qe.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch records: %w", err)
 	}

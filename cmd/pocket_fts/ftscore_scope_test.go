@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -52,7 +53,7 @@ func TestNonFTSCollectionNeverTouchesFtscore(t *testing.T) {
 		t.Fatalf("document upsert returned HTTP %d: %s", code, body)
 	}
 
-	if _, err := fts.Search("plain", `{"query":"hello","limit":10}`); err == nil {
+	if _, err := store.Search(context.Background(), "plain", `{"query":"hello","limit":10}`); err == nil {
 		t.Fatalf("expected fts.Search to fail for a collection ftscore was never told about, got no error")
 	}
 }
@@ -83,7 +84,7 @@ func TestFTSCollectionStillReachesFtscore(t *testing.T) {
 		t.Fatalf("document upsert returned HTTP %d: %s", code, body)
 	}
 
-	resultJSON, err := fts.Search("searchable", `{"query":"找得到","limit":10}`)
+	resultJSON, err := store.Search(context.Background(), "searchable", `{"query":"找得到","limit":10}`)
 	if err != nil {
 		t.Fatalf("expected fts.Search to succeed for an FTS-enabled collection, got error: %v", err)
 	}

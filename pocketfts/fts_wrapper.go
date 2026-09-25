@@ -1,4 +1,4 @@
-package main
+package pocketfts
 
 /*
 #include <stdlib.h>
@@ -13,11 +13,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+	"sync/atomic"
 	"unsafe"
 )
 
-// FTS is a wrapper around the C FTS engine.
-type FTS struct {
+// ftsEngine is a wrapper around the C FTS engine.
+type ftsEngine struct {
 	handle C.ulonglong
 }
 
@@ -31,18 +33,13 @@ func cToGoError(errOut *C.char) error {
 	return err
 }
 
-// FTSOptions carries the optional ftscore engine settings.
-type FTSOptions struct {
+// ftsOptions carries the optional ftscore engine settings.
+type ftsOptions struct {
 	WAL bool `json:"wal"`
 }
 
-// NewFTS creates a new FTS engine with the default options.
-func NewFTS(dbPath string, busyTimeoutMs int64, stemming bool) (*FTS, error) {
-	return NewFTSWithOptions(dbPath, busyTimeoutMs, stemming, FTSOptions{})
-}
-
-// NewFTSWithOptions creates a new FTS engine with the supplied options.
-func NewFTSWithOptions(dbPath string, busyTimeoutMs int64, stemming bool, opts FTSOptions) (*FTS, error) {
+// newFTSEngine creates a new FTS engine with the supplied options.
+func newFTSEngine(dbPath string, busyTimeoutMs int64, stemming bool, opts ftsOptions) (*ftsEngine, error) {
 	cDbPath := C.CString(dbPath)
 	defer C.free(unsafe.Pointer(cDbPath))
 
@@ -67,11 +64,11 @@ func NewFTSWithOptions(dbPath string, busyTimeoutMs int64, stemming bool, opts F
 		return nil, cToGoError(errOut)
 	}
 
-	return &FTS{handle: handle}, nil
+	return &ftsEngine{handle: handle}, nil
 }
 
 // Close closes the FTS engine.
-func (f *FTS) Close() error {
+func (f *ftsEngine) Close() error {
 	var errOut *C.char
 	ret := callFtsEngineClose(f.handle, &errOut)
 	if ret != 0 {
@@ -81,7 +78,7 @@ func (f *FTS) Close() error {
 }
 
 // CreateCollection creates a new collection.
-func (f *FTS) CreateCollection(schemaJSON string) error {
+func (f *ftsEngine) CreateCollection(schemaJSON string) error {
 	cSchemaJSON := C.CString(schemaJSON)
 	defer C.free(unsafe.Pointer(cSchemaJSON))
 
@@ -94,7 +91,7 @@ func (f *FTS) CreateCollection(schemaJSON string) error {
 }
 
 // UpsertDocument upserts a document into a collection.
-func (f *FTS) UpsertDocument(collectionName, documentJSON string) error {
+func (f *ftsEngine) UpsertDocument(collectionName, documentJSON string) error {
 	cCollectionName := C.CString(collectionName)
 	defer C.free(unsafe.Pointer(cCollectionName))
 	cDocumentJSON := C.CString(documentJSON)
@@ -109,7 +106,7 @@ func (f *FTS) UpsertDocument(collectionName, documentJSON string) error {
 }
 
 // Search performs a search query.
-func (f *FTS) Search(collectionName, requestJSON string) (string, error) {
+func (f *ftsEngine) Search(collectionName, requestJSON string) (string, error) {
 	cCollectionName := C.CString(collectionName)
 	defer C.free(unsafe.Pointer(cCollectionName))
 	cRequestJSON := C.CString(requestJSON)
@@ -140,7 +137,7 @@ func (f *FTS) Search(collectionName, requestJSON string) (string, error) {
 }
 
 // DeleteCollection deletes a collection and its associated FTS index.
-func (f *FTS) DeleteCollection(name string) error {
+func (f *ftsEngine) DeleteCollection(name string) error {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
@@ -153,7 +150,7 @@ func (f *FTS) DeleteCollection(name string) error {
 }
 
 // DeleteDocument deletes a document from the FTS index.
-func (f *FTS) DeleteDocument(collectionName, primaryKeyJSON string) error {
+func (f *ftsEngine) DeleteDocument(collectionName, primaryKeyJSON string) error {
 	cCollectionName := C.CString(collectionName)
 	defer C.free(unsafe.Pointer(cCollectionName))
 	cPrimaryKeyJSON := C.CString(primaryKeyJSON)
@@ -167,16 +164,16 @@ func (f *FTS) DeleteDocument(collectionName, primaryKeyJSON string) error {
 	return nil
 }
 
-// SetCallTimeout adjusts the default call timeout (in milliseconds) that the
+// setCallTimeout adjusts the default call timeout (in milliseconds) that the
 // FTS C library applies to FtsUpsertDocument/FtsDeleteDocument/FtsSearch. It
 // is process-wide (not tied to a specific *FTS handle). Passing <= 0
 // disables the timeout entirely.
-func SetCallTimeout(ms int64) {
+func setCallTimeout(ms int64) {
 	callFtsSetCallTimeout(C.longlong(ms))
 }
 
-// GetVersion returns the FTS core version string
-func GetFTSVersion() string {
+// getFTSVersion returns the FTS core version string.
+func getFTSVersion() string {
 	versionCStr := callFtsVersion()
 	if versionCStr == nil {
 		return "unknown"
@@ -186,13 +183,19 @@ func GetFTSVersion() string {
 	return version
 }
 
-// SetupFTSLogging sets up the FTS C library to forward its logs to the Go logger
-func SetupFTSLogging() {
+// ftsLogger receives the ftscore library's own log lines. The library's log
+// callback is process-wide, so the most recently opened Store's logger wins.
+var ftsLogger atomic.Pointer[slog.Logger]
+
+// setupFTSLogging points the FTS C library's log callback at logger.
+func setupFTSLogging(logger *slog.Logger) {
+	ftsLogger.Store(logger)
 	callFtsSetLogCallback((C.fts_log_cb_t)(unsafe.Pointer(C.logCallback)), nil)
 }
 
 //export logCallback
 func logCallback(level C.int, message *C.char, userData unsafe.Pointer) {
+	logger := ftsLogger.Load()
 	if logger == nil {
 		return
 	}
