@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,6 +20,12 @@ type CollectionDeleteRequest struct {
 type DocumentUpsertRequest struct {
 	Collection string                 `json:"collection"`
 	Document   map[string]interface{} `json:"document"`
+}
+
+type DocumentUpdateRequest struct {
+	Collection string                 `json:"collection"`
+	Document   map[string]interface{} `json:"document"`
+	Where      [][]interface{}        `json:"where,omitempty"`
 }
 
 type DocumentDeleteRequest struct {
@@ -242,6 +249,60 @@ func handleDocumentUpsert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.Info("Document upserted successfully", "collection", req.Collection, "remote_addr", r.RemoteAddr)
+	respondWithJSON(w, http.StatusOK, map[string]string{"status": "success"})
+}
+
+func handleDocumentUpdate(w http.ResponseWriter, r *http.Request) {
+	logger.Info("Document update request received", "method", r.Method, "remote_addr", r.RemoteAddr)
+
+	if r.Method != http.MethodPost {
+		logger.Warn("Invalid method for document update", "method", r.Method, "remote_addr", r.RemoteAddr)
+		respondWithError(w, http.StatusMethodNotAllowed, "Only POST method is allowed")
+		return
+	}
+
+	var req DocumentUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid JSON format")
+		return
+	}
+
+	where := make([]pocketfts.Condition, 0, len(req.Where))
+	for _, condition := range req.Where {
+		if len(condition) != 3 {
+			respondWithError(w, http.StatusBadRequest, "invalid where condition: expected [field, operator, value]")
+			return
+		}
+		field, fieldOK := condition[0].(string)
+		operator, operatorOK := condition[1].(string)
+		if !fieldOK || !operatorOK {
+			respondWithError(w, http.StatusBadRequest, "invalid where condition: field and operator must be strings")
+			return
+		}
+		where = append(where, pocketfts.Condition{Field: field, Operator: operator, Value: condition[2]})
+	}
+
+	err := store.Update(writeContext(), req.Collection, req.Document, where)
+	var conflict *pocketfts.ConflictError
+	if errors.As(err, &conflict) {
+		failed := make([][]interface{}, len(conflict.Failed))
+		for i, c := range conflict.Failed {
+			failed[i] = []interface{}{c.Field, c.Operator, c.Value}
+		}
+		logger.Info("Document update conditions not met", "collection", req.Collection, "remote_addr", r.RemoteAddr)
+		respondWithJSON(w, http.StatusConflict, map[string]interface{}{
+			"error":   err.Error(),
+			"failed":  failed,
+			"current": conflict.Current,
+		})
+		return
+	}
+	if err != nil {
+		respondWithWriteError(w, err)
+		return
+	}
+
+	logger.Info("Document updated successfully", "collection", req.Collection, "remote_addr", r.RemoteAddr)
 	respondWithJSON(w, http.StatusOK, map[string]string{"status": "success"})
 }
 

@@ -128,6 +128,7 @@ func main() {
 	http.HandleFunc("/collections/list", handleCollectionList)
 	http.HandleFunc("/collections/content", handleCollectionContent)
 	http.HandleFunc("/documents/upsert", handleDocumentUpsert)
+	http.HandleFunc("/documents/update", handleDocumentUpdate)
 	http.HandleFunc("/documents/delete", handleDocumentDelete)
 	http.HandleFunc("/search", handleSearch)
 	http.HandleFunc("/query", handleQuery)

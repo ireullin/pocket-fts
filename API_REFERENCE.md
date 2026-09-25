@@ -206,6 +206,63 @@ Content-Type: application/json
 Returned with a `Retry-After` header when the write did not complete within the
 `-write-timeout` budget. See [Write Concurrency](#write-concurrency).
 
+### Update Document
+```
+POST /documents/update
+Content-Type: application/json
+```
+
+Changes some fields of an existing document, optionally only if the stored
+document still matches the given conditions. Unlike upsert, it never creates a
+document.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `collection` | string | Yes | Collection containing the document. |
+| `document` | object | Yes | The primary key field, plus the fields to change. Fields left out keep their stored values. Every field must be defined in the collection schema. |
+| `where` | array\<array> | No | Conditions on the stored document, each `[field, operator, value]`, combined with logical AND. Same operators as the `sql` filter of `/query`: `"="`, `"!="`, `">"`, `">="`, `"<"`, `"<="`, `"LIKE"`. Every field must be defined in the collection schema. |
+
+The conditions are checked and the fields written as one step: no other write
+can land between the check and the write. Use this to avoid lost updates when
+several clients read a document, decide, and write it back.
+
+**Body**
+```json
+{
+  "collection": "meetings",
+  "document": { "id": "m1", "adopted_version_id": "v2" },
+  "where": [["adopted_version_id", "=", ""]]
+}
+```
+**Response 200**
+```json
+{ "status": "success" }
+```
+**Response 409** — a condition did not hold; nothing was written.
+```json
+{
+  "error": "update conditions not met: adopted_version_id = ",
+  "failed": [["adopted_version_id", "=", ""]],
+  "current": { "id": "m1", "adopted_version_id": "v1", "title": "Weekly sync" }
+}
+```
+`failed` lists the conditions that were not true; a condition on a field whose
+stored value is NULL counts as not true. `current` is the stored document, so
+the caller can decide what to do next without reading it again.
+
+**Response 404** — the collection, or the document with that primary key, does
+not exist.
+
+**Response 400** — an unknown field in `document` or `where`, an unsupported
+operator, a malformed condition, or a `document` without the primary key.
+
+**Response 503**
+```json
+{ "error": "Write timed out; the server is saturated with writes" }
+```
+Returned with a `Retry-After` header when the write did not complete within the
+`-write-timeout` budget. See [Write Concurrency](#write-concurrency).
+
 ### Delete Document
 ```
 POST /documents/delete
@@ -459,11 +516,15 @@ changes over its lifetime.
 
 ## Write Concurrency
 
-Writes are serialized. A single upsert or delete touches two SQLite databases:
-the row table and the full-text index. SQLite allows one writer at a time, and
-the full-text engine holds its index with a single exclusive connection, so
-concurrent writes queue rather than run in parallel. Adding concurrency raises
-latency without raising throughput.
+Writes are serialized. A single upsert, update or delete touches two SQLite
+databases: the row table and the full-text index. SQLite allows one writer at a
+time, and the full-text engine holds its index with a single exclusive
+connection, so concurrent writes queue rather than run in parallel. Adding
+concurrency raises latency without raising throughput.
+
+Each document write changes the row table and the full-text index together: if
+the full-text index rejects the document, the row table keeps its previous
+contents and the request fails.
 
 Concurrent writes wait in a queue instead of competing for the database lock.
 The wait is bounded by `-write-timeout` (default 30 seconds), which covers both
