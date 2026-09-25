@@ -24,16 +24,30 @@ paper_workers 維持舊版，升級時才改用。
 
 **Blocked by:** [04](./write-lock.md)
 
-**Status:** ready-for-agent
+**Status:** closed（2026-09-25）
 
 ## 驗收條件
 
-- [ ] 條件成立：200，只有帶的欄位改變。
-- [ ] 條件不成立：409，資料未改變，body 帶目前的文件。
-- [ ] 文件不存在：404，沒有建立文件。
-- [ ] `where` 引用不存在的欄位：400。
-- [ ] 改 searchable 欄位後，新詞搜得到、舊詞搜不到。
-- [ ] 併發測試：N 個請求同時帶 `where adopted = ""` 更新同一份文件，恰好 1 個 200，其餘 409。
-- [ ] `Store.Update` 提供同樣語意。
-- [ ] API_REFERENCE 新增 `/documents/update` 一節（不提函式庫）。
-- [ ] 真實服務 e2e：重現 paper_workers 的兩個 worker 情境，後寫的一方收到 409。
+- [x] 條件成立：200，只有帶的欄位改變。
+- [x] 條件不成立：409，資料未改變，body 帶目前的文件。
+- [x] 文件不存在：404，沒有建立文件。
+- [x] `where` 引用不存在的欄位：400。
+- [x] 改 searchable 欄位後，新詞搜得到、舊詞搜不到。
+- [x] 併發測試：N 個請求同時帶 `where adopted = ""` 更新同一份文件，恰好 1 個 200，其餘 409。
+- [x] `Store.Update` 提供同樣語意。
+- [x] API_REFERENCE 新增 `/documents/update` 一節（不提函式庫）。
+- [x] 真實服務 e2e：重現 paper_workers 的兩個 worker 情境，後寫的一方收到 409。
+
+## 關票核對（2026-09-25）
+
+實作於 `fcc4630`，審查修正 `eb462c2`。逐條核對：
+
+1. 條件成立 200、只改帶的欄位：`TestUpdateChangesOnlyGivenFieldsWhenConditionHolds`、`TestUpdateEndpointAppliesWhenConditionHolds`。層級：整合測試。
+2. 條件不成立 409、資料不變、body 帶目前文件：`TestUpdateConflictLeavesRowAndReportsCurrent`、`TestUpdateEndpointConflictReturns409WithCurrentDocument`。層級：整合測試。
+3. 文件不存在 404、不建立：`TestUpdateMissingDocumentIsNotFound`（有無條件各一次）、`TestUpdateEndpointStatusCodes`。層級：整合測試。
+4. `where` 欄位不存在 400：同上兩個測試，另含未知運算子、格式錯誤、document 未知欄位、缺主鍵。層級：整合測試。
+5. 改 searchable 欄位後新詞搜得到、舊詞搜不到：`TestUpdateOfSearchableFieldReindexes`。層級：整合測試（真實 ftscore）。
+6. 併發：`TestConcurrentConditionalUpdatesAdmitOne`，8 個 goroutine 帶 `adopted = ""`，恰好 1 個成功、7 個 409。層級：整合測試。
+7. `Store.Update` 是 HTTP 端點的實作本體，語意相同。層級：程式碼檢視。
+8. API_REFERENCE 新增 Update Document 一節（200／409／404／400／503），Write Concurrency 一節補上 update。沒有提到函式庫。層級：文件檢視。
+9. 真實服務 e2e：重現 paper_workers 兩個 worker（兩邊都先讀到 `adopted_version_id = ""`），8 場都是先寫的 gemini 200、後寫的 qwen 409 並在 body 看到 gemini，最終採用 gemini；8 個併發請求得到 1 個 200 與 7 個 409；不存在的文件回 404 且沒有被建立。容器實測也得到 200 → 409。層級：e2e。

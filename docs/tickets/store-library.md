@@ -14,7 +14,7 @@ HTTP 保留為主力、ftscore 不改、兩邊都用 dlopen。
 [04](./write-lock.md)、[05](./documents-update.md)、[06](./field-primary-key-flag.md)、
 [07](./score-limit-pushdown.md) 排在這張之後，直接實作在 `Store` 裡。
 
-**Status:** ready-for-agent
+**Status:** closed（2026-09-25）
 
 ## 已定案的設計
 
@@ -40,10 +40,21 @@ HTTP 保留為主力、ftscore 不改、兩邊都用 dlopen。
 
 ## 驗收條件
 
-- [ ] 其他 module 可以 `import "github.com/ireullin/pocket-fts/pocketfts"`，用上面的 API
+- [x] 其他 module 可以 `import "github.com/ireullin/pocket-fts/pocketfts"`，用上面的 API
       完成建 collection、寫入、全文搜尋、刪除、關閉（寫一個外部 module 的範例測試證明）。
-- [ ] `cmd/pocket_fts` 的 handler 只做 HTTP 解析與回應，邏輯全部呼叫 `Store`。
-- [ ] 既有測試全部改成對新結構執行，且全部通過，證明 HTTP 行為不變。
-- [ ] 用重建後的 `bin/pocket_fts` 起真實服務，跑一次建立／寫入／查詢／排序／刪除（e2e）。
-- [ ] `Dockerfile`、README 的建置指令改成新的建置路徑；`podman build` 與 `podman run` 實測。
-- [ ] README 與 API_REFERENCE 沒有提到函式庫。
+- [x] `cmd/pocket_fts` 的 handler 只做 HTTP 解析與回應，邏輯全部呼叫 `Store`。
+- [x] 既有測試全部改成對新結構執行，且全部通過，證明 HTTP 行為不變。
+- [x] 用重建後的 `bin/pocket_fts` 起真實服務，跑一次建立／寫入／查詢／排序／刪除（e2e）。
+- [x] `Dockerfile`、README 的建置指令改成新的建置路徑；`podman build` 與 `podman run` 實測。
+- [x] README 與 API_REFERENCE 沒有提到函式庫。
+
+## 關票核對（2026-09-25）
+
+實作於 `2a3a2de`，審查修正 `eb462c2`，執行檔 `b4dd87e`。逐條核對：
+
+1. 外部 module 可匯入：在 repo 外建一個 `module example.com/host`（`replace` 指向本 repo），測試 `TestEmbed` 走完 Open → CreateCollection → Upsert → Query（搜到 1 筆）→ Delete → ListCollections → Close，通過。repo 內另有 `pocketfts/example_test.go`（`package pocketfts_test`）的 `Example`，輸出核對通過。層級：跨 module 實際建置與執行。
+2. `cmd/pocket_fts/handlers.go` 只剩 JSON 解析與狀態碼對應，全部呼叫 `store.*`。層級：程式碼檢視。
+3. 既有 80 個測試搬到 `pocketfts/` 與 `cmd/pocket_fts/` 後全部通過；只有 `TestSetWriteTimeoutIgnoresNonPositive` 改寫成 `TestOpenIgnoresNonPositiveWriteTimeout`（全域變數改成 Config）。層級：單元／整合測試。
+4. 真實服務 e2e：新舊執行檔對同一組 49 個請求（建立、錯誤請求、upsert、list、content、query、search、delete）的回應，除了 `/search` 的 `ExecutionTime` 之外逐位元組相同（票 04 之後另有一處訊息差異，見 04）。另外 10 萬筆語料上 7 組查詢的回應逐位元組相同。層級：e2e。
+5. `README.md` 四個語言的建置指令改成 `./cmd/pocket_fts`；Dockerfile 只複製 `bin/pocket_fts`，不需要改。`podman build` 後 `podman run`，容器內建立、upsert、update（200 與 409）、依 `_score` 查詢、刪除都正常，容器 log 的 ERROR 為 0。層級：容器實測。
+6. `grep -i 'pocketfts\|library'` README.md、API_REFERENCE.md 沒有結果。層級：文件檢視。
